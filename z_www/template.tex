@@ -1,0 +1,113 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage[left=3cm, right=1cm, top=6cm, bottom=0cm]{geometry}
+\usepackage[T1]{fontenc}
+%\usepackage{mathptmx}
+
+% fixed placement
+\usepackage[absolute]{textpos}
+
+\usepackage{tabularx}
+\usepackage{listings}
+%\usepackage{epstopdf}
+%\usepackage{pdfpages}
+
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\EUR}}1 {£}{{\pounds}}1
+}
+
+\usepackage{wallpaper}
+\ULCornerWallPaper{1}{zmal.pdf}
+
+\lstset{breaklines=true}
+\setlength{\parindent}{0cm}
+\setlength{\tabcolsep}{3pt}
+
+\setlength{\arrayrulewidth}{0.3pt}
+\renewcommand{\arraystretch}{1.3}
+
+\thispagestyle{empty}
+
+\begin{document}
+
+
+% Z-nr
+\begin{textblock*}{47mm}(117mm,14mm)
+    \begin{center}
+        \Large
+        \textbf{VAR-ZNR}
+        \normalsize
+        \\[1mm]
+        VAR-DATE
+        \\[1mm]
+        \scriptsize{(Generert VAR-BUILDDATE)}
+    \end{center}
+\end{textblock*}
+
+
+% høyre kolonne
+\begin{textblock*}{8cm}(12cm,44mm)
+   
+
+    % detaljer
+    %\textbf{Arrangementstilknytning:} \\
+    VAR-TYPE
+
+
+    %\begin{tabularx}{\textwidth}{|X|}
+    %    \hline
+    %    \textbf{Arrangementstype:} \\
+    %    VAR-TYPE \\
+    %    \hline
+    %\end{tabularx}
+
+    \vspace{5mm}
+
+
+    % salg og betalinger
+    \begin{tabularx}{\textwidth}{rcrrX}
+        VAR-SALES-AND-DEBET
+        %25 \% & K & 3011 & 310 & Salg, øl \\
+        %\hline
+        %25 \% & K & 3014 & 90 & Salg, mineralvann \\
+    \end{tabularx}
+    \vspace{5mm}
+
+
+    % kommentar
+    \textbf{Kommentar:} \\
+    %\begin{lstlisting}[breakindent=0pt]
+VAR-COMMENT
+    %\end{lstlisting}
+
+
+    \vspace{8mm}
+    \textbf{Ansvarlig (signer):} \\[8mm]
+    \rule{5cm}{0.5pt} \\
+    VAR-RESPONSIBLE
+
+\end{textblock*}
+
+% kontantopptellinger
+\begin{textblock*}{71mm}(32mm,120mm)
+    \textbf{Kontantopptellinger:} \\[3mm]
+    \begin{tabular}{rrrrr}
+        Valør & Start & Slutt & Endring & Verdi \\
+        \hline
+        VAR-CASH
+    \end{tabular}
+\end{textblock*}
+
+
+\end{document}
