@@ -1,2 +1,4 @@
 /ny.*
-logdir/
+/logdir/
+/bilag.csv
+/reports.json
