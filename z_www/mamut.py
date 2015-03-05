@@ -209,7 +209,7 @@ class CYBMamutImport():
         self.zgroups = None # initialized by loadJSON
         self.selected = None # initialized by loadJSON
 
-    def loadJSON(self):
+    def loadJSON(self, all=False):
         f = open(DATA_FILE_IN, 'r')
         self.json = json.loads(f.read(), 'utf-8')['list']
         f.close()
@@ -222,7 +222,7 @@ class CYBMamutImport():
         for item in self.json:
             item_i += 1
 
-            if 'import_hide' in item and item['import_hide']:
+            if not all and 'import_hide' in item and item['import_hide']:
                 continue
 
             z = Z(item)
@@ -348,7 +348,7 @@ class PromptHelper():
 
     def show_help(self):
         print("")
-        print("              Kommandoer:    (<x> kan også skrives som <x:y>)")
+        print("                Kommandoer:    (<x> kan også skrives som <x:y>)")
         print("--------------------------------------------------------------------------------")
         print("  add <x>   Klargjør rapport (kan sløyfe 'add' i kommandoen)")
         print("  pop       Fjern siste rapport")
@@ -356,6 +356,7 @@ class PromptHelper():
         print("  num <n>   Sett ny K-nr som første nr")
         print("  show <x>  Vis konteringer for en rapport")
         print("  hide <x>  Fjern rapport permanent fra lista")
+        print("  reload    Nullstiller lister og laster data på nytt ('reload all' laster alt)")
         print("  quit      Avslutt (evt. trykk Ctrl+D)")
         print("")
         print("Trykk enter for å se status/liste/hjelp")
@@ -491,7 +492,7 @@ class MyPrompt(Cmd):
 
     def do_reload(self, args):
         """Laster all data på nytt"""
-        self.cyb.loadJSON()
+        self.cyb.loadJSON(all=args=='all')
 
         self.do_help("")
         print("Data ble lastet inn på nytt")
@@ -548,6 +549,13 @@ if __name__ == '__main__':
     cyb.loadJSON()
 
     prompt = MyPrompt(cyb)
+
+    print("--------------------------------------------------------------------------------")
+    print("          Generering av importeringsfil til Mamtu for Z-rapporter")
+    print("             System laget av kasserer Henrik Steen våren 2015")
+    print("                 se http://github.com/cybrairai/okotools")
+    print("--------------------------------------------------------------------------------")
+    print("")
 
     prompt.getNum()
 
