@@ -1,12 +1,9 @@
 #!/bin/env python
 # -*- coding: utf-8 -*-
 import csv
-import cStringIO
-import codecs
 import re
 import sys
 from cmd import Cmd
-import types
 import json
 import time
 
@@ -78,43 +75,13 @@ DATA_FILE_OUT = 'bilag.csv'
 
 DEVIATION_ACCOUNT = '8995'
 
-class CSVWriter():
-    """
-    A CSV writer which will write rows to CSV file "f",
-    which is encoded in the given encoding.
-    (code mostly from https://docs.python.org/2/library/csv.html)
-    """
-
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-        self.writer.writerow([(s.encode("utf-8") if isinstance(s, types.UnicodeType) else s) for s in row])
-        # Fetch UTF-8 output from the queue ...
-        data = self.queue.getvalue()
-        data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
-        data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
-
-    def writerows(self, rows):
-        for row in rows:
-            self.writerow(row)
-
 
 class GenerateCSV():
     def __init__(self, cyb):
         self.nextId = cyb.nextId
         self.cyb = cyb
-        self.csv_f = open(DATA_FILE_OUT, 'w')
-        self.csv = CSVWriter(self.csv_f, encoding="iso-8859-1", delimiter=';', quoting=csv.QUOTE_NONE)
+        self.csv_f = open(DATA_FILE_OUT, 'w', encoding="iso-8859-1")
+        self.csv = csv.writer(self.csv_f, delimiter=';', quoting=csv.QUOTE_NONE)
 
     def finish(self):
         self.csv_f.close()
@@ -142,7 +109,6 @@ class GenerateCSV():
             line[CSV_INDEX_BRUTTO] = item['amount']
 
             self.csv.writerow(line)
-            #print "LINE: %s: %s (%s%%) %d (%s)" % (znr, account, vat, amount, item[1])
 
         self.nextId += 1
 
@@ -283,8 +249,11 @@ class CYBMamutImport():
             groupi += 1
 
     def export(self):
+        """Eksporter Z-rapporter som ligger i self.selected"""
         if len(self.selected) == 0:
-            return False
+            return None
+
+        exported = []
 
         writer = GenerateCSV(self)
         for z in self.selected:
@@ -294,9 +263,10 @@ class CYBMamutImport():
         self.nextId = writer.nextId
         for z in self.selected:
             z.selected = False
+            exported.append(z)
         self.selected = []
 
-        return True
+        return exported
 
     def get(self, index, subindex):
         return self.zgroups[index].zlist[subindex or 0]
@@ -342,11 +312,12 @@ class PromptHelper():
             ismultiple = len(zgroup.zlist) > 1
             si = 0
             for z in zgroup.zlist:
-                prefix = "%19s" % ""
-                suffix = ""
+                subindex = "%d:" % si if ismultiple else "  "
 
                 if si == 0:
-                    prefix = "%2d: %s %-6s" % (i, zgroup.date, z.genZNr())
+                    prefix = "%2d:%s %s %-6s" % (i, subindex, zgroup.date, z.genZNr())
+                else:
+                    prefix = "   %-18s" % subindex
 
                 if z.selected:
                     prefix = bcolors.GREEN + prefix
@@ -356,36 +327,38 @@ class PromptHelper():
                     prefix = bcolors.GRAY + prefix
                 suffix = bcolors.RESET
 
-                subindex = "(%d:%d)" % (i, si) if ismultiple else ""
-                print("%s %s%7g%6g %-6s %s%s" % (prefix, z.data['builddate'], z.getTotalSales(), z.getDeviation(), subindex, z.data['type'], suffix))
+                print("%s %s%7g%6g %s%s" % (prefix, z.data['builddate'], z.getTotalSales(), z.getDeviation(), z.data['type'], suffix))
 
                 si += 1
 
             i += 1
 
-    def list_selected(self):
+    def list_selected(self, header=True):
         if len(self.cyb.selected) == 0:
             return
 
-        print("")
-        print("                           Klargjorte Z-rapporter")
-        print("--------------------------------------------------------------------------------")
+        if header:
+            print("")
+            print("             Klargjorte Z-rapporter (skriv 'pop' for å fjerne siste)")
+            print("--------------------------------------------------------------------------------")
         i = self.cyb.nextId
         for z in self.cyb.selected:
-            print("K%d  %s" % (i, z.genZNr()))
+            print("K%d  %s (%s)" % (i, z.genZNr(), z.data['date']))
             i += 1
 
     def show_help(self):
         print("")
-        print("Kommandoer:    (<x> kan også skrives som <x:y>)")
-        print("  list      Vis tilgjengelige rapporter")
-        print("  add <x>   Klargjør rapport")
+        print("              Kommandoer:    (<x> kan også skrives som <x:y>)")
+        print("--------------------------------------------------------------------------------")
+        print("  add <x>   Klargjør rapport (kan sløyfe 'add' i kommandoen)")
         print("  pop       Fjern siste rapport")
         print("  save      Generer importeringsfil")
         print("  num <n>   Sett ny K-nr som første nr")
         print("  show <x>  Vis konteringer for en rapport")
         print("  hide <x>  Fjern rapport permanent fra lista")
+        print("  quit      Avslutt (evt. trykk Ctrl+D)")
         print("")
+        print("Trykk enter for å se status/liste/hjelp")
         print("Neste K-nr: %d" % (self.cyb.nextId + len(self.cyb.selected)))
         print("")
 
@@ -401,65 +374,81 @@ class MyPrompt(Cmd):
         self.cyb = cyb
         self.helper = PromptHelper(cyb, self)
 
-    def do_list(self, args):
-        self.helper.list_available()
-        self.helper.list_selected()
-        self.helper.show_help()
-
     def do_add(self, args):
-        """Add a specified report to be generated"""
+        """Legg til en Z-rapport i genereringslista"""
         try:
             index, subindex = self.getInputIndex(args)
             z = self.cyb.get(index, subindex)
 
             if z.group.isSelected():
-                print("ERROR: Z-report already selected")
+                print("FEIL: Z-rapport allerede markert")
                 return
 
             if not z.validateZ():
                 self.helper.show_z_lines()
-                print("ERROR: Z-report don't sum to 0 (kredit+debet)")
+                print("FEIL: Z-rapport summerer ikke til 0 (kredit+debet)")
                 return
 
-            self.cyb.add(z)
             knr = self.cyb.nextId + len(self.cyb.selected)
+            self.cyb.add(z)
 
             print("     %s %s (%s)" % (z.genZNr(), z.data['date'], z.data['type']))
             self.helper.show_z_lines(z, knr)
 
             print("")
-            print("Kontroller at papirskjemaet ble generert %s   Skriv 'pop' for å angre" % z.data['builddate'])
+            print("Kontroller at papirskjemaet ble generert %s" % (bcolors.YELLOW + str(z.data['builddate']) + bcolors.RESET))
+            print("Skriv 'pop' for å angre")
 
         except ValueError:
             return
         except IndexError:
-            print("Index %s not found in list" % args)
+            print("Indeks %s ble ikke funnet i listen" % args)
 
     def do_pop(self, args):
-        """Remove last item on list"""
+        """Fjern den siste Z-rapporten i lista"""
         if len(self.cyb.selected) == 0:
-            print("There are no more elements to remove!")
+            print("Det er ingen rapporter i listen å fjerne!")
             return
         removed = self.cyb.pop()
-        print("Fjernet %s fra lista" % removed.genZNr())
+        print("Fjernet %s (%s) fra lista" % (removed.genZNr(), removed.data['date']))
 
     def do_save(self, args):
-        """Generate data for selected reports"""
+        """Generer konteringslinjer for de valgte Z-rapportene"""
         print("")
         print("                        Genererer importliste for")
         print("--------------------------------------------------------------------------------")
-        self.helper.list_selected()
-        if not self.cyb.export():
+        self.helper.list_selected(header=False)
+        exported = self.cyb.export()
+        if exported is None:
             print("Ingen bilag er valgt!")
             return
 
-        print("Fullført - Filen kan nå importeres i Mamut")
-        print("Neste K-nr: %d" % self.cyb.nextId)
+        print("")
+        print("Fullført - %s kan nå importeres i Mamut" % DATA_FILE_OUT)
+        print("")
 
-        # TODO: remove Z-reports from list?
+        while True:
+            sys.stdout.write("Skal vi fjerne Z-rapportene fra lista? (skriv 'hide' eller 'skip'): ")
+            val = input()
+
+            if val == 'hide' or val == 'skip':
+                break
+
+            print("Ugyldig verdi, prøv igjen")
+
+        if val == 'hide':
+            hide = []
+            for z in exported:
+                hide = hide + z.group.zlist
+            self.cyb.hide(hide)
+            self.do_reload("")
+
+        else:
+            print("")
+            print("Neste K-nr: %d" % self.cyb.nextId)
 
     def do_show(self, args):
-        """Show lines for a Z"""
+        """Vis konteringslinjer for en Z-rapport"""
         try:
             index, subindex = self.getInputIndex(args)
             z = self.cyb.get(index, subindex)
@@ -468,7 +457,7 @@ class MyPrompt(Cmd):
             return
 
     def do_num(self, args):
-        """Get or set next K number"""
+        """Vis eller sett første K-nummer"""
         if args == '':
             print("Første K-nummer: K%d" % self.cyb.nextId)
             return
@@ -480,20 +469,22 @@ class MyPrompt(Cmd):
             print("Ugyldig verdi")
 
     def do_quit(self, args):
-        """Quits the program"""
+        """Avslutter programmet"""
         print("Avslutter")
         raise SystemExit
 
     def do_hide(self, args):
-        """Skjul en spesifikk Z-rapport fra lista"""
+        """Skjul en (evt. spesifikk) Z-rapport fra lista"""
         try:
             index, subindex = self.getInputIndex(args)
             z = self.cyb.get(index, subindex)
 
-            znr = z.genZNr()
-            self.cyb.hide([z])
+            if subindex is None:
+                self.cyb.hide(z.group.zlist)
+            else:
+                self.cyb.hide([z])
 
-            print("Skjuler %s neste gang programmet lastes inn" % znr)
+            print("Skjuler %s (%s) neste gang programmet lastes inn" % (z.genZNr(), z.data['date']))
             print("Skriv evt 'reload' for å gjøre dette nå")
         except ValueError:
             return
@@ -506,15 +497,25 @@ class MyPrompt(Cmd):
         print("Data ble lastet inn på nytt")
 
     def do_EOF(self, args):
+        """Ctrl+D avslutter programmet"""
         self.do_quit(args)
 
+    def default(self, args):
+        """Som standard prøver vi å identifisere en Z, evt. viser vi hjelp"""
+        try:
+            self.getInputIndex(args, showmsg=False)
+            self.do_add(args)
+        except ValueError:
+            self.do_help("")
+
     def do_help(self, args):
+        """Vis liste over rapporter og hjelp"""
         self.helper.list_available()
         self.helper.list_selected()
         self.helper.show_help()
 
     def getNum(self):
-        """Ask for next K-number"""
+        """Spør etter første K-nummer som skal brukes"""
         while True:
             sys.stdout.write("Nummer for neste ledige K-nummer i Mamut: ")
             num = input()
@@ -525,20 +526,21 @@ class MyPrompt(Cmd):
             except ValueError:
                 print("Ugyldig verdi, prøv igjen")
 
-    def getInputIndex(self, args):
+    def getInputIndex(self, args, showmsg=True):
         """Parse index:subindex"""
         r = re.compile('^(\d+)(?::(\d+))?$')
         m = r.match(args)
         if m is None:
-            print("Ugyldig verdi, syntaks:")
-            print("  <index>              Velg nyeste rapport av en Z")
-            print("  <index>:<subindex>   Velg spesifikk rapport")
+            if showmsg:
+                print("Ugyldig verdi, syntaks:")
+                print("  <index>              Velg nyeste rapport av en Z")
+                print("  <index>:<subindex>   Velg spesifikk rapport")
             raise ValueError
 
         return int(m.group(1)), int(m.group(2)) if m.group(2) is not None else None
 
     def emptyline(self):
-        """An empty line will trigger help"""
+        """En tom linje gir hjelp"""
         self.do_help("")
 
 if __name__ == '__main__':
@@ -547,8 +549,7 @@ if __name__ == '__main__':
 
     prompt = MyPrompt(cyb)
 
-    #prompt.getNum()
-    prompt.cyb.nextId = 51 # FIXME
+    prompt.getNum()
 
     prompt.prompt = '> '
     prompt.do_help("")
