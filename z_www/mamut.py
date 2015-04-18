@@ -7,6 +7,13 @@ from cmd import Cmd
 import json
 import time
 
+# support for ANSI color codes
+try:
+    import colorama
+    colorama.init()
+except:
+    pass
+
 class bcolors:
     RESET = '\033[0m'
 
