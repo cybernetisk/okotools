@@ -75,6 +75,11 @@ DATA_FILE_OUT = 'bilag.csv'
 
 DEVIATION_ACCOUNT = '8995'
 
+def getNum(val):
+    try:
+        return int(val)
+    except ValueError:
+        return 0
 
 class GenerateCSV():
     def __init__(self, cyb):
@@ -142,7 +147,7 @@ class Z():
     def getTotalSales(self):
         sum = 0
         for item in self.data['sales']:
-            sum += (-1 if item[0][0] == 'K' else 1) * item[2]
+            sum += (-1 if item[0][0] == 'K' else 1) * getNum(item[2])
         return sum
 
     def genZNr(self):
@@ -153,7 +158,7 @@ class Z():
         """Sjekker om kredit og debet går opp i hverandre"""
         sum = 0
         for item in self.data['sales'] + self.data['debet']:
-            sum += (-1 if item[0][0] == 'K' else 1) * item[2]
+            sum += (-1 if item[0][0] == 'K' else 1) * getNum(item[2])
 
         return sum == 0
 
@@ -166,8 +171,8 @@ class Z():
                 'text': item[1],
                 'modifier': modifier,
                 'account': item[0][2:6],
-                'vat': 0 if len(item[0]) < 9 else int(item[0][7:9]),
-                'amount': modifier * item[2]
+                'vat': 0 if len(item[0]) < 9 else getNum(item[0][7:9]),
+                'amount': modifier * getNum(item[2])
             }
 
             x['netto'] = round(x['amount'] / (1 + x['vat']/100.0), 2)
@@ -386,7 +391,7 @@ class MyPrompt(Cmd):
                 return
 
             if not z.validateZ():
-                self.helper.show_z_lines()
+                self.helper.show_z_lines(z)
                 print("FEIL: Z-rapport summerer ikke til 0 (kredit+debet)")
                 return
 
