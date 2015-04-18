@@ -1,11 +1,6 @@
 #!/bin/bash
 #
 # @author Henrik Steen
-# @modified  2015-02-10 henrste (slått sammen delscript, omskrevet alt)
-# @modified  2014-12-17 henrste (kontoutskrifter)
-# @modified  2014-08-23 henrste (utbetalinger, krediteringer)
-# @modified  2014-06-09 henrste (utbetalinger)
-# @modified  2013-12-10 henrste (utbetalinger)
 
 DIR_KREDITERINGER="../4 Krediteringer"
 DIR_KONTOUTSKRIFTER="../4 Kontoutskrifter"
