@@ -8,8 +8,8 @@ database = "Client00010001"
 
 
 def writedata(data):
-    f2 = open('result.csv', 'w')
-    w = csv.writer(f2, delimiter=',', quoting=csv.QUOTE_ALL)
+    f2 = open('result.csv', 'w', encoding="utf-8")
+    w = csv.writer(f2, delimiter=',', quoting=csv.QUOTE_ALL, lineterminator="\n")
     w.writerow(["Konto", "Spesifisering", "Avdeling", "Prosjekt", "Type", "År", "Semester", "Beløp"])
 
     for row in data:
@@ -38,7 +38,7 @@ def getsqldata():
             dbo.Sys_GetAvdeling(l.DATA15) avdeling,
             p.TASK_NAME prosjekt,
             b.ACCYEAR,
-            IIF(MONTH(b.REGDATE) <= 6, 'Vår', 'Høst'),
+            IIF(YEAR(b.REGDATE) < b.ACCYEAR OR (YEAR(b.REGDATE) = b.ACCYEAR AND MONTH(b.REGDATE) <= 6), 'Vår', 'Høst'),
             SUM(l.CURRENCYSUM)
         FROM
             G_MAIN b
@@ -47,10 +47,14 @@ def getsqldata():
         WHERE b.STATUSID = 3 AND l.ACCID >= 3000
         GROUP BY l.ACCID, b.ACCYEAR,
             dbo.Sys_GetAvdeling(l.DATA15),
-            IIF(MONTH(b.REGDATE) <= 6, 'Vår', 'Høst'),
+            IIF(YEAR(b.REGDATE) < b.ACCYEAR OR (YEAR(b.REGDATE) = b.ACCYEAR AND MONTH(b.REGDATE) <= 6), 'Vår', 'Høst'),
             p.TASK_NAME
         HAVING SUM(l.CURRENCYSUM) != 0
-        ORDER BY p.TASK_NAME, b.ACCYEAR, l.ACCID
+        ORDER BY
+            p.TASK_NAME,
+            b.ACCYEAR,
+            IIF(YEAR(b.REGDATE) < b.ACCYEAR OR (YEAR(b.REGDATE) = b.ACCYEAR AND MONTH(b.REGDATE) <= 6), 'Vår', 'Høst'),
+            l.ACCID
         """)
 
     data = []
