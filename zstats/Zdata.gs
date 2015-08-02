@@ -1,39 +1,35 @@
 
+function getZDateByCache(sheetId) {
+  var cached = getCacheValue('zdate', sheetId);
+  if (cached !== null) {
+    return new Date(cached);
+  }
+}
+
+function getZDataByCache(sheetId) {
+  return getCacheValue('z', sheetId);
+}
 
 /**
  * Get date for a Z-report
  */
-function getZDate(sheet, force_cache) {
-  var cached = getCacheValue('zdate', sheet.getSheetId());
-  if (cached == null) {
-    if (force_cache) return null;
-    var cached = getRangeOnSheet(sheet, "Zdato").getValue();
-    setCacheValue('zdate', sheet.getSheetId(), cached);
-  }
-  
+function getZDate(sheet) {
+  cached = getRangeOnSheet(sheet, "Zdato").getValue();
+  setCacheValue('zdate', sheet.getSheetId(), cached);
   return new Date(cached);
 }
 
 /**
  * Generate data for a specific Z-sheet
  */
-function getZData(sheet, force_cache) {
-  // do we have cache??
-  var cacheid = sheet.getSheetId();
-  var cached = getCacheValue('z', cacheid);
-  if (cached != null) {
-    return cached;
-  }
-  
-  if (force_cache) return null;
-  
+function getZData(sheet) {
   /**
    * For sales and debet, select the valid columns.
    * The data should be [account-info, description, value]
    */
   function getSalesAndDebetRows(data) {
     var newdata = [];
-    for (x in data) {
+    for (var x in data) {
       if (data[x][0] != "" && data[x][4] != "") {
         newdata.push([data[x][0], data[x][1], data[x][4]]);
       }
@@ -71,12 +67,12 @@ function getZData(sheet, force_cache) {
   /**
    * Build data
    */
-  var d = new Date(getRangeOnSheet(sheet, "Zdato").getValue());
+  var dateObj = new Date(getRangeOnSheet(sheet, "Zdato").getValue());
   var data = {
     "sheetid": sheet.getSheetId(),
     "z": getRangeOnSheet(sheet, "Znr").getValue(),
     "age": (new Date().getTime() - (new Date(getRangeOnSheet(sheet, "Zdato").getValue()).getTime()))/86400000,
-    "date": getWeek(d)+" "+Utilities.formatDate(d, "Europe/Oslo", "dd.MM.YYYY"),
+    "date": getWeek(dateObj)+" "+Utilities.formatDate(dateObj, "Europe/Oslo", "dd.MM.YYYY"),
     //"builddate": Utilities.formatDate(new Date(), "Europe/Oslo", "dd.MM.YYYY HH:mm"),
     "responsible": getRangeOnSheet(sheet, "Ansvarlig").getValue(),
     "type": getRangeOnSheet(sheet, "Arrtype").getValue(),
@@ -85,14 +81,11 @@ function getZData(sheet, force_cache) {
       "end": getFirstCol(getRangeOnSheet(sheet, "AntallSlutt").getValues())
     },
     "sales": getSales(sheet),
-    "debet": getDebet(sheet)//,
-    //"comment": getRangeOnSheet(sheet, "Kommentar").getValue()
+    "debet": getDebet(sheet)
   };
 
-  //Logger.log("test:   "+data.age+"     "+getRangeOnSheet(sheet, "Zdato").getValue());
+  setCacheValue('z', data['sheetid'], data);
+  setCacheValue('zdate', data['sheetid'], dateObj);
 
-  setCacheValue('z', cacheid, data);
   return data;
 }
-
-

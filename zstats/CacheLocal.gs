@@ -1,13 +1,20 @@
-/**
- * @OnlyCurrentDoc
- * (makes the "app auth" only give access to this document, not the whole Google Disk)
- */
-
 var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Cache');
-var next_free = 0;
 var caches = {};
 _initCache();
 
+
+function getCacheTable(table_name) {
+  if (!(table_name in caches)) {
+    return null;
+  }
+
+  var dataColumn = 1;
+  var flat = {};
+  for (var key_name in caches[table_name]) {
+    flat[key_name] = caches[table_name][key_name][dataColumn];
+  }
+  return flat;
+}
 
 function getCacheValue(table_name, key_name) {
   if (!(table_name in caches)) {
@@ -28,7 +35,7 @@ function setCacheValue(table_name, key_name, object) {
   }
   
   if (!(key_name in caches[table_name])) {
-    caches[table_name][key_name] = [next_free++, null];
+    caches[table_name][key_name] = [_getFreeRow(), null];
   }
   
   caches[table_name][key_name][1] = object;
@@ -58,16 +65,17 @@ function cacheInvalidate(table_name, key_name) {
     '',
     ''
   ]]);
-  
+
+  delete rowsUsed[caches[table_name][key_name][0]];
   delete caches[table_name][key_name];
 }
 
 
 function _initCache() {
   caches = {};
+  rowsUsed = {};
   var data = sheet.getDataRange().getValues();
-  next_free = data.length;
-  
+
   for (var y = 0; y < data.length; y++) {
     _addToCache(data[y][0], data[y][1], data[y][2], y);
   }
@@ -79,8 +87,19 @@ function _addToCache(table_name, key_name, json, row_i) {
     caches[table_name] = {};
   }
   caches[table_name][key_name] = [row_i, JSON.parse(json)];
+  rowsUsed[row_i] = true;
 }
 
+function _getFreeRow() {
+  var i;
+  for (i = 0; i < sheet.getLastRow(); i++) {
+    if (rowsUsed[i] !== true) {
+      break;
+    }
+  }
+
+  return i;
+}
 
 
 function cacheTest() {
