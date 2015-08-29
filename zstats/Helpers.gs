@@ -17,4 +17,3 @@ function getRangeOnSheet(sheet, rname) {
   //Logger.log("getRangeOnSheet for "+rname+": "+((new Date()).getTime()-ts));
   return ret;
 }
-

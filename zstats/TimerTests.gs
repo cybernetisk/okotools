@@ -11,4 +11,3 @@ function timerReport(timer_name, comment) {
   Logger.log("timer "+timer_name+" elapsed: "+elapsed+(comment ? " ("+comment+")" : ""));
   timers[timer_name] = (new Date()).getTime();
 }
-

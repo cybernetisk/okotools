@@ -20,11 +20,11 @@ function getCacheValue(table_name, key_name) {
   if (!(table_name in caches)) {
     return null;
   }
-  
+
   if (key_name in caches[table_name]) {
     return caches[table_name][key_name][1];
   }
-  
+
   return null;
 }
 
@@ -33,13 +33,15 @@ function setCacheValue(table_name, key_name, object) {
   if (!(table_name in caches)) {
     caches[table_name] = {};
   }
-  
+
   if (!(key_name in caches[table_name])) {
-    caches[table_name][key_name] = [_getFreeRow(), null];
+    var row_i = _getFreeRow();
+    caches[table_name][key_name] = [row_i, null];
+    rowsUsed[row_i] = true;
   }
-  
+
   caches[table_name][key_name][1] = object;
-  
+
   sheet.getRange(caches[table_name][key_name][0]+1, 1, 1, 4).setValues([[
     table_name,
     key_name,
@@ -53,12 +55,11 @@ function cacheInvalidate(table_name, key_name) {
   if (!(table_name in caches)) {
     return;
   }
-  
+
   if (!(key_name in caches[table_name])) {
     return;
   }
-  
-  
+
   sheet.getRange(caches[table_name][key_name][0]+1, 1, 1, 4).setValues([[
     '',
     '',
@@ -92,7 +93,8 @@ function _addToCache(table_name, key_name, json, row_i) {
 
 function _getFreeRow() {
   var i;
-  for (i = 0; i < sheet.getLastRow(); i++) {
+  var lastRow = sheet.getLastRow();
+  for (i = 0; i < lastRow; i++) {
     if (rowsUsed[i] !== true) {
       break;
     }

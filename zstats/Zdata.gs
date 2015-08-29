@@ -4,6 +4,7 @@ function getZDateByCache(sheetId) {
   if (cached !== null) {
     return new Date(cached);
   }
+  return null;
 }
 
 function getZDataByCache(sheetId) {
@@ -23,6 +24,8 @@ function getZDate(sheet) {
  * Generate data for a specific Z-sheet
  */
 function getZData(sheet) {
+  timerReport('info', "getZData check sheet: "+sheet.getName());
+
   /**
    * For sales and debet, select the valid columns.
    * The data should be [account-info, description, value]
@@ -42,7 +45,7 @@ function getZData(sheet) {
   function getDebet(sheet) {
     return getSalesAndDebetRows(getRangeOnSheet(sheet, "D_G1").getValues());
   }
-  
+
   /**
    * Extract first column from a data set
    */
@@ -53,7 +56,7 @@ function getZData(sheet) {
     }
     return newdata;
   }
-  
+
   /**
    * Get dayname from daynumber
    */
@@ -61,9 +64,7 @@ function getZData(sheet) {
     var day = Utilities.formatDate(val, "Europe/Oslo", "u");
     return ["Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag", "Søndag"][day-1];
   }
-  
-  Logger.log("Check sheet: "+sheet.getName());
-  
+
   /**
    * Build data
    */
@@ -87,5 +88,6 @@ function getZData(sheet) {
   setCacheValue('z', data['sheetid'], data);
   setCacheValue('zdate', data['sheetid'], dateObj);
 
+  timerReport('info', 'getZData returning');
   return data;
 }

@@ -121,10 +121,19 @@ function getZSheetIdsInRange(dateFrom, dateTo) {
 
 
 function loadMissingReports() {
+  var max_to_load = 20;
+  var loaded_i = 0;
+
   getZSheetList().forEach(function (sheet) {
     if (getZDateByCache(sheet.getSheetId()) !== null) {
       return;
     }
+
+    if (loaded_i == max_to_load) {
+      return;
+    }
+
+    loaded_i++;
 
     getZData(sheet);
     Logger.log('loaded data for sheet ' + sheet.getSheetId());
