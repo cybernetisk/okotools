@@ -324,6 +324,65 @@ class Tripletex(TripletexBase):
 
         return result_list
 
+    def get_report_projects(self, date_start, date_end, project_id=None, include_sub_projects=True):
+        q = OrderedDict()
+        q['javaClass'] = 'no.tripletex.tcp.web.ProjectResultReportForm'
+        q['documentationComponent'] = '259'
+        q['contextId'] = '2845076'
+        q['isExpandedFilter'] = 'true'
+        q['period.startDate'] = date_start  #"2014-01-01"
+        q['period.endOfPeriodDate'] = date_end  #"2015-12-31"
+        q['period.periodType'] = '4'
+        q['selectedCustomerId'] = '-1'
+        q['selectedProjectManagerId'] = '-1'
+        q['selectedProjectId'] = str(project_id) if project_id else "-1"
+        q['isOffer'] = '0'
+        q['isInternal'] = '-1'
+        q['selectedProjectCategoryId'] = '-1'
+        q['selectedProjectDepartmentId'] = '-1'
+        q['viewSubProjects'] = "true" if include_sub_projects else "false"
+        q['viewProjectsNoMovements'] = 'false'
+        q['viewSoFar'] = 'false'
+        q['viewAccountingPeriods'] = 'false'
+        q['viewIncome'] = 'true'
+        q['viewCosts'] = 'true'
+        q['viewResult'] = 'false'
+        q['viewCoverage'] = 'false'
+        q['csv'] = 'true'
+        q['csvHeader'] = 'true'
+        q['csvEncoding'] = 'UTF-8'
+        q['csvSeparator'] = ';'
+        q['csvQualifier'] = '"'
+        q['csvDecimal'] = '.'
+        q['csvLineBreak'] = '\n'
+
+        query_string = urllib.parse.urlencode(q)
+        url = "https://tripletex.no/execute/projectResultReport?" + query_string
+
+        r = self.request_get(url)
+        if r.status_code != 200:
+            print(r.text)
+            raise TripletexException("Could not fetch report of projects, error code: %s" % r.status_code)
+
+        result_list = []
+
+        csvobj = csv.reader(r.text.strip().split('\n'), delimiter=';')
+        is_first = True
+        for row in csvobj:
+            if is_first:
+                is_first = False
+                continue
+
+            project = re.match(r'(\d+) (.+)', row[0])
+            result_list.append([
+                project.group(1),
+                project.group(2),
+                float(row[1]),
+                float(row[2])
+            ])
+
+        return result_list
+
     def import_gbat10(self, data):
         if not isinstance(data, str):
             raise ValueError("Need a unicode string as GBAT10-data")
@@ -413,10 +472,8 @@ def print_accounts(tripletex):
             int(account['active'])
         ))
 
-def print_report_result(tripletex):
+def print_report_result(tripletex, year, sem):
     project_number = 40041
-    year = 2015
-    sem = SEMESTERS[0]
 
     project_id = tripletex.get_project_id(project_number)
     result = tripletex.get_report_result(date_start=str(year)+sem['start'], date_end=str(year)+sem['end'], project_id=project_id)
@@ -425,18 +482,34 @@ def print_report_result(tripletex):
         print('%s\t\t%s\t\t\t%s\t%s\tregnskap\t%s\t%s' % (project_number, account[0], year, sem['text'],
                                                           time.strftime('%Y%m%d'), str(account[1]).replace('.', ',')))
 
+def print_report_projects(tripletex, year, sem):
+    result = tripletex.get_report_projects(date_start=str(year)+sem['start'], date_end=str(year)+sem['end'])
+
+    for project in result:
+        print('%s\t\t\t%s\t%s\tregnskap\t%s\t%s\t%s' % (project[0], year, sem['text'], time.strftime('%Y%m%d'),
+                                                      str(project[2]).replace('.', ','),
+                                                      str(project[3]).replace('.', ',')))
+
 def print_project_list(tripletex):
     projects = tripletex.get_project_list()
     for project in projects:
         print('%s\t%s\t%s' % (project['parent'], project['number'], project['text']))
 
-
 if __name__ == '__main__':
     tt = Tripletex()
 
     #print_accounts(tt)
-    #print_report_result(tt)
-    print_project_list(tt)
+    #print_project_list(tt)
+
+    print_report_result(tt, 2014, SEMESTERS[0])
+    print_report_result(tt, 2014, SEMESTERS[1])
+    print_report_result(tt, 2015, SEMESTERS[0])
+    print_report_result(tt, 2015, SEMESTERS[1])
+
+    #print_report_projects(tt, 2014, SEMESTERS[0])
+    #print_report_projects(tt, 2014, SEMESTERS[1])
+    #print_report_projects(tt, 2015, SEMESTERS[0])
+    #print_report_projects(tt, 2015, SEMESTERS[1])
 
     #print("Testing Tripletex-connection:")
     #num = tt.get_next_ledger_number(2015)
