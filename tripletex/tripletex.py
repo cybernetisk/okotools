@@ -2,15 +2,25 @@
 
 # pip3 install requests cookielib
 
+import csv
 import requests
 import http
-import urllib
+import urllib.parse
 import re
+import time
+from bs4 import BeautifulSoup
+from collections import OrderedDict
 
 # settings are stored in settings.py, example:
 # username = "username"
 # password = "password"
 from settings import *
+
+
+SEMESTERS = (
+    {'id': 1, 'text': 'vår', 'start': '-01-01', 'end': '-06-30'},
+    {'id': 2, 'text': 'høst', 'start': '-07-01', 'end': '-12-31'},
+)
 
 
 class TripletexBase():
@@ -94,6 +104,226 @@ class Tripletex(TripletexBase):
 
         return int(m.group(1)) + 1
 
+    def get_accounts(self):
+        url = "https://tripletex.no/execute/chartOfAccounts?act=content&scope=ui-id-2&contextId=2845076"
+        r = self.request_get(url)
+
+        if r.status_code != 200:
+            raise TripletexException("Could not get list of accounts")
+
+        soup = BeautifulSoup(r.text, 'html.parser')
+        account_list = []
+
+        for tr in soup.tbody.find_all('tr'):
+            if len(tr.contents) < 8:
+                continue
+
+            account_list.append({
+                'id': tr.contents[1].text.strip(),
+                'text': tr.contents[2].text.strip(),
+                'group': tr.contents[3].text.strip(),
+                'active': len(tr.contents[7].text.strip()) == 0
+            })
+
+        return account_list
+
+    def get_project_list_old(self):
+        url = "https://tripletex.no/JSON-RPC?syncSystem=0&contextId=2845076"
+
+        post_data = {
+            "marshallSpec": [
+                "id",
+                "number",
+                "displayName",
+                "hierarchyNameAndNumber",
+                "projectManagerNameAndNumber",
+                "departmentId",
+                "projectCategoryId",
+                "customerName"
+            ],
+            "className": "JSONRpcClient.RequestExtraInfo",
+            "id": '81',
+            "method": "Project.searchForProjects",
+            "params": [
+                '2845076',
+                '-1',
+                '-1',
+                '-1',
+                '-1',
+                '-1',
+                '0',
+                '1',
+                '-1',
+                'false',
+                'false',
+                {
+                    "javaClass": "java.util.Date",
+                    "time": '1443650400000'
+                },
+                {
+                    "javaClass": "java.util.Date",
+                    "time": '1446332400000'
+                },
+                ""
+            ]
+        }
+
+        r = self.request_post(url, json=post_data)
+        if r.status_code != 200:
+            raise TripletexException("Unexpected return code from JSON-RPC when fetching project list")
+
+        if 'error' in r.json():
+            raise TripletexException("Upload failed: %s" % r.json()['error'])
+
+        project_list = []
+
+        data = r.json()
+        for project in data['result']:
+            project_list.append({
+                'id': project['id'],
+                'number': project['number'],
+                'text': project['displayName']
+            })
+
+        return project_list
+
+    def get_project_list(self):
+        q = OrderedDict()
+        q['javaClass'] = 'no.tripletex.tcp.web.ListProjectsExtForm'
+        q['documentationComponent'] = '162'
+        q['contextId'] = '2845076'
+        q['viewMode'] = '0'
+        q['isExpandedFilter'] = 'true'
+        q['isOrder'] = '1'
+        q['filter'] = '-1'
+        q['selectedProjectManagerId'] = '-1'
+        q['selectedProjectDepartmentId'] = '-1'
+        q['projectCategoryId'] = '-1'
+        q['customerId'] = '-1'
+        q['customerCategoryId1'] = '-1'
+        q['sortType'] = '-1'
+        q['ascending'] = 'true'
+        q['registeredDateStart'] = ''
+        q['registeredDateEnd'] = ''
+        q['closedDateStart'] = ''
+        q['closedDateEnd'] = ''
+        q['viewTotal'] = 'false'
+        q['viewInvoicedIncomeOnly'] = 'false'
+        q['act'] = 'content'
+        q['scope'] = 'ajaxContent'
+
+        query_string = urllib.parse.urlencode(q)
+        url = "https://tripletex.no/execute/listProjectsExt?" + query_string
+
+        r = self.request_get(url)
+        if r.status_code != 200:
+            raise TripletexException("Could not fetch project list")
+
+        project_list = []
+        i = 0
+        for tr in re.findall(r'<tr.*?>(.+?)</tr>', r.text):
+            tdlist = re.findall(r'<td.*?>(.+?)</td>', tr)
+
+            if len(tdlist) == 7:
+                id = re.search(r'projectId=(\d+)&', tdlist[1]).group(1)
+
+                start_and_end = re.sub(r'<[^>]*?>', '', tdlist[5])
+                m = re.match(r'^\s*(.+?)( (.+?))?\s*$', start_and_end)
+
+                project_list.append({
+                    'id': id,
+                    'text': re.sub(r'  +', ' ', re.sub(r'<[^>]*?>', '', tdlist[2]).strip()),
+                    'start': m.group(1),
+                    'end': m.group(3)
+                })
+
+        return self.__project_list_find_parent(project_list)
+
+    def __project_list_find_parent(self, project_list):
+        levels = {-1: ''}
+        next_id = 1
+        new_project_list = []
+
+        for project in project_list:
+            level = int(len(re.sub(r'^((\. )*).*', r'\1', project['text']))/4)
+
+            parent = levels[level-1]
+
+            m = re.match(r'^(\. )*((\d+) )?(.*)', project['text'])
+            if not m:
+                raise Exception('could not parse project line: ' % project['text'])
+
+            text = m.group(4)
+
+            if m.group(3):
+                number = int(m.group(3))
+            else:
+                number = next_id
+                next_id += 1
+
+            new_project = dict(project)
+            new_project['number'] = number
+            new_project['text'] = text
+            new_project['parent'] = parent
+            new_project['level'] = level
+            new_project_list.append(new_project)
+
+            levels[level] = number
+
+        return new_project_list
+
+    def get_report_result(self, date_start, date_end, project_id=None, include_sub_projects=False):
+        q = OrderedDict()
+        q['javaClass'] = "no.tripletex.tcp.web.ResultReport2Form"
+        q['documentationComponent'] = "133"
+        q['contextId'] = "2845076"
+        q['viewMode'] = "0"
+        q['isExpandedFilter'] = "true"
+        q['period.startDate'] = date_start  #"2014-01-01"
+        q['period.endOfPeriodDate'] = date_end  #"2015-12-31"
+        q['period.periodType'] = "1"
+        q['selectedCustomerId'] = "-1"
+        q['selectedVendorId'] = "-1"
+        q['selectedDepartmentId'] = "-1"
+        q['selectedEmployeeId'] = "-1"
+        q['selectedProjectId'] = str(project_id) if project_id else "-1"
+        q['includeSubProjectsOfSelectedProject'] = "true" if include_sub_projects else "false"
+        q['selectedProductId'] = "-1"
+        q['budgetType'] = "0"
+        q['viewAccounts'] = "true"
+        q['viewLastYear'] = "false"
+        q['viewAccountingPeriods'] = "false"
+        q['viewSoFar'] = "false"
+        q['viewUnusedReportGroups'] = "false"
+        q['showDecimalVerdi'] = "false"
+        q['csv'] = "true"
+        q['csvHeader'] = "true"
+        q['csvEncoding'] = "UTF-8"
+        q['csvSeparator'] = ";"
+        q['csvQualifier'] = "\""
+        q['csvDecimal'] = "."
+        q['csvLineBreak'] = "\n"
+
+        query_string = urllib.parse.urlencode(q)
+        url = "https://tripletex.no/execute/resultReport2?" + query_string
+
+        r = self.request_get(url)
+        if r.status_code != 200:
+            print(r.text)
+            raise TripletexException("Could not fetch report, error code: %s" % r.status_code)
+
+        result_list = []
+
+        csvobj = csv.reader(r.text.strip().split('\n'), delimiter=';')
+        is_first = True
+        for row in csvobj:
+            if is_first:
+                is_first = False
+                continue
+            result_list.append([int(row[0]), float(row[-6])])
+
+        return result_list
+
     def import_gbat10(self, data):
         if not isinstance(data, str):
             raise ValueError("Need a unicode string as GBAT10-data")
@@ -139,6 +369,19 @@ class Tripletex(TripletexBase):
         if 'error' in r.json():
             raise UploadFailedException("Upload failed: %s" % r.json()['error'])
 
+    def get_project_id(self, project_number):
+        projects = self.get_project_list()
+        project_id = None
+        for project in projects:
+            if project['number'] == project_number:
+                project_id = project['id']
+                break
+
+        if not project_id:
+            raise TripletexException("Could not locate project id of project %s" % project_number)
+
+        return project_id
+
 
 class TripletexException(Exception):
     pass
@@ -160,11 +403,43 @@ class UploadFailedException(TripletexException):
     pass
 
 
+def print_accounts(tripletex):
+    accounts = tripletex.get_accounts()
+    for account in accounts:
+        print('%s\t%s\t%s\t%s' % (
+            account['id'],
+            account['text'],
+            account['group'],
+            int(account['active'])
+        ))
+
+def print_report_result(tripletex):
+    project_number = 40041
+    year = 2015
+    sem = SEMESTERS[0]
+
+    project_id = tripletex.get_project_id(project_number)
+    result = tripletex.get_report_result(date_start=str(year)+sem['start'], date_end=str(year)+sem['end'], project_id=project_id)
+
+    for account in result:
+        print('%s\t\t%s\t\t\t%s\t%s\tregnskap\t%s\t%s' % (project_number, account[0], year, sem['text'],
+                                                          time.strftime('%Y%m%d'), str(account[1]).replace('.', ',')))
+
+def print_project_list(tripletex):
+    projects = tripletex.get_project_list()
+    for project in projects:
+        print('%s\t%s\t%s' % (project['parent'], project['number'], project['text']))
+
+
 if __name__ == '__main__':
     tt = Tripletex()
 
-    print("Testing Tripletex-connection:")
-    num = tt.get_next_ledger_number(2015)
-    print("Next ledger number: %d" % num)
+    #print_accounts(tt)
+    #print_report_result(tt)
+    print_project_list(tt)
+
+    #print("Testing Tripletex-connection:")
+    #num = tt.get_next_ledger_number(2015)
+    #print("Next ledger number: %d" % num)
 
     #tt.import_gbat10(open('bilag2.csv', 'r', encoding='iso-8859-1').read())
