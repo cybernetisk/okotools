@@ -138,7 +138,7 @@ function extract_date_kreditering_normal() {
 		line=$(echo "$filedata" | sed "${n}q;d")
 
 		if [[ ! $line =~ ^[0-9]{2}/[0-9]{2}-[0-9]{4}$ ]]; then
-			if (( x > 18 )); then
+			if (( x > 30 )); then
 				return
 			fi
 			let x=$x+1
