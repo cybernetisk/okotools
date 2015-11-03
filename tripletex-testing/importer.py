@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import csv
 import re
@@ -6,6 +6,10 @@ import sys
 from cmd import Cmd
 import json
 import time
+import io
+from tripletex import Tripletex, LedgerNumberFailed
+
+LEDGER_SERIES = 80000
 
 # support for ANSI color codes
 try:
@@ -13,6 +17,39 @@ try:
     colorama.init()
 except:
     pass
+
+# map from Mamut-setup to Tripletex-setup
+account_map = {
+    '1911': ('1900', '0'),
+    '1915': ('1915', '0'),
+    '2414': ('2901', '0'),
+    '3011': ('3000', '1403'),
+    '3012': ('3000', '1404'),
+    '3013': ('3000', '1405'),
+    '3014': ('3000', '1406'),
+    '3015': ('3000', '1407'),
+    '3016': ('3000', '40013'),
+    '3017': ('3000', '1408'),
+    '3018': ('3000', '1415'),
+    '3021': ('3001', '1415'),
+    '3023': ('3000', '1402'),
+    '3025': ('3001', '1409'),
+    '3030': ('3220', '40041'),
+    '3116': ('3090', '40101'),
+    '3117': ('3290', '40054'),
+    '3118': ('3090', '40008'),
+    '3120': ('3290', '40002'),
+    '3122': ('3290', '40022'),
+    '3910': ('3910', '40001'),
+    '4245': ('7760', '40015'),
+    '4645': ('4642', '40024'),
+    '6843': ('7320', '40041'),
+    '6844': ('7320', '40041'),
+    '7741': ('7702', '40029'),
+    '7746': ('7701', '40026'),
+    '8995': ('1909', '0'),
+}
+
 
 class bcolors:
     RESET = '\033[0m'
@@ -26,6 +63,57 @@ class bcolors:
 
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+
+def getNum(val):
+    if val is None:
+        return 0
+    try:
+        return int(val)
+    except ValueError:
+        return 0
+
+
+class Trans:
+    def __init__(self, data, text, amount, isMamut=False):
+        # data: K-3014-25
+        #       25-K-3014
+        #       K-3014-40804
+
+        # match again old format
+        m = re.match(r'^([KD])-([\d_]+)(?:-(25|15|__))?$', data)
+        if m is not None:
+            self.type = m.group(1)
+            self.account = m.group(2)
+            self.vat = getNum(m.group(3)) or 0
+            self.project = 0
+
+        else:
+            # new format
+            m = re.match(r'^(?:(\d+)-)?([KD])-([\d_]+)(?:-([\d_]+))?$', data)
+            if m is None:
+                raise ValueError("Invalid data when parsing Trans: %s" % data)
+            self.type = m.group(2)
+            self.account = m.group(3)
+            self.vat = getNum(m.group(1)) or 0
+            self.project = getNum(m.group(4)) or 0
+
+        self.text = text
+        self.amount_positive = getNum(amount)
+        self.netto_positive = round(self.amount_positive / (1 + self.vat/100.0), 2)
+
+        self.modifier = -1 if self.type == 'K' else 1
+        self.amount = self.amount_positive * self.modifier
+
+        if isMamut:
+            self.transformFromMamut()
+
+    def transformFromMamut(self):
+        if self.account in account_map:
+            d = account_map[self.account]
+            self.account = d[0]
+            self.project = d[1]
+
 
 csv_default_line = [
     'GBAT10',
@@ -51,7 +139,7 @@ csv_default_line = [
     '', # 20 = beskrivelse hovedbok
     '', # 21 = beskrivelse reskontro
     '0', # rentefakturering
-    '0', # prosjekt
+    '0', # 23 = prosjekt
     '1', # avdeling
     '0', # betalingsbetingelse
     'T', # 26 = brutto? (T = bruk neste beløp i kombinasjon med MVA, F = ikke beregn MVA)
@@ -68,6 +156,7 @@ CSV_INDEX_VAT = 7
 CSV_INDEX_NETTO = 8
 CSV_INDEX_DESC1 = 20
 CSV_INDEX_DESC2 = 21
+CSV_INDEX_PROJECT = 23
 CSV_INDEX_CALC_VAT = 26
 CSV_INDEX_BRUTTO = 27
 
@@ -77,26 +166,30 @@ VAT_CODES = {
     25: 10
 }
 
-DATA_FILE_IN = 'reports.json'
+DATA_FILE_IN = '../z_www/reports.json'
 DATA_FILE_OUT = 'bilag.csv'
 
-DEVIATION_ACCOUNT = '8995'
-
-def getNum(val):
-    try:
-        return int(val)
-    except ValueError:
-        return 0
+DEVIATION_ACCOUNT = '1909'
 
 class GenerateCSV():
-    def __init__(self, cyb):
+    def __init__(self, cyb, useFile=True):
         self.nextId = cyb.nextId
+        self.useFile = useFile
         self.cyb = cyb
-        self.csv_f = open(DATA_FILE_OUT, 'w', encoding="iso-8859-1")
+        if self.useFile:
+            self.csv_f = open(DATA_FILE_OUT, 'w', encoding="iso-8859-1")
+        else:
+            self.csv_f = io.StringIO()
         self.csv = csv.writer(self.csv_f, delimiter=';', quoting=csv.QUOTE_NONE)
 
     def finish(self):
-        self.csv_f.close()
+        if self.useFile:
+            self.csv_f.close()
+
+    def getBuffer(self):
+        if self.useFile:
+            raise Exception("Can not get buffer for file writing")
+        return self.csv_f
 
     def addZ(self, z):
         znr = z.genZNr()
@@ -105,20 +198,21 @@ class GenerateCSV():
             # TODO: validate account
             # TODO: validate VAT
 
-            vat_code = VAT_CODES[item['vat']]
+            vat_code = VAT_CODES[item.vat]
 
             line = list(csv_default_line)
-            line[CSV_INDEX_BNR] = self.nextId
+            line[CSV_INDEX_BNR] = self.nextId - LEDGER_SERIES
             line[CSV_INDEX_BDATE] = z.date
             line[CSV_INDEX_BPERIOD] = z.period
             line[CSV_INDEX_BYEAR] = self.cyb.year
-            line[CSV_INDEX_ACCOUNT] = item['account']
+            line[CSV_INDEX_ACCOUNT] = item.account
             line[CSV_INDEX_VAT] = vat_code
-            line[CSV_INDEX_NETTO] = item['netto']
-            line[CSV_INDEX_DESC1] = "%s %s" % (znr, item['text'])
+            line[CSV_INDEX_NETTO] = item.netto_positive * item.modifier
+            line[CSV_INDEX_DESC1] = "%s %s" % (znr, item.text)
             line[CSV_INDEX_DESC2] = line[CSV_INDEX_DESC1]
+            line[CSV_INDEX_PROJECT] = item.project
             line[CSV_INDEX_CALC_VAT] = 'T'
-            line[CSV_INDEX_BRUTTO] = item['amount']
+            line[CSV_INDEX_BRUTTO] = item.amount
 
             self.csv.writerow(line)
 
@@ -132,12 +226,29 @@ class Z():
         self.data = data
         self.selected = False
 
+        self.sales = self.getSalesOrDebet(data['sales'])
+        self.debet = self.getSalesOrDebet(data['debet'])
+        self.isMamut = self.isMamut()
+
         self.date = self.getDate()
         self.period = int(self.date[4:6])
 
         self.index = -1
         self.subindex = -1
         self.json_index = None
+
+    def getSalesOrDebet(self, data):
+        ret = []
+        for item in data:
+            ret.append(Trans(item[0], item[1], item[2], self.isMamut))
+        return ret
+
+    def isMamut(self):
+        # assume old format (Mamut) if no projects are known
+        for item in self.sales + self.debet:
+            if item.project != 0:
+                return False
+        return True
 
     def getDate(self):
         """Konverter 'Tirsdag dd.mm.yyyy' til 'yyyymmdd'"""
@@ -153,8 +264,8 @@ class Z():
 
     def getTotalSales(self):
         sum = 0
-        for item in self.data['sales']:
-            sum += (-1 if item[0][0] == 'K' else 1) * getNum(item[2])
+        for item in self.sales:
+            sum += item.amount
         return sum
 
     def genZNr(self):
@@ -164,33 +275,18 @@ class Z():
     def validateZ(self):
         """Sjekker om kredit og debet går opp i hverandre"""
         sum = 0
-        for item in self.data['sales'] + self.data['debet']:
-            sum += (-1 if item[0][0] == 'K' else 1) * getNum(item[2])
+        for item in self.sales + self.debet:
+            sum += item.amount
 
         return sum == 0
 
     def getLines(self):
-        lines = []
-
-        for item in self.data['sales'] + self.data['debet']:
-            modifier = -1 if item[0][0] == 'K' else 1
-            x = {
-                'text': item[1],
-                'modifier': modifier,
-                'account': item[0][2:6],
-                'vat': 0 if len(item[0]) < 9 else getNum(item[0][7:9]),
-                'amount': modifier * getNum(item[2])
-            }
-
-            x['netto'] = round(x['amount'] / (1 + x['vat']/100.0), 2)
-            lines.append(x)
-
-        return lines
+        return self.sales + self.debet
 
     def getDeviation(self):
         for line in self.getLines():
-            if line['account'] == DEVIATION_ACCOUNT:
-                return line['amount']
+            if line.account == DEVIATION_ACCOUNT:
+                return line.amount_positive
         return 0
 
 class ZGroup():
@@ -213,13 +309,14 @@ class ZGroup():
         return False
 
 
-class CYBMamutImport():
+class CYBTripletexImport():
     def __init__(self):
         self.nextId = 1
         self.year = 2015
         self.json = None # initialized by loadJSON
         self.zgroups = None # initialized by loadJSON
         self.selected = None # initialized by loadJSON
+        self.tripletex = Tripletex()
 
     def loadJSON(self, all=False):
         f = open(DATA_FILE_IN, 'r')
@@ -260,17 +357,20 @@ class CYBMamutImport():
                 zi += 1
             groupi += 1
 
-    def export(self):
+    def export(self, importCSV=False):
         """Eksporter Z-rapporter som ligger i self.selected"""
         if len(self.selected) == 0:
             return None
 
         exported = []
 
-        writer = GenerateCSV(self)
+        writer = GenerateCSV(self, useFile=not importCSV)
         for z in self.selected:
             writer.addZ(z)
         writer.finish()
+
+        if importCSV:
+            self.tripletex.import_gbat10(writer.getBuffer().getvalue())
 
         self.nextId = writer.nextId
         for z in self.selected:
@@ -334,9 +434,9 @@ class PromptHelper():
                 if z.selected:
                     prefix = bcolors.GREEN + prefix
                 elif si == 0:
-                    prefix = bcolors.BLUE + prefix
-                else:
                     prefix = bcolors.GRAY + prefix
+                else:
+                    prefix = bcolors.BLUE + prefix
                 suffix = bcolors.RESET
 
                 print("%s %s%7g%6g %s%s" % (prefix, z.data['builddate'], z.getTotalSales(), z.getDeviation(), z.data['type'], suffix))
@@ -355,7 +455,7 @@ class PromptHelper():
             print("--------------------------------------------------------------------------------")
         i = self.cyb.nextId
         for z in self.cyb.selected:
-            print("K%d  %s (%s)" % (i, z.genZNr(), z.data['date']))
+            print("%d  %s (%s)" % (i, z.genZNr(), z.data['date']))
             i += 1
 
     def show_help(self):
@@ -365,21 +465,21 @@ class PromptHelper():
         print("  add <x>   Klargjør rapport (kan sløyfe 'add' i kommandoen)")
         print("  pop       Fjern siste rapport")
         print("  save      Generer importeringsfil")
-        print("  num <n>   Sett ny K-nr som første nr")
+        print("  num <n>   Sett ny bilagsnr som første nr")
         print("  show <x>  Vis konteringer for en rapport")
         print("  hide <x>  Fjern rapport permanent fra lista")
         print("  reload    Nullstiller lister og laster data på nytt ('reload all' laster alt)")
         print("  quit      Avslutt (evt. trykk Ctrl+D)")
         print("")
         print("Trykk enter for å se status/liste/hjelp")
-        print("Neste K-nr: %d" % (self.cyb.nextId + len(self.cyb.selected)))
+        print("Neste bilagsnr: %d" % (self.cyb.nextId + len(self.cyb.selected)))
         print("")
 
     def show_z_lines(self, z, knr = None):
         znr = z.genZNr()
-        k = ("%sK%d%s " % (bcolors.BLUE, knr, bcolors.RESET)) if knr is not None else ""
+        k = ("%s%d%s " % (bcolors.BLUE, knr, bcolors.RESET)) if knr is not None else ""
         for line in z.getLines():
-            print("%s%s: %s   %+2s%%  %6d   %s" % (k, znr, line['account'], line['vat'], line['amount'], line['text']))
+            print("%s%s: %+5s %s   %+2s%%  %6d   %s" % (k, znr, line.project, line.account, line.vat, line.amount, line.text))
 
 class MyPrompt(Cmd):
     def __init__(self, cyb):
@@ -437,7 +537,7 @@ class MyPrompt(Cmd):
             return
 
         print("")
-        print("Fullført - %s kan nå importeres i Mamut" % DATA_FILE_OUT)
+        print("Fullført - %s kan nå importeres" % DATA_FILE_OUT)
         print("")
 
         while True:
@@ -458,7 +558,43 @@ class MyPrompt(Cmd):
 
         else:
             print("")
-            print("Neste K-nr: %d" % self.cyb.nextId)
+            print("Neste bilagsnr: %d" % self.cyb.nextId)
+
+    def do_import(self, args):
+        """Importer konteringslinjer for de valgte Z-rapportene til Tripletex"""
+        print("")
+        print("                        Importerer følgende bilag")
+        print("--------------------------------------------------------------------------------")
+        self.helper.list_selected(header=False)
+
+        exported = self.cyb.export(importCSV=True)
+        if exported is None:
+            print("Ingen bilag er valgt!")
+            return
+
+        print("")
+        print("Fullført - alle bilag ble import til Tripletex")
+        print("")
+
+        while True:
+            sys.stdout.write("Skal vi fjerne Z-rapportene fra lista? (skriv 'hide' eller 'skip'): ")
+            val = input()
+
+            if val == 'hide' or val == 'skip':
+                break
+
+            print("Ugyldig verdi, prøv igjen")
+
+        if val == 'hide':
+            hide = []
+            for z in exported:
+                hide = hide + z.group.zlist
+            self.cyb.hide(hide)
+            self.do_reload("")
+
+        else:
+            print("")
+            print("Neste bilagsnr: %d" % self.cyb.nextId)
 
     def do_show(self, args):
         """Vis konteringslinjer for en Z-rapport"""
@@ -470,14 +606,14 @@ class MyPrompt(Cmd):
             return
 
     def do_num(self, args):
-        """Vis eller sett første K-nummer"""
+        """Vis eller sett første bilagsnummer"""
         if args == '':
-            print("Første K-nummer: K%d" % self.cyb.nextId)
+            print("Første bilagsnummer: %d" % self.cyb.nextId)
             return
 
         try:
             self.cyb.nextId = int(args)
-            print("Første K-nummer satt til K%d" % self.cyb.nextId)
+            print("Første bilagsnummer satt til %d" % self.cyb.nextId)
         except ValueError:
             print("Ugyldig verdi")
 
@@ -528,16 +664,23 @@ class MyPrompt(Cmd):
         self.helper.show_help()
 
     def getNum(self):
-        """Spør etter første K-nummer som skal brukes"""
-        while True:
-            sys.stdout.write("Nummer for neste ledige K-nummer i Mamut: ")
-            num = input()
+        """Finn første bilagsnummer som skal brukes"""
+        try:
+            val = self.cyb.tripletex.get_next_ledger_number(2015) # TODO: dynamic year
+            self.cyb.nextId = val
+            print("Nummer for neste oppgjør: %d" % val)
+        except LedgerNumberFailed:
+            print("Klarte ikke å hente bilagsnr fra Tripletex")
 
-            try:
-                self.cyb.nextId = int(num)
-                break
-            except ValueError:
-                print("Ugyldig verdi, prøv igjen")
+            while True:
+                sys.stdout.write("Nummer for neste ledige bilagsnummer for oppgjør i Tripletex: ")
+                num = input()
+
+                try:
+                    self.cyb.nextId = int(num)
+                    break
+                except ValueError:
+                    print("Ugyldig verdi, prøv igjen")
 
     def getInputIndex(self, args, showmsg=True):
         """Parse index:subindex"""
@@ -557,14 +700,14 @@ class MyPrompt(Cmd):
         self.do_help("")
 
 if __name__ == '__main__':
-    cyb = CYBMamutImport()
+    cyb = CYBTripletexImport()
     cyb.loadJSON()
 
     prompt = MyPrompt(cyb)
 
     print("--------------------------------------------------------------------------------")
-    print("          Generering av importeringsfil til Mamtu for Z-rapporter")
-    print("             System laget av kasserer Henrik Steen våren 2015")
+    print("         Generering av importeringsfil til Tripletex for Z-rapporter")
+    print("         System laget av kasserer Henrik Steen våren og høsten 2015")
     print("                 se http://github.com/cybrairai/okotools")
     print("--------------------------------------------------------------------------------")
     print("")
