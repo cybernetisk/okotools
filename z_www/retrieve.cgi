@@ -20,6 +20,7 @@ def printHeader():
     print "Content-Type: text/plain"
     print
 
+
 def getDataOrExit():
     form = cgi.FieldStorage()
     if 'data' not in form:
@@ -94,16 +95,16 @@ def get_cash_table(data):
 
     return "\n\hline".join(ret)
 
-def generatePDF(data):
-    f = open('ny.tex', 'w')
+def generatePDF(data, filename):
+    f = open('archive/%s.tex' % filename, 'w')
     data = data.encode('utf-8')
     f.write(data)
     f.close()
 
-    p = subprocess.Popen(["pdflatex", "ny.tex"], stdout=subprocess.PIPE)
+    p = subprocess.Popen(["pdflatex", "%s.tex" % filename], stdout=subprocess.PIPE, cwd=os.path.abspath('archive'))
     out, err = p.communicate()
 
-    print 'http://cyb.no/okonomi/z/ny.pdf';
+    print 'http://cyb.no/okonomi/z/archive/%s.pdf' % filename;
 
 
 def exportJSON(data):
@@ -195,6 +196,9 @@ tex = tex.replace("VAR-SALES-AND-DEBET", trans)
 
 tex = tex.replace("VAR-CASH", get_cash_table(data['cash']))
 
-generatePDF(tex)
+prettydate = ''.join(data['date'][-10:].split('.')[::-1])
+prettybuilddate = ''.join(data['builddate'][:10].split('.')[::-1]) + '_' + data['builddate'][11:13] + data['builddate'][14:16]
+filename = '%s-%s-%s' % (prettydate, re.sub(r'[^a-zA-Z0-9]', '_', ztext), prettybuilddate)
+generatePDF(tex, filename)
 
 exportJSON(data)
