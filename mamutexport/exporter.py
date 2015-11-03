@@ -2,15 +2,17 @@
 # -*- coding: utf-8 -*-
 import csv
 import pymssql
+import time
 
 server = "localhost:49313"
 database = "Client00010001"
 
+date_now = time.strftime("%Y%m%d")
 
 def writedata(data):
     f2 = open('result.csv', 'w', encoding="utf-8")
     w = csv.writer(f2, delimiter=',', quoting=csv.QUOTE_ALL, lineterminator="\n")
-    w.writerow(["Konto", "Spesifisering", "Avdeling", "Prosjekt", "Type", "År", "Semester", "Beløp"])
+    w.writerow(["Konto", "Spesifisering", "Avdeling", "Prosjekt", "Type", "Versjon", "År", "Semester", "Beløp"])
 
     for row in data:
         amount = str(row['amount']).replace(".", ",")
@@ -20,6 +22,7 @@ def writedata(data):
             row['avd'],
             row['prosj'],
             "Regnskap",
+            date_now,
             row['year'],
             row['sem'],
             amount])
