@@ -7,13 +7,14 @@ from cmd import Cmd
 import json
 import time
 import io
-from tripletex import Tripletex, LedgerNumberFailed
+from .tripletex import Tripletex, LedgerNumberFailed
 
 LEDGER_SERIES = 80000
 
 # support for ANSI color codes
 try:
     import colorama
+
     colorama.init()
 except:
     pass
@@ -100,15 +101,15 @@ class Trans:
 
         self.text = text
         self.amount_positive = getNum(amount)
-        self.netto_positive = round(self.amount_positive / (1 + self.vat/100.0), 2)
+        self.netto_positive = round(self.amount_positive / (1 + self.vat / 100.0), 2)
 
         self.modifier = -1 if self.type == 'K' else 1
         self.amount = self.amount_positive * self.modifier
 
         if isMamut:
-            self.transformFromMamut()
+            self.transform_from_mamut()
 
-    def transformFromMamut(self):
+    def transform_from_mamut(self):
         if self.account in account_map:
             d = account_map[self.account]
             self.account = d[0]
@@ -117,34 +118,34 @@ class Trans:
 
 csv_default_line = [
     'GBAT10',
-    '', # 1 = bilagsnr
-    '', # 2 = bilagsdato (yyyymmdd)
-    '6', # bilagstype (6 = kasse, 9 = diverse)
-    '', # 4 = periode
-    '', # 5 = regnskapsår
-    '', # 6 = konto
-    '', # 7 = mva (1 = ingen, 30 = 25 % utgående, 371 = 15 % utgående)
-    '', # 8 = saldo (netto, altså uten evt. mva)
-    '0', # kundenr
-    '0', # leverandørnr
-    '', # kontaktnavn
-    '', # adresse
-    '', # postnr
-    '', # poststed
-    '', # fakturanr
-    '', # kid
-    '0', # forfallsdato
-    '', # (not in use)
-    '', # bankkonto
-    '', # 20 = beskrivelse hovedbok
-    '', # 21 = beskrivelse reskontro
-    '0', # rentefakturering
-    '0', # 23 = prosjekt
-    '1', # avdeling
-    '0', # betalingsbetingelse
-    'T', # 26 = brutto? (T = bruk neste beløp i kombinasjon med MVA, F = ikke beregn MVA)
-    '', # 27 = bruttosum
-    '' # ekstra felt for å sikre semikolon på slutten
+    '',  # 1 = bilagsnr
+    '',  # 2 = bilagsdato (yyyymmdd)
+    '6',  # bilagstype (6 = kasse, 9 = diverse)
+    '',  # 4 = periode
+    '',  # 5 = regnskapsår
+    '',  # 6 = konto
+    '',  # 7 = mva (1 = ingen, 30 = 25 % utgående, 371 = 15 % utgående)
+    '',  # 8 = saldo (netto, altså uten evt. mva)
+    '0',  # kundenr
+    '0',  # leverandørnr
+    '',  # kontaktnavn
+    '',  # adresse
+    '',  # postnr
+    '',  # poststed
+    '',  # fakturanr
+    '',  # kid
+    '0',  # forfallsdato
+    '',  # (not in use)
+    '',  # bankkonto
+    '',  # 20 = beskrivelse hovedbok
+    '',  # 21 = beskrivelse reskontro
+    '0',  # rentefakturering
+    '0',  # 23 = prosjekt
+    '1',  # avdeling
+    '0',  # betalingsbetingelse
+    'T',  # 26 = brutto? (T = bruk neste beløp i kombinasjon med MVA, F = ikke beregn MVA)
+    '',  # 27 = bruttosum
+    ''  # ekstra felt for å sikre semikolon på slutten
 ]
 
 CSV_INDEX_BNR = 1
@@ -170,6 +171,7 @@ DATA_FILE_IN = '../z_www/reports.json'
 DATA_FILE_OUT = 'bilag.csv'
 
 DEVIATION_ACCOUNT = '1909'
+
 
 class GenerateCSV():
     def __init__(self, cyb, useFile=True):
@@ -289,6 +291,7 @@ class Z():
                 return line.amount_positive
         return 0
 
+
 class ZGroup():
     def __init__(self, sid):
         self.groupindex = None
@@ -313,9 +316,9 @@ class CYBTripletexImport():
     def __init__(self):
         self.nextId = 1
         self.year = 2015
-        self.json = None # initialized by loadJSON
-        self.zgroups = None # initialized by loadJSON
-        self.selected = None # initialized by loadJSON
+        self.json = None  # initialized by loadJSON
+        self.zgroups = None  # initialized by loadJSON
+        self.selected = None  # initialized by loadJSON
         self.tripletex = Tripletex()
 
     def loadJSON(self, all=False):
@@ -439,7 +442,8 @@ class PromptHelper():
                     prefix = bcolors.BLUE + prefix
                 suffix = bcolors.RESET
 
-                print("%s %s%7g%6g %s%s" % (prefix, z.data['builddate'], z.getTotalSales(), z.getDeviation(), z.data['type'], suffix))
+                print("%s %s%7g%6g %s%s" % (
+                    prefix, z.data['builddate'], z.getTotalSales(), z.getDeviation(), z.data['type'], suffix))
 
                 si += 1
 
@@ -475,11 +479,13 @@ class PromptHelper():
         print("Neste bilagsnr: %d" % (self.cyb.nextId + len(self.cyb.selected)))
         print("")
 
-    def show_z_lines(self, z, knr = None):
+    def show_z_lines(self, z, knr=None):
         znr = z.genZNr()
         k = ("%s%d%s " % (bcolors.BLUE, knr, bcolors.RESET)) if knr is not None else ""
         for line in z.getLines():
-            print("%s%s: %+5s %s   %+2s%%  %6d   %s" % (k, znr, line.project, line.account, line.vat, line.amount, line.text))
+            print("%s%s: %+5s %s   %+2s%%  %6d   %s" % (
+                k, znr, line.project, line.account, line.vat, line.amount, line.text))
+
 
 class MyPrompt(Cmd):
     def __init__(self, cyb):
@@ -509,7 +515,8 @@ class MyPrompt(Cmd):
             self.helper.show_z_lines(z, knr)
 
             print("")
-            print("Kontroller at papirskjemaet ble generert %s" % (bcolors.YELLOW + str(z.data['builddate']) + bcolors.RESET))
+            print("Kontroller at papirskjemaet ble generert %s" % (
+                bcolors.YELLOW + str(z.data['builddate']) + bcolors.RESET))
             print("Skriv 'pop' for å angre")
 
         except ValueError:
@@ -540,6 +547,7 @@ class MyPrompt(Cmd):
         print("Fullført - %s kan nå importeres" % DATA_FILE_OUT)
         print("")
 
+        val = None
         while True:
             sys.stdout.write("Skal vi fjerne Z-rapportene fra lista? (skriv 'hide' eller 'skip'): ")
             val = input()
@@ -576,6 +584,7 @@ class MyPrompt(Cmd):
         print("Fullført - alle bilag ble import til Tripletex")
         print("")
 
+        val = None
         while True:
             sys.stdout.write("Skal vi fjerne Z-rapportene fra lista? (skriv 'hide' eller 'skip'): ")
             val = input()
@@ -640,7 +649,7 @@ class MyPrompt(Cmd):
 
     def do_reload(self, args):
         """Laster all data på nytt"""
-        self.cyb.loadJSON(all=args=='all')
+        self.cyb.loadJSON(all=args == 'all')
 
         self.do_help("")
         print("Data ble lastet inn på nytt")
@@ -666,7 +675,7 @@ class MyPrompt(Cmd):
     def getNum(self):
         """Finn første bilagsnummer som skal brukes"""
         try:
-            val = self.cyb.tripletex.get_next_ledger_number(2015) # TODO: dynamic year
+            val = self.cyb.tripletex.get_next_ledger_number(2015)  # TODO: dynamic year
             self.cyb.nextId = val
             print("Nummer for neste oppgjør: %d" % val)
         except LedgerNumberFailed:
@@ -698,6 +707,7 @@ class MyPrompt(Cmd):
     def emptyline(self):
         """En tom linje gir hjelp"""
         self.do_help("")
+
 
 if __name__ == '__main__':
     cyb = CYBTripletexImport()

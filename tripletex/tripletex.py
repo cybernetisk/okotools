@@ -4,20 +4,16 @@
 
 import csv
 import requests
-import http
+import http.cookiejar
 import urllib.parse
 import re
-import time
-import sys
-import os.path
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 
 # settings are stored in settings.py, example:
 # username = "username"
 # password = "password"
-from settings import *
-
+from .settings import *
 
 SEMESTERS = (
     {'id': 1, 'text': 'vår', 'start': '-01-01', 'end': '-06-30'},
@@ -25,7 +21,7 @@ SEMESTERS = (
 )
 
 
-class TripletexBase():
+class TripletexBase:
     session = None
 
     def __init__(self, cookies_file="cookies.txt"):
@@ -72,24 +68,30 @@ class TripletexBase():
         s.cookies.save()
         return r
 
-    def get_login_data(self):
+    @staticmethod
+    def get_login_data():
         return 'username=%s&password=%s&act=login&contentUrl=&site=no&recaptcha=false' % (
             urllib.parse.quote(username), urllib.parse.quote(password))
 
     def do_login(self):
         r = self.get_session_object().post('https://tripletex.no/execute/login',
-            data=self.get_login_data(),
-            headers={'content-type': 'application/x-www-form-urlencoded'},
-            allow_redirects=False)
+                                           data=self.get_login_data(),
+                                           headers={'content-type': 'application/x-www-form-urlencoded'},
+                                           allow_redirects=False)
 
         if r.status_code != 302:
             raise LoginFailedException(r.text)
 
 
 class Tripletex(TripletexBase):
-    def get_url_ledger(self, year):
+    @staticmethod
+    def get_url_ledger(year):
         """year = 2015"""
-        return 'https://tripletex.no/execute/viewJournal?javaClass=no.tripletex.tcp.web.JournalForm&documentationComponent=145&contextId=2845076&isExpandedFilter=true&period.startDate=%d-01-01&period.endOfPeriodDate=%d-12-31&period.periodType=1&=%d&registeredById=-1&updatedById=-1&numberSeriesId=89077&startNumber=&endNumber=&accountId=-1&minAmountString=&maxAmountString=&amountType=2&ascending=false&rowCount=2&act=content&scope=ajaxContent' % (year, year, year)
+        return 'https://tripletex.no/execute/viewJournal?javaClass=no.tripletex.tcp.web.JournalForm&' + \
+               'documentationComponent=145&contextId=2845076&isExpandedFilter=true&period.startDate=%d-01-01&' + \
+               'period.endOfPeriodDate=%d-12-31&period.periodType=1&=%d&registeredById=-1&updatedById=-1&' + \
+               'numberSeriesId=89077&startNumber=&endNumber=&accountId=-1&minAmountString=&maxAmountString=&' + \
+               'amountType=2&ascending=false&rowCount=2&act=content&scope=ajaxContent' % (year, year, year)
 
     def get_ledger(self, year):
         return self.request_get(self.get_url_ledger(year))
@@ -222,18 +224,17 @@ class Tripletex(TripletexBase):
             raise TripletexException("Could not fetch project list")
 
         project_list = []
-        i = 0
         for tr in re.findall(r'<tr.*?>(.+?)</tr>', r.text):
             tdlist = re.findall(r'<td.*?>(.+?)</td>', tr)
 
             if len(tdlist) == 7:
-                id = re.search(r'projectId=(\d+)&', tdlist[1]).group(1)
+                project_id = re.search(r'projectId=(\d+)&', tdlist[1]).group(1)
 
                 start_and_end = re.sub(r'<[^>]*?>', '', tdlist[5])
                 m = re.match(r'^\s*(.+?)( (.+?))?\s*$', start_and_end)
 
                 project_list.append({
-                    'id': id,
+                    'id': project_id,
                     'text': re.sub(r'  +', ' ', re.sub(r'<[^>]*?>', '', tdlist[2]).strip()),
                     'start': m.group(1),
                     'end': m.group(3)
@@ -241,19 +242,20 @@ class Tripletex(TripletexBase):
 
         return self.__project_list_find_parent(project_list)
 
-    def __project_list_find_parent(self, project_list):
+    @staticmethod
+    def __project_list_find_parent(project_list):
         levels = {-1: ''}
         next_id = 1
         new_project_list = []
 
         for project in project_list:
-            level = int(len(re.sub(r'^((\. )*).*', r'\1', project['text']))/4)
+            level = int(len(re.sub(r'^((\. )*).*', r'\1', project['text'])) / 4)
 
-            parent = levels[level-1]
+            parent = levels[level - 1]
 
             m = re.match(r'^(\. )*((\d+) )?(.*)', project['text'])
             if not m:
-                raise Exception('could not parse project line: ' % project['text'])
+                raise Exception('could not parse project line: %s' % project['text'])
 
             text = m.group(4)
 
@@ -281,8 +283,8 @@ class Tripletex(TripletexBase):
         q['contextId'] = "2845076"
         q['viewMode'] = "0"
         q['isExpandedFilter'] = "true"
-        q['period.startDate'] = date_start  #"2014-01-01"
-        q['period.endOfPeriodDate'] = date_end  #"2015-12-31"
+        q['period.startDate'] = date_start  # "2014-01-01"
+        q['period.endOfPeriodDate'] = date_end  # "2015-12-31"
         q['period.periodType'] = "1"
         q['selectedCustomerId'] = "-1"
         q['selectedVendorId'] = "-1"
@@ -332,8 +334,8 @@ class Tripletex(TripletexBase):
         q['documentationComponent'] = '259'
         q['contextId'] = '2845076'
         q['isExpandedFilter'] = 'true'
-        q['period.startDate'] = date_start  #"2014-01-01"
-        q['period.endOfPeriodDate'] = date_end  #"2015-12-31"
+        q['period.startDate'] = date_start  # "2014-01-01"
+        q['period.endOfPeriodDate'] = date_end  # "2015-12-31"
         q['period.periodType'] = '4'
         q['selectedCustomerId'] = '-1'
         q['selectedProjectManagerId'] = '-1'
@@ -391,7 +393,7 @@ class Tripletex(TripletexBase):
 
         files = [('file', ('bilag.csv', data.encode('utf-8'), 'text/plain')), ]
         r = self.request_post('https://tripletex.no/execute/uploadCentral?contextId=2845076', files=files)
-        #[{"id":"29027318","revision":"1","name":"bilag.csv","size":"0","readableSize":"0","uid":"0","checksum":"da39a3ee5e6b4b0d3255bfef95601890afd80709"}]
+        # [{"id":"29027318","revision":"1","name":"bilag.csv","size":"0","readableSize":"0","uid":"0","checksum":"da39a3ee5e6b4b0d3255bfef95601890afd80709"}]
 
         if r.status_code != 200:
             raise UploadFailedException(r.text)
@@ -462,81 +464,3 @@ class LedgerNumberFailed(TripletexException):
 
 class UploadFailedException(TripletexException):
     pass
-
-
-def get_accounts_list(tripletex):
-    accounts = tripletex.get_accounts()
-    ret = ''
-    for account in accounts:
-        ret += '%s\t%s\t%s\t%s\n' % (
-            account['id'],
-            account['text'],
-            account['group'],
-            int(account['active'])
-        )
-    return ret
-
-def get_accounts_report(tripletex, year, sem):
-    project_number = 40041
-
-    project_id = tripletex.get_project_id(project_number)
-    result = tripletex.get_report_result(date_start=str(year)+sem['start'], date_end=str(year)+sem['end'], project_id=project_id)
-
-    ret = ''
-    for account in result:
-        ret += '%s\t\t%s\t\t\t%s\t%s\tregnskap\t%s\t%s\n' % (project_number, account[0], year, sem['text'],
-                                                          time.strftime('%Y%m%d'), str(account[1]).replace('.', ','))
-    return ret
-
-def get_projects_report(tripletex, year, sem):
-    result = tripletex.get_report_projects(date_start=str(year)+sem['start'], date_end=str(year)+sem['end'])
-
-    ret = ''
-    for project in result:
-        ret += '%s\t\t\t%s\t%s\tregnskap\t%s\t%s\t%s\n' % (project[0], year, sem['text'], time.strftime('%Y%m%d'),
-                                                      str(project[2]).replace('.', ','),
-                                                      str(project[3]).replace('.', ','))
-    return ret
-
-def get_projects_list(tripletex):
-    ret = ''
-    projects = tripletex.get_project_list()
-    for project in projects:
-        ret += '%s\t%s\t%s\n' % (project['parent'], project['number'], project['text'])
-    return ret
-
-if __name__ == '__main__':
-    tt = Tripletex()
-
-    home = os.path.expanduser('~')
-    path = home + '/Dropbox/Økonomigruppa/8 Budsjett og regnskap (internt)/2016/'
-
-    with open(path + 'accounts_list.txt', 'w') as f:
-        f.write(get_accounts_list(tt))
-    print('Exported accounts list')
-
-    with open(path + 'projects_list.txt', 'w') as f:
-        f.write(get_projects_list(tt))
-    print('Exported projects list')
-
-    with open(path + 'accounts_report.txt', 'w') as f:
-        f.write(get_accounts_report(tt, 2014, SEMESTERS[0]))
-        f.write(get_accounts_report(tt, 2014, SEMESTERS[1]))
-        f.write(get_accounts_report(tt, 2015, SEMESTERS[0]))
-        f.write(get_accounts_report(tt, 2015, SEMESTERS[1]))
-    print('Exported accounts report')
-
-    with open(path + 'projects_report.txt', 'w') as f:
-        f.write(get_projects_report(tt, 2014, SEMESTERS[0]))
-        f.write(get_projects_report(tt, 2014, SEMESTERS[1]))
-        f.write(get_projects_report(tt, 2015, SEMESTERS[0]))
-        f.write(get_projects_report(tt, 2015, SEMESTERS[1]))
-    print('Exported projects report')
-
-    print('Reports saved to files in %s' % path)
-
-    #print("Testing Tripletex-connection:")
-    #num = tt.get_next_ledger_number(2015)
-    #print("Next ledger number: %d" % num)
-
-    #tt.import_gbat10(open('bilag2.csv', 'r', encoding='iso-8859-1').read())
