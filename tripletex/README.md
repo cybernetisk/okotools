@@ -4,17 +4,14 @@ som vi dessverre ikke får tilgang til uten videre. Denne mappen inneholder imid
 scripts som bruker de vanlige sidene for å laste opp bilag og hente ut data. Dette er ikke
 garantert å være like stabilt som hvis vi kunne benyttet API-et.
 
+Ved bruk av scriptene her blir man spurt om brukernavn og passord til Tripletex, slik
+at den kan logge på med en personlig bruker.
+
 ## Krav
 Må ha følgende på systemet:
 * Python3
+* Python3-pakker: `pip3 install requests cookielib` (hvis nødvendig)
 * BeautifulSoup4 for Python3
-
-Må sette opp brukernavn og passord som skal brukes på Tripletex i egen fil ```settings.py```:
-
-```python
-username = "brukernavn"
-password = "passord"
-```
 
 ## Importering av kasseoppgjør
 Når kasseoppgjør genereres ved hjelp av Google Disk [forklart i eget dokument](../z_www/)

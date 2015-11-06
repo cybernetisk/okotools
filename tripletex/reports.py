@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 import os
 import time
 
-from tripletex import *
+from tripletex.tripletex import TripletexAccounts, TripletexProjects
+
+SEMESTERS = (
+    {'id': 1, 'text': 'vår', 'start': '-01-01', 'end': '-06-30'},
+    {'id': 2, 'text': 'høst', 'start': '-07-01', 'end': '-12-31'},
+)
 
 
 def get_accounts_list(tripletex):
@@ -19,10 +25,7 @@ def get_accounts_list(tripletex):
     return ret
 
 
-def get_accounts_report(tripletex, year, sem):
-    project_number = 40041
-
-    project_id = tripletex.get_project_id(project_number)
+def get_accounts_report(tripletex, year, sem, project_id, project_number):
     result = tripletex.get_report_result(date_start=str(year) + sem['start'], date_end=str(year) + sem['end'],
                                          project_id=project_id)
 
@@ -53,31 +56,35 @@ def get_projects_list(tripletex):
 
 
 if __name__ == '__main__':
-    tt = Tripletex()
+    tt_accounts = TripletexAccounts()
+    tt_projects = TripletexProjects()
+
+    main_project_number = 40041
+    main_project_id = tt_projects.get_project_id(40041)
 
     home = os.path.expanduser('~')
     path = home + '/Dropbox/Økonomigruppa/8 Budsjett og regnskap (internt)/2016/'
 
     with open(path + 'accounts_list.txt', 'w') as f:
-        f.write(get_accounts_list(tt))
+        f.write(get_accounts_list(tt_accounts))
     print('Exported accounts list')
 
     with open(path + 'projects_list.txt', 'w') as f:
-        f.write(get_projects_list(tt))
+        f.write(get_projects_list(tt_projects))
     print('Exported projects list')
 
     with open(path + 'accounts_report.txt', 'w') as f:
-        f.write(get_accounts_report(tt, 2014, SEMESTERS[0]))
-        f.write(get_accounts_report(tt, 2014, SEMESTERS[1]))
-        f.write(get_accounts_report(tt, 2015, SEMESTERS[0]))
-        f.write(get_accounts_report(tt, 2015, SEMESTERS[1]))
+        f.write(get_accounts_report(tt_accounts, 2014, SEMESTERS[0], main_project_id, main_project_number))
+        f.write(get_accounts_report(tt_accounts, 2014, SEMESTERS[1], main_project_id, main_project_number))
+        f.write(get_accounts_report(tt_accounts, 2015, SEMESTERS[0], main_project_id, main_project_number))
+        f.write(get_accounts_report(tt_accounts, 2015, SEMESTERS[1], main_project_id, main_project_number))
     print('Exported accounts report')
 
     with open(path + 'projects_report.txt', 'w') as f:
-        f.write(get_projects_report(tt, 2014, SEMESTERS[0]))
-        f.write(get_projects_report(tt, 2014, SEMESTERS[1]))
-        f.write(get_projects_report(tt, 2015, SEMESTERS[0]))
-        f.write(get_projects_report(tt, 2015, SEMESTERS[1]))
+        f.write(get_projects_report(tt_projects, 2014, SEMESTERS[0]))
+        f.write(get_projects_report(tt_projects, 2014, SEMESTERS[1]))
+        f.write(get_projects_report(tt_projects, 2015, SEMESTERS[0]))
+        f.write(get_projects_report(tt_projects, 2015, SEMESTERS[1]))
     print('Exported projects report')
 
     print('Reports saved to files in %s' % path)
