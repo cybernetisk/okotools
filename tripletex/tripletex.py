@@ -33,7 +33,7 @@ class TripletexBase:
 
         cj = http.cookiejar.MozillaCookieJar(self.cookies_file)
         try:
-            cj.load()
+            cj.load(ignore_discard=True)
         except FileNotFoundError:
             pass
 
