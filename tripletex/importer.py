@@ -231,7 +231,7 @@ class Z:
 
         self.sales = self.get_sales_or_debet(data['sales'])
         self.debet = self.get_sales_or_debet(data['debet'])
-        self.isMamut = self.isMamut()
+        self.is_mamut = self.is_mamut()
 
         self.date = self.get_date()
         self.period = int(self.date[4:6])
@@ -243,15 +243,15 @@ class Z:
     def get_sales_or_debet(self, data):
         ret = []
         for item in data:
-            ret.append(Trans(item[0], item[1], item[2], self.isMamut))
+            ret.append(Trans(item[0], item[1], item[2], self.is_mamut))
         return ret
 
-    # def is_mamut(self):
-    #    # assume old format (Mamut) if no projects are known
-    #    for item in self.sales + self.debet:
-    #        if item.project != 0:
-    #            return False
-    #    return True
+    def is_mamut(self):
+        # assume old format (Mamut) if no projects are known
+        for item in self.sales + self.debet:
+            if item.project != 0:
+                return False
+        return True
 
     def get_date(self):
         """Konverter 'Tirsdag dd.mm.yyyy' til 'yyyymmdd'"""
