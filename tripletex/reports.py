@@ -81,9 +81,3 @@ if __name__ == '__main__':
     print('Exported projects report')
 
     print('Reports saved to files in %s' % path)
-
-    # print("Testing Tripletex-connection:")
-    # num = tt.get_next_ledger_number(2015)
-    # print("Next ledger number: %d" % num)
-
-    # tt.import_gbat10(open('bilag2.csv', 'r', encoding='iso-8859-1').read())
