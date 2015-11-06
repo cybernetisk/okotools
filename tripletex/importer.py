@@ -7,7 +7,8 @@ from cmd import Cmd
 import json
 import time
 import io
-from .tripletex import Tripletex, LedgerNumberFailed
+
+from tripletex import Tripletex, LedgerNumberFailed
 
 LEDGER_SERIES = 80000
 
@@ -52,7 +53,7 @@ account_map = {
 }
 
 
-class bcolors:
+class BColors:
     RESET = '\033[0m'
 
     HEADER = '\033[95m'
@@ -66,7 +67,7 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
-def getNum(val):
+def get_num(val):
     if val is None:
         return 0
     try:
@@ -76,7 +77,7 @@ def getNum(val):
 
 
 class Trans:
-    def __init__(self, data, text, amount, isMamut=False):
+    def __init__(self, data, text, amount, is_mamut=False):
         # data: K-3014-25
         #       25-K-3014
         #       K-3014-40804
@@ -86,7 +87,7 @@ class Trans:
         if m is not None:
             self.type = m.group(1)
             self.account = m.group(2)
-            self.vat = getNum(m.group(3)) or 0
+            self.vat = get_num(m.group(3)) or 0
             self.project = 0
 
         else:
@@ -96,17 +97,17 @@ class Trans:
                 raise ValueError("Invalid data when parsing Trans: %s" % data)
             self.type = m.group(2)
             self.account = m.group(3)
-            self.vat = getNum(m.group(1)) or 0
-            self.project = getNum(m.group(4)) or 0
+            self.vat = get_num(m.group(1)) or 0
+            self.project = get_num(m.group(4)) or 0
 
         self.text = text
-        self.amount_positive = getNum(amount)
+        self.amount_positive = get_num(amount)
         self.netto_positive = round(self.amount_positive / (1 + self.vat / 100.0), 2)
 
         self.modifier = -1 if self.type == 'K' else 1
         self.amount = self.amount_positive * self.modifier
 
-        if isMamut:
+        if is_mamut:
             self.transform_from_mamut()
 
     def transform_from_mamut(self):
@@ -173,10 +174,10 @@ DATA_FILE_OUT = 'bilag.csv'
 DEVIATION_ACCOUNT = '1909'
 
 
-class GenerateCSV():
-    def __init__(self, cyb, useFile=True):
+class GenerateCSV:
+    def __init__(self, cyb, use_file=True):
         self.nextId = cyb.nextId
-        self.useFile = useFile
+        self.useFile = use_file
         self.cyb = cyb
         if self.useFile:
             self.csv_f = open(DATA_FILE_OUT, 'w', encoding="iso-8859-1")
@@ -188,15 +189,15 @@ class GenerateCSV():
         if self.useFile:
             self.csv_f.close()
 
-    def getBuffer(self):
+    def get_buffer(self):
         if self.useFile:
             raise Exception("Can not get buffer for file writing")
         return self.csv_f
 
-    def addZ(self, z):
-        znr = z.genZNr()
+    def add_z(self, z):
+        znr = z.get_z_nr()
 
-        for item in z.getLines():
+        for item in z.get_lines():
             # TODO: validate account
             # TODO: validate VAT
 
@@ -221,78 +222,78 @@ class GenerateCSV():
         self.nextId += 1
 
 
-class Z():
+class Z:
     def __init__(self, data):
         self.zindex = None
         self.group = None
         self.data = data
         self.selected = False
 
-        self.sales = self.getSalesOrDebet(data['sales'])
-        self.debet = self.getSalesOrDebet(data['debet'])
+        self.sales = self.get_sales_or_debet(data['sales'])
+        self.debet = self.get_sales_or_debet(data['debet'])
         self.isMamut = self.isMamut()
 
-        self.date = self.getDate()
+        self.date = self.get_date()
         self.period = int(self.date[4:6])
 
         self.index = -1
         self.subindex = -1
         self.json_index = None
 
-    def getSalesOrDebet(self, data):
+    def get_sales_or_debet(self, data):
         ret = []
         for item in data:
             ret.append(Trans(item[0], item[1], item[2], self.isMamut))
         return ret
 
-    def isMamut(self):
-        # assume old format (Mamut) if no projects are known
-        for item in self.sales + self.debet:
-            if item.project != 0:
-                return False
-        return True
+    # def is_mamut(self):
+    #    # assume old format (Mamut) if no projects are known
+    #    for item in self.sales + self.debet:
+    #        if item.project != 0:
+    #            return False
+    #    return True
 
-    def getDate(self):
+    def get_date(self):
         """Konverter 'Tirsdag dd.mm.yyyy' til 'yyyymmdd'"""
         date = self.data['date'][-10:].split('.')
         date.reverse()
         return ''.join(date)
 
-    def getBuildTime(self):
+    def get_build_time(self):
         """Konverter builddate til yyyymmdd HHmm"""
         date = self.data['builddate'][:10].split('.')
         date.reverse()
         return ''.join(date) + ' ' + self.data['builddate'][11:13] + self.data['builddate'][14:16]
 
-    def getTotalSales(self):
+    def get_total_sales(self):
         sum = 0
         for item in self.sales:
             sum += item.amount
         return sum
 
-    def genZNr(self):
+    def get_z_nr(self):
         """Generer tekstversjon av Z-nr"""
         return ('Z%s' % self.data['z']) if str(self.data['z']).isdigit() else self.data['z']
 
-    def validateZ(self):
+    def validate_z(self):
         """Sjekker om kredit og debet går opp i hverandre"""
-        sum = 0
+        z_sum = 0
         for item in self.sales + self.debet:
-            sum += item.amount
+            z_sum += item.amount
 
-        return sum == 0
+        return z_sum == 0
 
-    def getLines(self):
+    def get_lines(self):
         return self.sales + self.debet
 
-    def getDeviation(self):
-        for line in self.getLines():
+    def get_deviation(self):
+        for line in self.get_lines():
             if line.account == DEVIATION_ACCOUNT:
                 return line.amount_positive
         return 0
 
 
-class ZGroup():
+class ZGroup:
     def __init__(self, sid):
         self.groupindex = None
         self.sid = sid
@@ -301,27 +302,28 @@ class ZGroup():
 
     def add(self, z):
         self.zlist.append(z)
-        self.zlist.sort(key=lambda x: x.getBuildTime(), reverse=True)
-        self.date = z.getDate()
+        self.zlist.sort(key=lambda x: x.get_build_time(), reverse=True)
+        self.date = z.get_date()
         z.group = self
 
-    def isSelected(self):
+    def is_selected(self):
         for z in self.zlist:
             if z.selected:
                 return True
         return False
 
 
-class CYBTripletexImport():
+class CYBTripletexImport:
     def __init__(self):
         self.nextId = 1
         self.year = 2015
         self.json = None  # initialized by loadJSON
+        self.data = None  # initialized by loadJSON
         self.zgroups = None  # initialized by loadJSON
         self.selected = None  # initialized by loadJSON
         self.tripletex = Tripletex()
 
-    def loadJSON(self, all=False):
+    def load_json(self, show_all=False):
         f = open(DATA_FILE_IN, 'r')
         self.json = json.loads(f.read(), 'utf-8')['list']
         f.close()
@@ -334,7 +336,7 @@ class CYBTripletexImport():
         for item in self.json:
             item_i += 1
 
-            if not all and 'import_hide' in item and item['import_hide']:
+            if not show_all and 'import_hide' in item and item['import_hide']:
                 continue
 
             z = Z(item)
@@ -348,7 +350,7 @@ class CYBTripletexImport():
             zgroup.add(z)
 
         # sort it by date (and convert to list)
-        self.zgroups = sorted(self.zgroups.values(), key=lambda x: x.date + x.zlist[0].genZNr())
+        self.zgroups = sorted(self.zgroups.values(), key=lambda x: x.date + x.zlist[0].get_z_nr())
 
         # store indexes
         groupi = 0
@@ -360,20 +362,20 @@ class CYBTripletexImport():
                 zi += 1
             groupi += 1
 
-    def export(self, importCSV=False):
+    def export(self, import_csv=False):
         """Eksporter Z-rapporter som ligger i self.selected"""
         if len(self.selected) == 0:
             return None
 
         exported = []
 
-        writer = GenerateCSV(self, useFile=not importCSV)
+        writer = GenerateCSV(self, use_file=not import_csv)
         for z in self.selected:
-            writer.addZ(z)
+            writer.add_z(z)
         writer.finish()
 
-        if importCSV:
-            self.tripletex.import_gbat10(writer.getBuffer().getvalue())
+        if import_csv:
+            self.tripletex.import_gbat10(writer.get_buffer().getvalue())
 
         self.nextId = writer.nextId
         for z in self.selected:
@@ -395,7 +397,8 @@ class CYBTripletexImport():
         z.selected = False
         return z
 
-    def hide(self, zlist):
+    @staticmethod
+    def hide(zlist):
         """Skjul Z-rapporter fra lista"""
         with open(DATA_FILE_IN, 'r') as f:
             data = json.loads(f.read(), 'utf-8')
@@ -408,7 +411,7 @@ class CYBTripletexImport():
             json.dump(data, f)
 
 
-class PromptHelper():
+class PromptHelper:
     def __init__(self, cyb, prompt):
         self.cyb = cyb
         self.prompt = prompt
@@ -430,20 +433,20 @@ class PromptHelper():
                 subindex = "%d:" % si if ismultiple else "  "
 
                 if si == 0:
-                    prefix = "%2d:%s %s %-6s" % (i, subindex, zgroup.date, z.genZNr())
+                    prefix = "%2d:%s %s %-6s" % (i, subindex, zgroup.date, z.get_z_nr())
                 else:
                     prefix = "   %-18s" % subindex
 
                 if z.selected:
-                    prefix = bcolors.GREEN + prefix
+                    prefix = BColors.GREEN + prefix
                 elif si == 0:
-                    prefix = bcolors.GRAY + prefix
+                    prefix = BColors.GRAY + prefix
                 else:
-                    prefix = bcolors.BLUE + prefix
-                suffix = bcolors.RESET
+                    prefix = BColors.BLUE + prefix
+                suffix = BColors.RESET
 
                 print("%s %s%7g%6g %s%s" % (
-                    prefix, z.data['builddate'], z.getTotalSales(), z.getDeviation(), z.data['type'], suffix))
+                    prefix, z.data['builddate'], z.get_total_sales(), z.get_deviation(), z.data['type'], suffix))
 
                 si += 1
 
@@ -459,7 +462,7 @@ class PromptHelper():
             print("--------------------------------------------------------------------------------")
         i = self.cyb.nextId
         for z in self.cyb.selected:
-            print("%d  %s (%s)" % (i, z.genZNr(), z.data['date']))
+            print("%d  %s (%s)" % (i, z.get_z_nr(), z.data['date']))
             i += 1
 
     def show_help(self):
@@ -479,10 +482,11 @@ class PromptHelper():
         print("Neste bilagsnr: %d" % (self.cyb.nextId + len(self.cyb.selected)))
         print("")
 
-    def show_z_lines(self, z, knr=None):
-        znr = z.genZNr()
-        k = ("%s%d%s " % (bcolors.BLUE, knr, bcolors.RESET)) if knr is not None else ""
-        for line in z.getLines():
+    @staticmethod
+    def show_z_lines(z, knr=None):
+        znr = z.get_z_nr()
+        k = ("%s%d%s " % (BColors.BLUE, knr, BColors.RESET)) if knr is not None else ""
+        for line in z.get_lines():
             print("%s%s: %+5s %s   %+2s%%  %6d   %s" % (
                 k, znr, line.project, line.account, line.vat, line.amount, line.text))
 
@@ -496,14 +500,14 @@ class MyPrompt(Cmd):
     def do_add(self, args):
         """Legg til en Z-rapport i genereringslista"""
         try:
-            index, subindex = self.getInputIndex(args)
+            index, subindex = self.get_input_index(args)
             z = self.cyb.get(index, subindex)
 
-            if z.group.isSelected():
+            if z.group.is_selected():
                 print("FEIL: Z-rapport allerede markert")
                 return
 
-            if not z.validateZ():
+            if not z.validate_z():
                 self.helper.show_z_lines(z)
                 print("FEIL: Z-rapport summerer ikke til 0 (kredit+debet)")
                 return
@@ -511,12 +515,12 @@ class MyPrompt(Cmd):
             knr = self.cyb.nextId + len(self.cyb.selected)
             self.cyb.add(z)
 
-            print("     %s %s (%s)" % (z.genZNr(), z.data['date'], z.data['type']))
+            print("     %s %s (%s)" % (z.get_z_nr(), z.data['date'], z.data['type']))
             self.helper.show_z_lines(z, knr)
 
             print("")
             print("Kontroller at papirskjemaet ble generert %s" % (
-                bcolors.YELLOW + str(z.data['builddate']) + bcolors.RESET))
+                BColors.YELLOW + str(z.data['builddate']) + BColors.RESET))
             print("Skriv 'pop' for å angre")
 
         except ValueError:
@@ -530,7 +534,7 @@ class MyPrompt(Cmd):
             print("Det er ingen rapporter i listen å fjerne!")
             return
         removed = self.cyb.pop()
-        print("Fjernet %s (%s) fra lista" % (removed.genZNr(), removed.data['date']))
+        print("Fjernet %s (%s) fra lista" % (removed.get_z_nr(), removed.data['date']))
 
     def do_save(self, args):
         """Generer konteringslinjer for de valgte Z-rapportene"""
@@ -575,7 +579,7 @@ class MyPrompt(Cmd):
         print("--------------------------------------------------------------------------------")
         self.helper.list_selected(header=False)
 
-        exported = self.cyb.export(importCSV=True)
+        exported = self.cyb.export(import_csv=True)
         if exported is None:
             print("Ingen bilag er valgt!")
             return
@@ -608,7 +612,7 @@ class MyPrompt(Cmd):
     def do_show(self, args):
         """Vis konteringslinjer for en Z-rapport"""
         try:
-            index, subindex = self.getInputIndex(args)
+            index, subindex = self.get_input_index(args)
             z = self.cyb.get(index, subindex)
             self.helper.show_z_lines(z)
         except ValueError:
@@ -634,7 +638,7 @@ class MyPrompt(Cmd):
     def do_hide(self, args):
         """Skjul en (evt. spesifikk) Z-rapport fra lista"""
         try:
-            index, subindex = self.getInputIndex(args)
+            index, subindex = self.get_input_index(args)
             z = self.cyb.get(index, subindex)
 
             if subindex is None:
@@ -642,26 +646,26 @@ class MyPrompt(Cmd):
             else:
                 self.cyb.hide([z])
 
-            print("Skjuler %s (%s) neste gang programmet lastes inn" % (z.genZNr(), z.data['date']))
+            print("Skjuler %s (%s) neste gang programmet lastes inn" % (z.get_z_nr(), z.data['date']))
             print("Skriv evt 'reload' for å gjøre dette nå")
         except ValueError:
             return
 
     def do_reload(self, args):
         """Laster all data på nytt"""
-        self.cyb.loadJSON(all=args == 'all')
+        self.cyb.load_json(show_all=args == 'all')
 
         self.do_help("")
         print("Data ble lastet inn på nytt")
 
-    def do_EOF(self, args):
+    def do_eof(self, args):
         """Ctrl+D avslutter programmet"""
         self.do_quit(args)
 
     def default(self, args):
         """Som standard prøver vi å identifisere en Z, evt. viser vi hjelp"""
         try:
-            self.getInputIndex(args, showmsg=False)
+            self.get_input_index(args, showmsg=False)
             self.do_add(args)
         except ValueError:
             self.do_help("")
@@ -672,7 +676,7 @@ class MyPrompt(Cmd):
         self.helper.list_selected()
         self.helper.show_help()
 
-    def getNum(self):
+    def get_num(self):
         """Finn første bilagsnummer som skal brukes"""
         try:
             val = self.cyb.tripletex.get_next_ledger_number(2015)  # TODO: dynamic year
@@ -691,7 +695,8 @@ class MyPrompt(Cmd):
                 except ValueError:
                     print("Ugyldig verdi, prøv igjen")
 
-    def getInputIndex(self, args, showmsg=True):
+    @staticmethod
+    def get_input_index(args, showmsg=True):
         """Parse index:subindex"""
         r = re.compile('^(\d+)(?::(\d+))?$')
         m = r.match(args)
@@ -711,7 +716,7 @@ class MyPrompt(Cmd):
 
 if __name__ == '__main__':
     cyb = CYBTripletexImport()
-    cyb.loadJSON()
+    cyb.load_json()
 
     prompt = MyPrompt(cyb)
 
@@ -722,7 +727,7 @@ if __name__ == '__main__':
     print("--------------------------------------------------------------------------------")
     print("")
 
-    prompt.getNum()
+    prompt.get_num()
 
     prompt.prompt = '> '
     prompt.do_help("")

@@ -13,7 +13,7 @@ from collections import OrderedDict
 # settings are stored in settings.py, example:
 # username = "username"
 # password = "password"
-from .settings import *
+from settings import *
 
 SEMESTERS = (
     {'id': 1, 'text': 'vår', 'start': '-01-01', 'end': '-06-30'},
