@@ -87,11 +87,12 @@ class Tripletex(TripletexBase):
     @staticmethod
     def get_url_ledger(year):
         """year = 2015"""
-        return 'https://tripletex.no/execute/viewJournal?javaClass=no.tripletex.tcp.web.JournalForm&' + \
-               'documentationComponent=145&contextId=2845076&isExpandedFilter=true&period.startDate=%d-01-01&' + \
-               'period.endOfPeriodDate=%d-12-31&period.periodType=1&=%d&registeredById=-1&updatedById=-1&' + \
-               'numberSeriesId=89077&startNumber=&endNumber=&accountId=-1&minAmountString=&maxAmountString=&' + \
-               'amountType=2&ascending=false&rowCount=2&act=content&scope=ajaxContent' % (year, year, year)
+        url = 'https://tripletex.no/execute/viewJournal?javaClass=no.tripletex.tcp.web.JournalForm&' + \
+              'documentationComponent=145&contextId=2845076&isExpandedFilter=true&period.startDate=%d-01-01&' + \
+              'period.endOfPeriodDate=%d-12-31&period.periodType=1&=%d&registeredById=-1&updatedById=-1&' + \
+              'numberSeriesId=89077&startNumber=&endNumber=&accountId=-1&minAmountString=&maxAmountString=&' + \
+              'amountType=2&ascending=false&rowCount=2&act=content&scope=ajaxContent'
+        return url % (year, year, year)
 
     def get_ledger(self, year):
         return self.request_get(self.get_url_ledger(year))
