@@ -5,7 +5,6 @@ import sys
 import re
 from cmd import Cmd
 from tripletex.z import CYBTripletexImport, DATA_FILE_OUT
-from tripletex.tripletex import LedgerNumberFailed
 
 DATA_FILE_IN = '../z_www/reports.json'
 
@@ -82,9 +81,12 @@ class PromptHelper:
             print("")
             print("             Klargjorte Z-rapporter (skriv 'pop' for å fjerne siste)")
             print("--------------------------------------------------------------------------------")
-        i = self.cyb.nextId
+
+        i = 0
+        first_num = self.cyb.get_first_num()
         for z in self.cyb.selected:
-            print("%d  %s (%s)" % (i, z.get_z_nr(), z.data['date']))
+            num = first_num + i
+            print("%d  %s (%s)" % (num, z.get_z_nr(), z.data['date']))
             i += 1
 
     def show_help(self):
@@ -102,7 +104,6 @@ class PromptHelper:
         print("  quit      Avslutt (evt. trykk Ctrl+D)")
         print("")
         print("Trykk enter for å se status/liste/hjelp")
-        print("Neste bilagsnr: %d" % (self.cyb.nextId + len(self.cyb.selected)))
         print("")
 
     @staticmethod
@@ -135,8 +136,8 @@ class MyPrompt(Cmd):
                 print("FEIL: Z-rapport summerer ikke til 0 (kredit+debet)")
                 return
 
-            knr = self.cyb.nextId + len(self.cyb.selected)
             self.cyb.add_z(z)
+            knr = self.cyb.get_first_num() + len(self.cyb.selected) - 1
 
             print("     %s %s (%s)" % (z.get_z_nr(), z.data['date'], z.data['type']))
             self.helper.show_z_lines(z, knr)
@@ -193,7 +194,7 @@ class MyPrompt(Cmd):
 
         else:
             print("")
-            print("Neste bilagsnr: %d" % self.cyb.nextId)
+            print("Neste bilagsnr: %d" % self.cyb.first_id)
 
     def do_import(self, args):
         """Importer konteringslinjer for de valgte Z-rapportene til Tripletex"""
@@ -230,7 +231,7 @@ class MyPrompt(Cmd):
 
         else:
             print("")
-            print("Neste bilagsnr: %d" % self.cyb.nextId)
+            print("Neste bilagsnr: %d" % self.cyb.first_id)
 
     def do_show(self, args):
         """Vis konteringslinjer for en Z-rapport"""
@@ -242,14 +243,10 @@ class MyPrompt(Cmd):
             return
 
     def do_num(self, args):
-        """Vis eller sett første bilagsnummer"""
-        if args == '':
-            print("Første bilagsnummer: %d" % self.cyb.nextId)
-            return
-
+        """Sett første bilagsnummer"""
         try:
-            self.cyb.nextId = int(args)
-            print("Første bilagsnummer satt til %d" % self.cyb.nextId)
+            self.cyb.first_id = int(args)
+            print("Første bilagsnummer satt til %d" % self.cyb.first_id)
         except ValueError:
             print("Ugyldig verdi")
 
@@ -281,7 +278,7 @@ class MyPrompt(Cmd):
         self.do_help("")
         print("Data ble lastet inn på nytt")
 
-    def do_eof(self, args):
+    def do_EOF(self, args):
         """Ctrl+D avslutter programmet"""
         self.do_quit(args)
 
@@ -298,25 +295,6 @@ class MyPrompt(Cmd):
         self.helper.list_available()
         self.helper.list_selected()
         self.helper.show_help()
-
-    def get_num(self):
-        """Finn første bilagsnummer som skal brukes"""
-        try:
-            val = self.cyb.tripletex.get_next_ledger_number(2015)  # TODO: dynamic year
-            self.cyb.nextId = val
-            print("Nummer for neste oppgjør: %d" % val)
-        except LedgerNumberFailed:
-            print("Klarte ikke å hente bilagsnr fra Tripletex")
-
-            while True:
-                sys.stdout.write("Nummer for neste ledige bilagsnummer for oppgjør i Tripletex: ")
-                num = input()
-
-                try:
-                    self.cyb.nextId = int(num)
-                    break
-                except ValueError:
-                    print("Ugyldig verdi, prøv igjen")
 
     @staticmethod
     def get_input_index(args, showmsg=True):
@@ -349,8 +327,6 @@ if __name__ == '__main__':
     print("                 se http://github.com/cybrairai/okotools")
     print("--------------------------------------------------------------------------------")
     print("")
-
-    prompt.get_num()
 
     prompt.prompt = '> '
     prompt.do_help("")

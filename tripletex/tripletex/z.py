@@ -7,7 +7,7 @@ import json
 import time
 import io
 
-from .tripletex import TripletexImporter, TripletexException
+from .tripletex import TripletexImporter, TripletexException, LedgerNumberFailed
 from .mamut import Transform
 from .utils import get_num
 
@@ -101,7 +101,7 @@ class GenerateCSV:
     ]
 
     def __init__(self, cyb, output_handle):
-        self.nextId = cyb.nextId
+        self.nextId = cyb.get_first_num()
         self.cyb = cyb
         self.csv = csv.writer(output_handle, delimiter=';', quoting=csv.QUOTE_NONE)
 
@@ -123,7 +123,7 @@ class GenerateCSV:
             line[self.CSV_INDEX_BNR] = self.nextId - LEDGER_SERIES
             line[self.CSV_INDEX_BDATE] = z.date
             line[self.CSV_INDEX_BPERIOD] = z.period
-            line[self.CSV_INDEX_BYEAR] = self.cyb.year
+            line[self.CSV_INDEX_BYEAR] = self.cyb.active_year
             line[self.CSV_INDEX_ACCOUNT] = item.account
             line[self.CSV_INDEX_VAT] = vat_code
             line[self.CSV_INDEX_NETTO] = item.netto_positive * item.modifier
@@ -182,6 +182,9 @@ class Z:
         date = self.data['date'][-10:].split('.')
         date.reverse()
         return ''.join(date)
+
+    def get_year(self):
+        return int(self.data['date'][-4:])
 
     def get_build_time(self):
         """Konverter builddate til yyyymmdd HHmm"""
@@ -245,8 +248,8 @@ class ZGroup:
 class CYBTripletexImport:
     def __init__(self, json_file):
         self.json_file = json_file
-        self.nextId = 1
-        self.year = 2015
+        self.first_num = None
+        self.active_year = None
         self.json = None  # initialized by loadJSON
         self.data = None  # initialized by loadJSON
         self.zgroups = None  # initialized by loadJSON
@@ -318,7 +321,7 @@ class CYBTripletexImport:
             self.generate_csv(output_handle)
             output_handle.close()
 
-        self.nextId += len(self.selected)
+        self.first_num += len(self.selected)
 
         for z in self.selected:
             z.selected = False
@@ -331,6 +334,12 @@ class CYBTripletexImport:
         return self.zgroups[index].zlist[subindex or 0]
 
     def add_z(self, z):
+        if len(self.selected) > 0 and self.selected[0].get_year() != z.get_year():
+            raise ZError('Kan ikke håndtere Z-rapporter for flere år samtidig')
+        elif len(self.selected) == 0:
+            self.first_num = None
+            self.active_year = z.get_year()
+
         self.selected.append(z)
         z.selected = True
 
@@ -350,3 +359,28 @@ class CYBTripletexImport:
 
         with open(self.json_file, 'w') as f:
             json.dump(data, f)
+
+    def get_first_num(self):
+        if not self.first_num:
+            if not self.active_year:
+                raise ZError('Kan ikke finne først bilagsnr uten et valgt år')
+
+            try:
+                self.first_num = self.tripletex.get_next_ledger_number(self.active_year)
+            except LedgerNumberFailed:
+                print("Klarte ikke å hente bilagsnr fra Tripletex")
+
+                while True:
+                    num = input('Nummer for neste ledige bilagsnummer for oppgjør i Tripletex (år %d): ' %
+                                self.active_year)
+
+                    try:
+                        self.first_num = int(num)
+                        break
+                    except ValueError:
+                        print("Ugyldig verdi, prøv igjen")
+
+        return self.first_num
+
+class ZError(Exception):
+    pass

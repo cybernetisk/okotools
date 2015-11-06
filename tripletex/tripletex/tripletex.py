@@ -408,10 +408,7 @@ class TripletexImporter(TripletexBase):
         return self.connector.request_get(self.get_url_ledger(year))
 
     def get_next_ledger_number(self, year):
-        data = self.get_ledger(2015)
-        if data.status_code == 401:
-            self.connector.do_login()
-            data = self.get_ledger(year)
+        data = self.get_ledger(year)
 
         m = re.search(r'Bilag nummer (\d+)-(\d+)', data.text)
         if m is None:
