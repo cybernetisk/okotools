@@ -7,7 +7,7 @@ import json
 import time
 import io
 
-from .tripletex import TripletexImporter
+from .tripletex import TripletexImporter, TripletexException
 from .mamut import Transform
 from .utils import get_num
 
@@ -307,7 +307,12 @@ class CYBTripletexImport:
         if import_csv:
             output_handle = io.StringIO()
             self.generate_csv(output_handle)
-            self.tripletex.import_gbat10(output_handle.getvalue())
+
+            try:
+                self.tripletex.import_gbat10(output_handle.getvalue())
+            except TripletexException as e:
+                print("Feil oppstå ved forsøk på å importere til Tripletex: %s" % e)
+
         else:
             output_handle = open(DATA_FILE_OUT, 'w', encoding="iso-8859-1")
             self.generate_csv(output_handle)

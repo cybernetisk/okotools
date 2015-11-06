@@ -428,11 +428,11 @@ class TripletexImporter(TripletexBase):
         # [{"id":"29027318","revision":"1","name":"bilag.csv","size":"0","readableSize":"0","uid":"0","checksum":"da39a3ee5e6b4b0d3255bfef95601890afd80709"}]
 
         if r.status_code != 200:
-            raise UploadFailedException(r.text)
+            raise UploadFailedException('Received unexpected status code %d when trying to upload' % r.status_code, r)
 
         file_data = r.json()[0]
         if 'checksum' not in file_data:
-            raise UploadFailedException('Could not extract checksum from response of uploaded data')
+            raise UploadFailedException('Could not extract checksum from response of uploaded data', r)
 
         import_data = {
             "id": 2,
@@ -483,4 +483,6 @@ class LedgerNumberFailed(TripletexException):
 
 
 class UploadFailedException(TripletexException):
-    pass
+    def __init__(self, message, response=None):
+        super(UploadFailedException, self).__init__(message)
+        self.response = response
