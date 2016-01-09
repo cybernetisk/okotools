@@ -194,7 +194,7 @@ class MyPrompt(Cmd):
 
         else:
             print("")
-            print("Neste bilagsnr: %d" % self.cyb.first_id)
+            print("Neste bilagsnr: %d" % self.cyb.first_num)
 
     def do_import(self, args):
         """Importer konteringslinjer for de valgte Z-rapportene til Tripletex"""
@@ -231,7 +231,7 @@ class MyPrompt(Cmd):
 
         else:
             print("")
-            print("Neste bilagsnr: %d" % self.cyb.first_id)
+            print("Neste bilagsnr: %d" % self.cyb.first_num)
 
     def do_show(self, args):
         """Vis konteringslinjer for en Z-rapport"""
@@ -245,8 +245,8 @@ class MyPrompt(Cmd):
     def do_num(self, args):
         """Sett første bilagsnummer"""
         try:
-            self.cyb.first_id = int(args)
-            print("Første bilagsnummer satt til %d" % self.cyb.first_id)
+            self.cyb.first_num = int(args)
+            print("Første bilagsnummer satt til %d" % self.cyb.first_num)
         except ValueError:
             print("Ugyldig verdi")
 
