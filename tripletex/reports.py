@@ -26,6 +26,7 @@ def get_accounts_list(tripletex):
 
 
 def get_accounts_report(tripletex, year, sem, project_id, project_number):
+    print("Exporting accounts report for semester %d in %d" % (sem['id'], year))
     result = tripletex.get_report_result(date_start=str(year) + sem['start'], date_end=str(year) + sem['end'],
                                          project_id=project_id)
 
@@ -37,6 +38,7 @@ def get_accounts_report(tripletex, year, sem, project_id, project_number):
 
 
 def get_projects_report(tripletex, year, sem):
+    print("Exporting projects report for semester %d in %d" % (sem['id'], year))
     result = tripletex.get_report_projects(date_start=str(year) + sem['start'], date_end=str(year) + sem['end'])
 
     ret = ''
@@ -60,7 +62,7 @@ if __name__ == '__main__':
     tt_projects = TripletexProjects()
 
     main_project_number = 40041
-    main_project_id = tt_projects.get_project_id(40041)
+    main_project_id = tt_projects.get_project_id(main_project_number)
 
     home = os.path.expanduser('~')
     path = home + '/Dropbox/Økonomigruppa/8 Budsjett og regnskap (internt)/2016/'
@@ -78,13 +80,17 @@ if __name__ == '__main__':
         f.write(get_accounts_report(tt_accounts, 2014, SEMESTERS[1], main_project_id, main_project_number))
         f.write(get_accounts_report(tt_accounts, 2015, SEMESTERS[0], main_project_id, main_project_number))
         f.write(get_accounts_report(tt_accounts, 2015, SEMESTERS[1], main_project_id, main_project_number))
-    print('Exported accounts report')
+        f.write(get_accounts_report(tt_accounts, 2016, SEMESTERS[0], main_project_id, main_project_number))
+        #f.write(get_accounts_report(tt_accounts, 2016, SEMESTERS[1], main_project_id, main_project_number))
+    print('Exported accounts reports')
 
     with open(path + 'projects_report.txt', 'w') as f:
         f.write(get_projects_report(tt_projects, 2014, SEMESTERS[0]))
         f.write(get_projects_report(tt_projects, 2014, SEMESTERS[1]))
         f.write(get_projects_report(tt_projects, 2015, SEMESTERS[0]))
         f.write(get_projects_report(tt_projects, 2015, SEMESTERS[1]))
-    print('Exported projects report')
+        f.write(get_projects_report(tt_projects, 2016, SEMESTERS[0]))
+        #f.write(get_projects_report(tt_projects, 2016, SEMESTERS[1]))
+    print('Exported projects reports')
 
     print('Reports saved to files in %s' % path)
