@@ -151,9 +151,9 @@ class Z:
         self.data = data
         self.selected = False
 
+        self.is_mamut = self.is_mamut(data['sales'] + data['debet'])
         self.sales = self.get_sales_or_debet(data['sales'])
         self.debet = self.get_sales_or_debet(data['debet'])
-        self.is_mamut = self.is_mamut()
 
         self.date = self.get_date()
         self.period = int(self.date[4:6])
@@ -171,10 +171,11 @@ class Z:
             ret.append(transaction)
         return ret
 
-    def is_mamut(self):
+    def is_mamut(self, transactions):
         # assume old format (Mamut) if no projects are known
-        for item in self.sales + self.debet:
-            if item.project != 0:
+        for item in transactions:
+            transaction = Transaction(item[0], item[1], item[2])
+            if transaction.project != 0:
                 return False
         return True
 
