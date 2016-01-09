@@ -12,21 +12,22 @@ from .mamut import Transform
 from .utils import get_num
 
 LEDGER_SERIES = 80000
-DEVIATION_ACCOUNT = '1909'
+DEVIATION_ACCOUNT = '1909'  # konto for kasseavvik
 DATA_FILE_OUT = 'bilag.csv'
 
 VAT_CODES = {
-    0: 1,
-    15: 371,
-    25: 10
+    0: 0,
+    3: 25,
+    31: 15,
+    5: 0,
+    6: 0
 }
 
 
 class Transaction:
     def __init__(self, data, text, amount):
-        # data: K-3014-25
-        #       25-K-3014
-        #       K-3014-40804
+        # format: [vatcode]-K/D-account-[project]
+        # (old format: K/D-account-vat)
 
         # match again old format
         m = re.match(r'^([KD])-([\d_]+)(?:-(25|15|__))?$', data)
@@ -46,9 +47,11 @@ class Transaction:
             self.vat = get_num(m.group(1)) or 0
             self.project = get_num(m.group(4)) or 0
 
+        vat = VAT_CODES[self.vat] if self.vat in VAT_CODES else self.vat
+
         self.text = text
         self.amount_positive = get_num(amount)
-        self.netto_positive = round(self.amount_positive / (1 + self.vat / 100.0), 2)
+        self.netto_positive = round(self.amount_positive / (1 + vat / 100.0), 2)
 
         self.modifier = -1 if self.type == 'K' else 1
         self.amount = self.amount_positive * self.modifier
@@ -117,15 +120,13 @@ class GenerateCSV:
             # TODO: validate account
             # TODO: validate VAT
 
-            vat_code = VAT_CODES[item.vat]
-
             line = list(self.csv_default_line)
             line[self.CSV_INDEX_BNR] = self.nextId - LEDGER_SERIES
             line[self.CSV_INDEX_BDATE] = z.date
             line[self.CSV_INDEX_BPERIOD] = z.period
             line[self.CSV_INDEX_BYEAR] = self.cyb.active_year
             line[self.CSV_INDEX_ACCOUNT] = item.account
-            line[self.CSV_INDEX_VAT] = vat_code
+            line[self.CSV_INDEX_VAT] = item.vat
             line[self.CSV_INDEX_NETTO] = item.netto_positive * item.modifier
             line[self.CSV_INDEX_DESC1] = "%s %s" % (znr, item.text)
             line[self.CSV_INDEX_DESC2] = line[self.CSV_INDEX_DESC1]
@@ -381,6 +382,7 @@ class CYBTripletexImport:
                         print("Ugyldig verdi, prøv igjen")
 
         return self.first_num
+
 
 class ZError(Exception):
     pass

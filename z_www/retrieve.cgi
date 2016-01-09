@@ -3,7 +3,6 @@
 import cgi
 import sys
 import os
-import pprint
 import re
 import subprocess
 
@@ -14,6 +13,23 @@ cgitb.enable(display=0, logdir="/hom/cyb/www_docs/okonomi/z/logdir")
 lib_path = os.path.abspath('simplejson-2.1.0')
 sys.path.append(lib_path)
 import simplejson as json
+
+VAT_CODES = {
+    0: 0,
+    3: 25,
+    31: 15,
+    5: 0,
+    6: 0
+}
+
+
+def get_num(val):
+    if val is None:
+        return 0
+    try:
+        return int(val)
+    except ValueError:
+        return 0
 
 
 def printHeader():
@@ -28,6 +44,7 @@ def getDataOrExit():
         sys.exit(0)
     return json.loads(form['data'].value, 'utf-8')
 
+
 def getTemplate():
     f = open('template.tex', 'r')
     data = f.read()
@@ -35,42 +52,50 @@ def getTemplate():
     f.close()
     return data
 
+
 def safestring(data):
     CHARS = {
         '&':  r'\&',
         '%':  r'\%',
         '$':  r'\$',
         '#':  r'\#',
-        '_':  r'\_', #r'\letterunderscore{}',
-        '{':  r'\{', #r'\letteropenbrace{}',
-        '}':  r'\}', #r'\letterclosebrace{}',
-        '~':  r'\~', #r'\lettertilde{}',
-        '^':  r'\^', #r'\letterhat{}',
-        '\\': r'\\', #r'\letterbackslash{}',
+        '_':  r'\_',  # r'\letterunderscore{}',
+        '{':  r'\{',  # r'\letteropenbrace{}',
+        '}':  r'\}',  # r'\letterclosebrace{}',
+        '~':  r'\~',  # r'\lettertilde{}',
+        '^':  r'\^',  # r'\letterhat{}',
+        '\\': r'\\',  # r'\letterbackslash{}',
     }
     return "".join([CHARS.get(char, char) for char in unicode(data).strip()])
+
 
 def get_trans(data, addsum=0):
     trans = []
     sum = 0
     for r in data:
-        t = Trans(r[0])
+        t = Transaction(r[0])
 
         mva = ""
         if t.vat != 0:
-            mva = safestring(t.vat) + r' \%'
-        trans.append("\\footnotesize{%s} & \\footnotesize{%s} & \\small{%s} & %s & %s & \\small{%s} \\\\" % \
-            (t.project or "", mva, safestring(t.type), safestring(t.account), safestring(r[2]), safestring(r[1])))
+            if t.vat in VAT_CODES:
+                mva = "%s (%d\\%%)" % (safestring(t.vat), VAT_CODES[t.vat])
+            else:
+                mva = safestring(t.vat) + '\\% (?)'
+
+        trans.append("\\footnotesize{%s} & \\footnotesize{%s} & \\small{%s} & %s & %s & \\footnotesize{%s} \\\\" %
+                     (t.project or "", mva, safestring(t.type), safestring(t.account), safestring(r[2]), safestring(r[1])))
         sum += getInt(r[2])
     if addsum:
         trans.append("&&&& \\textbf{%d} & \\textbf{Sum salg} \\\\[3mm]" % sum)
     return trans
+
 
 def getInt(v):
     try:
         return int(v)
     except ValueError:
         return 0
+
 
 def get_cash_table(data):
     ret = []
@@ -84,16 +109,17 @@ def get_cash_table(data):
 
         x = end-start
         amount = x*t[i]
-        ret.append("%s & %s & %s & %s & %s \\\\" % \
-            (t[i], start, end, x, amount))
+        ret.append("%s & %s & %s & %s & %s \\\\" %
+                   (t[i], start, end, x, amount))
         sum += amount
         sum_start += start*t[i]
         sum_end += end*t[i]
 
-    ret.append("\\textbf{Sum} & %d & %d & & %d \\\\" % \
-        (sum_start, sum_end, sum))
+    ret.append("\\textbf{Sum} & %d & %d & & %d \\\\" %
+               (sum_start, sum_end, sum))
 
     return "\n\hline".join(ret)
+
 
 def generatePDF(data, filename):
     f = open('archive/%s.tex' % filename, 'w')
@@ -104,7 +130,7 @@ def generatePDF(data, filename):
     p = subprocess.Popen(["pdflatex", "%s.tex" % filename], stdout=subprocess.PIPE, cwd=os.path.abspath('archive'))
     out, err = p.communicate()
 
-    print 'http://cyb.no/okonomi/z/archive/%s.pdf' % filename;
+    print 'http://cyb.no/okonomi/z/archive/%s.pdf' % filename
 
 
 def exportJSON(data):
@@ -123,7 +149,7 @@ def exportJSON(data):
 
     x['list'].append(data)
 
-    x = json.dumps(x) #.encode('utf-8')
+    x = json.dumps(x)  # .encode('utf-8')
     f.write(x)
     f.truncate()
     f.close()
@@ -152,31 +178,28 @@ tex = getTemplate()
 #   comment => user provided comment
 
 
-class Trans:
+class Transaction:
     def __init__(self, data):
-        # data: K-3014-25
-        #       25-K-3014
-        #       K-3014-40804
+        # format: [vatcode]-K/D-account-[project]
+        # (old format: K/D-account-vat)
 
         # match again old format
-        m = re.match(r'^([KD])-(\d+)(?:-(25|15))?$', data)
+        m = re.match(r'^([KD])-([\d_]+)(?:-(25|15|__))?$', data)
         if m is not None:
             self.type = m.group(1)
             self.account = m.group(2)
-            self.vat = m.group(3) or 0
+            self.vat = get_num(m.group(3)) or 0
             self.project = 0
-            return
 
-        # new format
-        m = re.match(r'^(?:(\d+)-)?([KD])-(\d+)(?:-(\d+))?$', data)
-        if m is None:
-            print "err %s" % data
-            sys.exit(0)
-            raise ValueError("Invalid data when parsing Trans: %s" % data)
-        self.type = m.group(2)
-        self.account = m.group(3)
-        self.vat = m.group(1) or 0
-        self.project = m.group(4) or 0
+        else:
+            # new format
+            m = re.match(r'^(?:(\d+)-)?([KD])-([\d_]+)(?:-([\d_]+))?$', data)
+            if m is None:
+                raise ValueError("Invalid data when parsing Trans: %s" % data)
+            self.type = m.group(2)
+            self.account = m.group(3)
+            self.vat = get_num(m.group(1)) or 0
+            self.project = get_num(m.group(4)) or 0
 
 
 ztext = safestring(data['z'])
