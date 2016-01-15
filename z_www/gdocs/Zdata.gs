@@ -7,6 +7,15 @@ var settings = {
   "destaddr": "http://cyb.no/okonomi/z/retrieve.cgi"
 };
 
+function cleanDoc() {
+  var s = SpreadsheetApp.getActiveSpreadsheet();
+  var sheets = getZSheetList()
+  for (var i in sheets) {
+    var sheet = sheets[i];
+    s.deleteSheet(sheet);
+  }
+}
+
 function onOpen() { 
   var s = SpreadsheetApp.getActiveSpreadsheet();
   
@@ -17,7 +26,7 @@ function onOpen() {
       functionName: "newNormalZ"
     },
     {
-      name: "Opprett ny Z (f.eks. medlemssalg)",
+      name: "Opprett manuell Z (f.eks. medlemssalg)",
       functionName: "newZ"
     },
     {
@@ -72,81 +81,13 @@ function showStats() {
  * Create new sheet from template and set name. Ask for details first
  */
 function newZ() {
-  var a = UiApp.createApplication().setTitle("Ny Z-rapport");
-  
-  var form = a.createFormPanel();
-  a.add(form);
-  
-  var outerpanel = a.createVerticalPanel();
-  form.add(outerpanel);
-  
-  var panel1 = a.createHorizontalPanel();
-  panel1.setSpacing(10);
-  outerpanel.add(panel1);
-  
-  var panel2 = a.createVerticalPanel();
-  panel2.setSpacing(10);
-  panel1.add(panel2);
-  
-  var radioValue = a.createTextBox().setName("ztypevalue").setVisible(false);
-  panel2.add(radioValue);
-  var types = [["Kasse i Escape", "kasse"],
-               ["Medlemssalg i døra", "medlem"],
-               ["Annet", "annet"]];
-  for (var i = 0; i < 3; i++) {
-    var handler = a.createClientHandler().forTargets(radioValue).setText(types[i][1]);
-    var ztype = a.createRadioButton("ztype", types[i][0]).addValueChangeHandler(handler);
-    panel2.add(ztype);
-    if (i == 0) {
-      ztype.setValue(true);
-      radioValue.setText(types[i][1]);
-    }
-  }
-  
-  var znr = a.createTextBox().setName("znr").setFocus(true);
-  znr.setValue(nextZNum());
-  panel2.add(a.createLabel("Z-nr (ignorer hvis medlemssalg): "));
-  panel2.add(znr);
-  panel2.add(a.createLabel("Husk og dobbeltsjekk når Z blir ført inn!"));
-  
-  var panel2 = a.createVerticalPanel();
-  panel2.setSpacing(10);
-  panel1.add(panel2);
-  
-  var dato = a.createDateBox().setName("date").setId("date");
-  dato.setValue(new Date());
-  panel2.add(a.createLabel("Dato:"));
-  panel2.add(dato);
-  
-  var b = a.createSubmitButton('submit').setText("Lag ny Z-rapport fra mal");
-  outerpanel.add(b);
-  
-  SpreadsheetApp.getActive().show(a);
+  var html = HtmlService.createHtmlOutputFromFile("NewManualZ").setSandboxMode(HtmlService.SandboxMode.IFRAME);
+  SpreadsheetApp.getUi().showModalDialog(html, "Ny manuell Z-rapport");
 }
 
-/**
- * Handle form submit
- */
-function doPost(e) {
-  var a = UiApp.getActiveApplication();
-  
-  var znr = e.parameter.znr;
-  var dat = e.parameter.date;
-  
-  znr = e.parameter.ztypevalue == "kasse" ? znr : (e.parameter.ztypevalue == "medlem" ? "MEDLEM" : "A:"+znr);
-  
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var s = ss.getSheetByName("MAL").copyTo(ss);
-  s.activate();
-  ss.moveActiveSheet(2);
-  
-  getRange("Znr").setValue(znr);
-  getRange("Zdato").setValue(dat);
-  setName();
-  getRange("Ansvarlig").activate();
-  
-  a.close();
-  return a;
+function handleNewZForm(znr, date) {
+  createNewZFromTemplate(znr, date);
+  return true;
 }
 
 
@@ -154,13 +95,18 @@ function doPost(e) {
  * Create next normal Z
  */
 function newNormalZ() {
+  createNewZFromTemplate(nextZNum(), new Date());
+}
+
+
+function createNewZFromTemplate(znr, date) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var s = ss.getSheetByName("MAL").copyTo(ss);
   s.activate();
   ss.moveActiveSheet(2); // place after template
   
-  getRange("Znr").setValue(nextZNum());
-  getRange("Zdato").setValue(new Date());
+  getRange("Znr").setValue(znr);
+  getRange("Zdato").setValue(date);
   setName();
   getRange("Ansvarlig").activate();
 }
@@ -172,7 +118,7 @@ function newNormalZ() {
 function nextZNum() {
   var n;
   var max = 0;
-  var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+  var sheets = SpreadsheetApp.getActiveSpreadsheet().getSheets().slice(0, 5);
   for (var x in sheets) {
     n = sheets[x].getName();
     if (n.substring(0, 1) == "Z" && n.substring(1) == parseInt(n.substring(1))) {
@@ -202,20 +148,31 @@ function setName() {
   var nr = getRange('Znr').getValue();
   var newname = "";
   
-  // integers = Z from 'kassesystemet'
-  if (nr % 1 === 0) {
-    var newname = "Z" + nr;
-  }
-  
-  // 'medlemssalg' needs it's own identifier
-  else if (nr == "MEDLEM") {
+  var getDate = function () {
     var dato = getRange('Zdato').getValue();
     if (typeof dato != 'object') {
       Browser.msgBox("Dato er ikke datotype!");
       return;
     }
-    dato = Utilities.formatDate(dato, "Europe/Oslo", "yyyy-MM-dd");
-    var newname = "MEDLEM-" + dato;
+    return Utilities.formatDate(dato, "Europe/Oslo", "yyyy-MM-dd");
+  }
+  
+  // integers = Z from 'kassesystemet'
+  if (nr % 1 === 0) {
+    newname = "Z" + nr;
+  }
+  
+  // 'medlemssalg' needs it's own identifier
+  else if (nr == "MEDLEM") {
+    dato = getDate();
+    if (!dato) return;
+    newname = "MEDLEM-" + dato;
+  }
+  
+  else if (nr.length > 0) {
+    dato = getDate();
+    if (!dato) return;
+    newname = nr + "-" + dato;
   }
   
   if (newname == "") {
@@ -250,6 +207,9 @@ function findZ() {
  * Generate data for a specific Z-sheet
  */
 function getZData(sheet) {
+  var commentrange = getRangeOnSheet(sheet, "Kommentar");
+  var isOldLayout = commentrange.getColumn() == 2;
+  
   /**
    * For sales and debet, select the valid columns.
    * The data should be [account-info, description, value]
@@ -258,7 +218,12 @@ function getZData(sheet) {
     var newdata = [];
     for (x in data) {
       if (data[x][0] != "" && data[x][4] != "") {
-        newdata.push([data[x][0], data[x][1], data[x][4]]);
+        // as of 2014-10-28 the two first columns have switched places
+        if (isOldLayout) {
+          newdata.push([data[x][0], data[x][1], data[x][4]]);
+        } else {
+          newdata.push([data[x][1], data[x][0], data[x][4]]);
+        }
       }
     }
     return newdata;
@@ -293,9 +258,10 @@ function getZData(sheet) {
    * Build data to send to generator
    */
   var data = {
+    "sheetid": sheet.getSheetId(),
     "z": getRangeOnSheet(sheet, "Znr").getValue(),
-    "date": getWeek(getRangeOnSheet(sheet, "Zdato").getValue())+" "+Utilities.formatDate(getRangeOnSheet(sheet, "Zdato").getValue(), "Europe/Oslo", "dd.MM.YYYY"),
-    "builddate": Utilities.formatDate(new Date(), "Europe/Oslo", "dd.MM.YYYY HH:mm"),
+    "date": getWeek(getRangeOnSheet(sheet, "Zdato").getValue())+" "+Utilities.formatDate(getRangeOnSheet(sheet, "Zdato").getValue(), "Europe/Oslo", "dd.MM.yyyy"),
+    "builddate": Utilities.formatDate(new Date(), "Europe/Oslo", "dd.MM.yyyy HH:mm"),
     "responsible": getRangeOnSheet(sheet, "Ansvarlig").getValue(),
     "type": getRangeOnSheet(sheet, "Arrtype").getValue(),
     "cash": {
@@ -304,7 +270,7 @@ function getZData(sheet) {
     },
     "sales": getSales(sheet),
     "debet": getDebet(sheet),
-    "comment": getRangeOnSheet(sheet, "Kommentar").getValue()
+    "comment": commentrange.getValue()
   };
 
   return data;
@@ -316,6 +282,11 @@ function getZData(sheet) {
  */
 function exportData() {
   var data = getZData(SpreadsheetApp.getActiveSheet());
+  
+  if (!data['z'] || !data['date'] || !data['responsible'] || !data['type']) {
+    Browser.msgBox("Du må fylle ut alle de fire gule feltene øverst!");
+    return;
+  }
   
   // send data
   var payload = {
