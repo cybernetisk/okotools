@@ -66,7 +66,7 @@ class PromptHelper:
                     prefix = BColors.BLUE + prefix
                 suffix = BColors.RESET
 
-                print("%s %s%7g%6g %s%s" % (
+                print("%s %s%10.2f%6g %s%s" % (
                     prefix, z.data['builddate'], z.get_total_sales(), z.get_deviation(), z.data['type'], suffix))
 
                 si += 1
@@ -111,7 +111,7 @@ class PromptHelper:
         znr = z.get_z_nr()
         k = ("%s%d%s " % (BColors.BLUE, knr, BColors.RESET)) if knr is not None else ""
         for line in z.get_lines():
-            print("%s%s: %+5s %s   %+2s  %6d   %s" % (
+            print("%s%s: %+5s %s   %+2s  %10.2f   %s" % (
                 k, znr, line.project, line.account, line.vat, line.amount, line.text))
 
 

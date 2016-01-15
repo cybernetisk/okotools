@@ -9,3 +9,12 @@ def get_num(val):
         return int(val)
     except ValueError:
         return 0
+
+
+def get_float(val):
+    if val is None:
+        return 0
+    try:
+        return float(val)
+    except ValueError:
+        return 0

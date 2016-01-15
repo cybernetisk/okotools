@@ -9,7 +9,7 @@ import io
 
 from .tripletex import TripletexImporter, TripletexException, LedgerNumberFailed
 from .mamut import Transform
-from .utils import get_num
+from .utils import get_num, get_float
 
 LEDGER_SERIES = 80000
 DEVIATION_ACCOUNT = '1909'  # konto for kasseavvik
@@ -50,7 +50,7 @@ class Transaction:
         vat = VAT_CODES[self.vat] if self.vat in VAT_CODES else self.vat
 
         self.text = text
-        self.amount_positive = get_num(amount)
+        self.amount_positive = round(get_float(amount), 2)
         self.netto_positive = round(self.amount_positive / (1 + vat / 100.0), 2)
 
         self.modifier = -1 if self.type == 'K' else 1
@@ -132,7 +132,7 @@ class GenerateCSV:
             line[self.CSV_INDEX_DESC2] = line[self.CSV_INDEX_DESC1]
             line[self.CSV_INDEX_PROJECT] = item.project
             line[self.CSV_INDEX_CALC_VAT] = 'T'
-            line[self.CSV_INDEX_BRUTTO] = item.amount
+            line[self.CSV_INDEX_BRUTTO] = round(item.amount, 2)
 
             self.csv.writerow(line)
 
@@ -210,7 +210,7 @@ class Z:
         for item in self.sales + self.debet:
             z_sum += item.amount
 
-        return z_sum == 0
+        return round(z_sum, 2) == 0
 
     def get_lines(self):
         return self.sales + self.debet
