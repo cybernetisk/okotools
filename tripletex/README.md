@@ -10,8 +10,7 @@ at den kan logge på med en personlig bruker.
 ## Krav
 Må ha følgende på systemet:
 * Python3
-* Python3-pakker: `pip3 install requests cookielib` (hvis nødvendig)
-* BeautifulSoup4 for Python3
+* Python3-pakker: `pip3 install --user requests beautifulsoup4`
 
 ## Importering av kasseoppgjør
 Når kasseoppgjør genereres ved hjelp av Google Disk [forklart i eget dokument](../z_www/)
