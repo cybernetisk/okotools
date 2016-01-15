@@ -6,14 +6,7 @@ import os
 import re
 import subprocess
 
-import cgitb
-cgitb.enable(display=0, logdir="/hom/cyb/www_docs/okonomi/z/logdir")
-
-# kjipe Ifi som har gammel programvare...
-lib_path = os.path.abspath('simplejson-2.1.0')
-sys.path.append(lib_path)
-import simplejson as json
-
+LOGDIR = '/hom/cyb/www_docs/okonomi/z/logdir'
 VAT_CODES = {
     0: 0,
     3: 25,
@@ -21,6 +14,22 @@ VAT_CODES = {
     5: 0,
     6: 0
 }
+ARCHIVE_URL = 'http://cyb.no/okonomi/z/archive/'
+
+# override settings in settings.py
+if os.path.isfile('settings.py'):
+    from settings import *
+
+
+import cgitb
+cgitb.enable(display=0, logdir=LOGDIR)
+
+# kjipe Ifi som har gammel programvare...
+lib_path = os.path.abspath('simplejson-2.1.0')
+sys.path.append(lib_path)
+import simplejson as json
+
+
 
 
 def get_num(val):
@@ -130,7 +139,7 @@ def generatePDF(data, filename):
     p = subprocess.Popen(["pdflatex", "%s.tex" % filename], stdout=subprocess.PIPE, cwd=os.path.abspath('archive'))
     out, err = p.communicate()
 
-    print 'http://cyb.no/okonomi/z/archive/%s.pdf' % filename
+    print '%s%s.pdf' % (ARCHIVE_URL, filename)
 
 
 def exportJSON(data):
@@ -141,11 +150,13 @@ def exportJSON(data):
     """
 
     f = open('reports.json', 'r+')
-    x = json.loads(f.read(), 'utf-8')
+    fdata = f.read()
     f.seek(0)
 
-    #if not 'list' in x:
-    #   x = {'list': []}
+    if len(fdata) == 0:
+        x = {'list': []}
+    else:
+        x = json.loads(fdata, 'utf-8')
 
     x['list'].append(data)
 
