@@ -10,3 +10,7 @@ Systemet er laget av Henrik Steen som var kasserer i 2014 og 2015.
 
 ## Importering til regnskapssystem
 Se [egen beskrivelse](../tripletex/README.md) om dette.
+
+## Feilsøking
+Hvis man får meldingen 'Premature end of script headers: retrieve.cgi' på nettsia så er det enten feil i scriptet,
+eller så er det mest sannsynlig feil tilganger. Sørg for at +x er korrekt satt!
