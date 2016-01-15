@@ -17,7 +17,9 @@ class TripletexConnector:
     """
     default_object = None
 
-    def __init__(self, cookies_file="/tmp/tripletex-cookies.txt", credentials_provider=None):
+    def __init__(self, cookies_file=None, credentials_provider=None):
+        if cookies_file is None:
+            cookies_file = "/tmp/tripletex-cookies-%s.txt" % getpass.getuser()
         self.session = None
         self.cookies_file = cookies_file
         self.credentials_provider = credentials_provider if credentials_provider else self.default_credentials_provider
