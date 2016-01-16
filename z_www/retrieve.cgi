@@ -5,6 +5,7 @@ import sys
 import os
 import re
 import subprocess
+import cgitb
 
 LOGDIR = '/hom/cyb/www_docs/okonomi/z/logdir'
 VAT_CODES = {
@@ -21,18 +22,13 @@ if os.path.isfile('settings.py'):
     from settings import *
 
 
-import cgitb
-cgitb.enable(display=0, logdir=LOGDIR)
-
 # kjipe Ifi som har gammel programvare...
 lib_path = os.path.abspath('simplejson-2.1.0')
 sys.path.append(lib_path)
 import simplejson as json
 
 
-
-
-def get_num(val):
+def get_int(val):
     if val is None:
         return 0
     try:
@@ -41,134 +37,171 @@ def get_num(val):
         return 0
 
 
-def printHeader():
-    print "Content-Type: text/plain"
-    print
+class ZRetrieve:
+    @staticmethod
+    def get_data_or_exit():
+        form = cgi.FieldStorage()
+        if 'data' not in form:
+            print "Invalid data"
+            sys.exit(0)
+        return json.loads(form['data'].value, 'utf-8')
+
+    @staticmethod
+    def exportJSON(data):
+        """
+        1. load the existing data
+        2. merge this data in the existing list
+        3. save new list
+        """
+
+        f = open('reports.json', 'r+')
+        fdata = f.read()
+        f.seek(0)
+
+        if len(fdata) == 0:
+            x = {'list': []}
+        else:
+            x = json.loads(fdata, 'utf-8')
+
+        x['list'].append(data)
+
+        x = json.dumps(x)  # .encode('utf-8')
+        f.write(x)
+        f.truncate()
+        f.close()
+
+    @staticmethod
+    def get_z_name(zdata):
+        z_name = str(zdata['z'])
+        if z_name.isdigit():
+            z_name = "Z " + z_name
+        return z_name
+
+    @staticmethod
+    def get_report_filename(zdata):
+        z_name = ZRetrieve.get_z_name(zdata)
+        prettydate = ''.join(zdata['date'][-10:].split('.')[::-1])
+        prettybuilddate = ''.join(zdata['builddate'][:10].split('.')[::-1]) + '_' + zdata['builddate'][11:13] + zdata['builddate'][14:16]
+        filename = '%s-%s-%s' % (prettydate, re.sub(r'[^a-zA-Z0-9]', '_', z_name), prettybuilddate)
+        return filename
+
+    @staticmethod
+    def handle():
+        zdata = ZRetrieve.get_data_or_exit()
+
+        template = ZTemplate()
+        filename = ZRetrieve.get_report_filename(zdata)
+        template.generate(zdata, filename)
+
+        ZRetrieve.exportJSON(zdata)
 
 
-def getDataOrExit():
-    form = cgi.FieldStorage()
-    if 'data' not in form:
-        print "Invalid data"
-        sys.exit(0)
-    return json.loads(form['data'].value, 'utf-8')
+class ZTemplate:
+    def __init__(self):
+        self.template = ZTemplate.get_template()
 
+    def generate(self, zdata, filename):
+        tex = self.template
 
-def getTemplate():
-    f = open('template.tex', 'r')
-    data = f.read()
-    data = data.decode('utf-8')
-    f.close()
-    return data
+        ztext = ZRetrieve.get_z_name(zdata)
+        tex = tex.replace("VAR-ZNR", ZTemplate.safestring(ztext))
 
+        tex = tex.replace("VAR-RESPONSIBLE", ZTemplate.safestring(zdata['responsible']))
+        tex = tex.replace("VAR-TYPE", ZTemplate.safestring(zdata['type']))
+        tex = tex.replace("VAR-DATE", ZTemplate.safestring(zdata['date']))
+        tex = tex.replace("VAR-BUILDDATE", ZTemplate.safestring(zdata['builddate']))
+        tex = tex.replace("VAR-COMMENT", ZTemplate.safestring(zdata['comment']).replace("\n", "\\\\\n"))
 
-def safestring(data):
-    CHARS = {
-        '&':  r'\&',
-        '%':  r'\%',
-        '$':  r'\$',
-        '#':  r'\#',
-        '_':  r'\_',  # r'\letterunderscore{}',
-        '{':  r'\{',  # r'\letteropenbrace{}',
-        '}':  r'\}',  # r'\letterclosebrace{}',
-        '~':  r'\~',  # r'\lettertilde{}',
-        '^':  r'\^',  # r'\letterhat{}',
-        '\\': r'\\',  # r'\letterbackslash{}',
-    }
-    return "".join([CHARS.get(char, char) for char in unicode(data).strip()])
+        trans = "\n\cline{3-6}".join(ZTemplate.get_trans(zdata['sales'], True)) \
+              + "\n\cline{3-6}".join(ZTemplate.get_trans(zdata['debet']))
+        tex = tex.replace("VAR-SALES-AND-DEBET", trans)
 
+        tex = tex.replace("VAR-CASH", ZTemplate.get_cash_table(zdata['cash']))
 
-def get_trans(data, addsum=0):
-    trans = []
-    sum = 0
-    for r in data:
-        t = Transaction(r[0])
+        ZTemplate.generate_pdf(tex, filename)
 
-        mva = ""
-        if t.vat != 0:
-            if t.vat in VAT_CODES:
-                mva = "%s (%d\\%%)" % (safestring(t.vat), VAT_CODES[t.vat])
-            else:
-                mva = safestring(t.vat) + '\\% (?)'
+    @staticmethod
+    def get_template(file='template.tex'):
+        f = open(file, 'r')
+        data = f.read()
+        data = data.decode('utf-8')
+        f.close()
+        return data
 
-        trans.append("\\footnotesize{%s} & \\footnotesize{%s} & \\small{%s} & %s & %s & \\footnotesize{%s} \\\\" %
-                     (t.project or "", mva, safestring(t.type), safestring(t.account), safestring(r[2]), safestring(r[1])))
-        sum += getInt(r[2])
-    if addsum:
-        trans.append("&&&& \\textbf{%d} & \\textbf{Sum salg} \\\\[3mm]" % sum)
-    return trans
+    @staticmethod
+    def safestring(data):
+        CHARS = {
+            '&':  r'\&',
+            '%':  r'\%',
+            '$':  r'\$',
+            '#':  r'\#',
+            '_':  r'\_',  # r'\letterunderscore{}',
+            '{':  r'\{',  # r'\letteropenbrace{}',
+            '}':  r'\}',  # r'\letterclosebrace{}',
+            '~':  r'\~',  # r'\lettertilde{}',
+            '^':  r'\^',  # r'\letterhat{}',
+            '\\': r'\\',  # r'\letterbackslash{}',
+        }
+        return "".join([CHARS.get(char, char) for char in unicode(data).strip()])
 
+    @staticmethod
+    def get_trans(data, addsum=0):
+        trans = []
+        sum = 0
+        for r in data:
+            t = Transaction(r[0])
 
-def getInt(v):
-    try:
-        return int(v)
-    except ValueError:
-        return 0
+            mva = ""
+            if t.vat != 0:
+                if t.vat in VAT_CODES:
+                    mva = "%s (%d\\%%)" % (ZTemplate.safestring(t.vat), VAT_CODES[t.vat])
+                else:
+                    mva = ZTemplate.safestring(t.vat) + '\\% (?)'
 
+            trans.append("\\footnotesize{%s} & \\footnotesize{%s} & \\small{%s} & %s & %s & \\footnotesize{%s} \\\\" %
+                         (t.project or "", mva, ZTemplate.safestring(t.type), ZTemplate.safestring(t.account),
+                          ZTemplate.safestring(r[2]), ZTemplate.safestring(r[1])))
+            sum += get_int(r[2])
+        if addsum:
+            trans.append("&&&& \\textbf{%d} & \\textbf{Sum salg} \\\\[3mm]" % sum)
+        return trans
 
-def get_cash_table(data):
-    ret = []
-    t = [1, 5, 10, 20, 50, 100, 200, 500, 1000]
-    sum = 0
-    sum_start = 0
-    sum_end = 0
-    for i, start in enumerate(data['start']):
-        start = getInt(start)
-        end = getInt(data['end'][i])
+    @staticmethod
+    def get_cash_table(data):
+        ret = []
+        t = [1, 5, 10, 20, 50, 100, 200, 500, 1000]
+        sum = 0
+        sum_start = 0
+        sum_end = 0
+        for i, start in enumerate(data['start']):
+            start = get_int(start)
+            end = get_int(data['end'][i])
 
-        x = end-start
-        amount = x*t[i]
-        ret.append("%s & %s & %s & %s & %s \\\\" %
-                   (t[i], start, end, x, amount))
-        sum += amount
-        sum_start += start*t[i]
-        sum_end += end*t[i]
+            x = end-start
+            amount = x*t[i]
+            ret.append("%s & %s & %s & %s & %s \\\\" %
+                       (t[i], start, end, x, amount))
+            sum += amount
+            sum_start += start*t[i]
+            sum_end += end*t[i]
 
-    ret.append("\\textbf{Sum} & %d & %d & & %d \\\\" %
-               (sum_start, sum_end, sum))
+        ret.append("\\textbf{Sum} & %d & %d & & %d \\\\" %
+                   (sum_start, sum_end, sum))
 
-    return "\n\hline".join(ret)
+        return "\n\hline".join(ret)
 
+    @staticmethod
+    def generate_pdf(data, filename):
+        f = open('archive/%s.tex' % filename, 'w')
+        data = data.encode('utf-8')
+        f.write(data)
+        f.close()
 
-def generatePDF(data, filename):
-    f = open('archive/%s.tex' % filename, 'w')
-    data = data.encode('utf-8')
-    f.write(data)
-    f.close()
+        p = subprocess.Popen(["pdflatex", "%s.tex" % filename], stdout=subprocess.PIPE, cwd=os.path.abspath('archive'))
+        out, err = p.communicate()
 
-    p = subprocess.Popen(["pdflatex", "%s.tex" % filename], stdout=subprocess.PIPE, cwd=os.path.abspath('archive'))
-    out, err = p.communicate()
+        print '%s%s.pdf' % (ARCHIVE_URL, filename)
 
-    print '%s%s.pdf' % (ARCHIVE_URL, filename)
-
-
-def exportJSON(data):
-    """
-    1. load the existing data
-    2. merge this data in the existing list
-    3. save new list
-    """
-
-    f = open('reports.json', 'r+')
-    fdata = f.read()
-    f.seek(0)
-
-    if len(fdata) == 0:
-        x = {'list': []}
-    else:
-        x = json.loads(fdata, 'utf-8')
-
-    x['list'].append(data)
-
-    x = json.dumps(x)  # .encode('utf-8')
-    f.write(x)
-    f.truncate()
-    f.close()
-
-printHeader()
-
-data = getDataOrExit()
-tex = getTemplate()
 
 # variable data is a associative array with the following keys:
 #   z => "Znr" in the spreadsheet (can be text, but excludes "Z" char)
@@ -199,7 +232,7 @@ class Transaction:
         if m is not None:
             self.type = m.group(1)
             self.account = m.group(2)
-            self.vat = get_num(m.group(3)) or 0
+            self.vat = get_int(m.group(3)) or 0
             self.project = 0
 
         else:
@@ -209,30 +242,14 @@ class Transaction:
                 raise ValueError("Invalid data when parsing Trans: %s" % data)
             self.type = m.group(2)
             self.account = m.group(3)
-            self.vat = get_num(m.group(1)) or 0
-            self.project = get_num(m.group(4)) or 0
+            self.vat = get_int(m.group(1)) or 0
+            self.project = get_int(m.group(4)) or 0
 
 
-ztext = safestring(data['z'])
-if ztext.isdigit():
-    ztext = "Z " + ztext
-tex = tex.replace("VAR-ZNR", ztext)
+if __name__ == '__main__':
+    cgitb.enable(display=0, logdir=LOGDIR)
 
-tex = tex.replace("VAR-RESPONSIBLE", safestring(data['responsible']))
-tex = tex.replace("VAR-TYPE", safestring(data['type']))
-tex = tex.replace("VAR-DATE", safestring(data['date']))
-tex = tex.replace("VAR-BUILDDATE", safestring(data['builddate']))
-tex = tex.replace("VAR-COMMENT", safestring(data['comment']).replace("\n", "\\\\\n"))
+    print "Content-Type: text/plain"
+    print
 
-trans = "\n\cline{3-6}".join(get_trans(data['sales'], True)) \
-      + "\n\cline{3-6}".join(get_trans(data['debet']))
-tex = tex.replace("VAR-SALES-AND-DEBET", trans)
-
-tex = tex.replace("VAR-CASH", get_cash_table(data['cash']))
-
-prettydate = ''.join(data['date'][-10:].split('.')[::-1])
-prettybuilddate = ''.join(data['builddate'][:10].split('.')[::-1]) + '_' + data['builddate'][11:13] + data['builddate'][14:16]
-filename = '%s-%s-%s' % (prettydate, re.sub(r'[^a-zA-Z0-9]', '_', ztext), prettybuilddate)
-generatePDF(tex, filename)
-
-exportJSON(data)
+    ZRetrieve.handle()
