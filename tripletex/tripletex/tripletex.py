@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import csv
+import datetime
 import requests
 import http.cookiejar
+import json
 import urllib.parse
 import re
 import getpass
@@ -51,15 +53,35 @@ class TripletexConnector:
 
         return self.session
 
+    @staticmethod
+    def is_401(request):
+        if request.status_code == 401:
+            return True
+
+        if request.status_code == 200 and request.headers['Content-Type'].lower().find('application/json') != -1:
+            # tripletex don't always return valid json, and not always 401 neither
+            parsed = json.loads(request.text.replace("'", '"'))
+            try:
+                if parsed['error']['javaClass'] == 'no.tripletex.common.exception.NotLoggedInException':
+                    return True
+            except KeyError:
+                pass
+
+        return False
+
+    def force_user_logged_in(self, request, session, *args, **kwargs):
+        if self.is_401(request):
+            self.do_login()
+            request = session.get(*args, **kwargs)
+            if self.is_401(request):
+                raise NotLoggedInException(request.text)
+        return request
+
     def request_get(self, *args, **kwargs):
         s = self.get_session_object()
         r = s.get(*args, **kwargs)
 
-        if r.status_code == 401:
-            self.do_login()
-            r = s.get(*args, **kwargs)
-            if r.status_code == 401:
-                raise NotLoggedInException(r.text)
+        r = self.force_user_logged_in(r, s, *args, **kwargs)
 
         s.cookies.save(ignore_discard=True)
         return r
@@ -68,11 +90,7 @@ class TripletexConnector:
         s = self.get_session_object()
         r = s.post(*args, **kwargs)
 
-        if r.status_code == 401:
-            self.do_login()
-            r = s.post(*args, **kwargs)
-            if r.status_code == 401:
-                raise NotLoggedInException(r.text)
+        r = self.force_user_logged_in(r, s, *args, **kwargs)
 
         s.cookies.save()
         return r
@@ -95,13 +113,193 @@ class TripletexConnector:
 
 
 class TripletexBase:
-    def __init__(self, connector=None):
+    def __init__(self, contextId, connector=None):
+        self.contextId = contextId
         self.connector = connector if connector else TripletexConnector.get_default_object()
+
+
+class TripletexLedger(TripletexBase):
+    def get_ledger(self, date_start, date_end, account_start=3000, account_end=""):
+        q = OrderedDict()
+        q['javaClass'] = "no.tripletex.tcp.web.LedgerForm"
+        q['documentationComponent'] = "144"
+        q['contextId'] = self.contextId
+        q['isExpandedFilter'] = "true"
+        q['onlyOpenPostings'] = "false"
+        q['period.startDate'] = date_start  # "2016-01-01"
+        q['period.endOfPeriodDate'] = date_end  # "2016-12-31"
+        q['period.periodType'] = "1"
+        q['openPostingsDateBefore'] = ""
+        q['accountId'] = "-1"
+        q['startNumber'] = account_start
+        q['endNumber'] = account_end
+        q['selectedCustomerId'] = "-1"
+        q['selectedVendorId'] = "-1"
+        q['selectedEmployeeId'] = "-1"
+        q['selectedDepartmentId'] = "-1"
+        q['selectedProjectId'] = "-1"
+        q['includeSubProjectsOfSelectedProject'] = "false"
+        q['selectedProductId'] = "-1"
+        q['selectedVatId'] = "-1"
+        q['minAmountString'] = ""
+        q['maxAmountString'] = ""
+        q['amountType'] = "2"
+        q['orderBy'] = "1"
+        q['postingCount'] = "500000"  # this field is not respected anyways
+        q['viewCustomer'] = "true"
+        q['viewVendor'] = "true"
+        q['viewEmployee'] = "false"
+        q['viewDepartment'] = "false"
+        q['viewProject'] = "false"
+        q['viewProduct'] = "false"
+        q['csv'] = "true"
+        q['csvHeader'] = "true"
+        q['csvEncoding'] = "UTF-8"
+        q['csvSeparator'] = ";"
+        q['csvQualifier'] = '"'
+        q['csvDecimal'] = "."
+        q['csvLineBreak'] = "\n"
+
+        query_string = urllib.parse.urlencode(q)
+        url = "https://tripletex.no/execute/ledger?" + query_string
+
+        r = self.connector.request_get(url)
+        if r.status_code != 200:
+            raise TripletexException("Could not fetch ledger, error code: %s" % r.status_code)
+
+        result_list = []
+        column_list = []
+
+        fields_interested = [
+            'Avdelingsnavn',
+            'Avdelingsnummer',
+            'Beløp',
+            'Beskrivelse',
+            'Bilagsbeskrivelse',
+            'Bilagsnummer',
+            'Bilagsår',
+            'Dato',
+            'Kontonavn',
+            'Kontonummer',
+            'Kundenavn',
+            'Kundenummer',
+            'Leverandørnavn',
+            'Leverandørnummer',
+            'Prosjektnavn',
+            'Prosjektnummer',
+        ]
+
+        csvobj = csv.reader(r.text.strip().split('\n'), delimiter=';')
+        is_first = True
+        for row in csvobj:
+            if is_first:
+                for col in row:
+                    column_list.append(col)
+                is_first = False
+                continue
+
+            res = {}
+            for i, col in enumerate(row):
+                fieldname = column_list[i]
+                if fieldname in fields_interested:
+                    res[fieldname] = col
+
+            # skip "Åpningsbalanse"
+            if res['Bilagsnummer'] == '':
+                continue
+
+            # parse values
+            res['Beløp'] = float(res['Beløp'])
+            d = res['Dato'].split('-')
+            res['Dato'] = datetime.date(int(d[0]), int(d[1]), int(d[2]))
+            for field in ['Avdelingsnummer', 'Bilagsnummer', 'Bilagsår', 'Kontonummer',
+                          'Kundenummer', 'Leverandørnummer', 'Prosjektnummer']:
+                if res[field] == '':
+                    res[field] = None
+                else:
+                    res[field] = int(res[field])
+
+            result_list.append(res)
+
+        return result_list
+
+    def aggregate(self, ledgerdata, *aggregators):
+        result = OrderedDict()
+        default_data = {'in': 0, 'out': 0}
+
+        for row in ledgerdata:
+            # perform aggregators and check if it filters the row out
+            intermediates = []
+            for aggregator in aggregators:
+                res = aggregator(row)  # should return either False, True or (key, meta)
+                if res is False:
+                    break
+                if res is not True:
+                    intermediates.append(res)
+
+            else:
+                level = result
+                for key, meta in intermediates:
+                    if key not in level:
+                        level[key] = {'meta': meta, 'data': OrderedDict()}
+                    level = level[key]['data']
+
+                if level == OrderedDict():
+                    level.update(default_data)
+
+                if row['Kontonummer'] < 4000 or row['Kontonummer'] in [8050, 8072]:
+                    level['in'] = round(level['in'] + row['Beløp'], 2)
+                else:
+                    level['out'] = round(level['out'] + row['Beløp'], 2)
+
+        return result
+
+
+class TripletexDepartments(TripletexBase):
+    def get_department_list(self):
+        url = "https://tripletex.no/JSON-RPC?syncSystem=0&contextId=" + str(self.contextId)
+
+        post_data = {
+            "marshallSpec": [
+                "id",
+                "number",
+                "name",
+                "nameAndNumber"
+            ],
+            "className": "JSONRpcClient.RequestExtraInfo",
+            "id": 19,
+            "method": "Department.searchForDepartments",
+            "params": [
+                self.contextId,
+                '',
+                1000,
+                0
+            ]
+        }
+
+        r = self.connector.request_post(url, json=post_data)
+        if r.status_code != 200:
+            raise TripletexException("Unexpected return code from JSON-RPC when fetching department list")
+
+        if 'error' in r.json():
+            raise TripletexException("Unexpected return value from JSON-RPC when fetching department list: %s" % r.json()['error'])
+
+        department_list = []
+
+        data = r.json()
+        for department in data['result']:
+            department_list.append({
+                'id': department['id'],
+                'number': department['number'],
+                'name': department['name']
+            })
+
+        return department_list
 
 
 class TripletexAccounts(TripletexBase):
     def get_accounts(self):
-        url = "https://tripletex.no/execute/chartOfAccounts?act=content&scope=ui-id-2&contextId=2845076"
+        url = "https://tripletex.no/execute/chartOfAccounts?act=content&scope=ui-id-2&contextId=" + str(self.contextId)
         r = self.connector.request_get(url)
 
         if r.status_code != 200:
@@ -127,7 +325,7 @@ class TripletexAccounts(TripletexBase):
         q = OrderedDict()
         q['javaClass'] = "no.tripletex.tcp.web.ResultReport2Form"
         q['documentationComponent'] = "133"
-        q['contextId'] = "2845076"
+        q['contextId'] = self.contextId
         q['viewMode'] = "0"
         q['isExpandedFilter'] = "true"
         q['period.startDate'] = date_start  # "2014-01-01"
@@ -178,7 +376,7 @@ class TripletexAccounts(TripletexBase):
 
 class TripletexProjects(TripletexBase):
     def get_project_list_old(self):
-        url = "https://tripletex.no/JSON-RPC?syncSystem=0&contextId=2845076"
+        url = "https://tripletex.no/JSON-RPC?syncSystem=0&contextId=" + str(self.contextId)
 
         post_data = {
             "marshallSpec": [
@@ -195,7 +393,7 @@ class TripletexProjects(TripletexBase):
             "id": '81',
             "method": "Project.searchForProjects",
             "params": [
-                '2845076',
+                self.contextId,
                 '-1',
                 '-1',
                 '-1',
@@ -241,7 +439,7 @@ class TripletexProjects(TripletexBase):
         q = OrderedDict()
         q['javaClass'] = 'no.tripletex.tcp.web.ListProjectsExtForm'
         q['documentationComponent'] = '162'
-        q['contextId'] = '2845076'
+        q['contextId'] = self.contextId
         q['viewMode'] = '0'
         q['isExpandedFilter'] = 'true'
         q['isOrder'] = '1'
@@ -273,7 +471,7 @@ class TripletexProjects(TripletexBase):
         for tr in re.findall(r'<tr.*?>(.+?)</tr>', r.text):
             tdlist = re.findall(r'<td.*?>(.+?)</td>', tr)
 
-            if len(tdlist) == 7:
+            if len(tdlist) == 7 or len(tdlist) == 8:  # 8 if avdeling is enabled/visible
                 project_id = re.search(r'projectId=(\d+)&', tdlist[1]).group(1)
 
                 start_and_end = re.sub(r'<[^>]*?>', '', tdlist[5])
@@ -292,7 +490,7 @@ class TripletexProjects(TripletexBase):
         q = OrderedDict()
         q['javaClass'] = 'no.tripletex.tcp.web.ProjectResultReportForm'
         q['documentationComponent'] = '259'
-        q['contextId'] = '2845076'
+        q['contextId'] = self.contextId
         q['isExpandedFilter'] = 'true'
         q['period.startDate'] = date_start  # "2014-01-01"
         q['period.endOfPeriodDate'] = date_end  # "2015-12-31"
@@ -400,11 +598,11 @@ class TripletexImporter(TripletexBase):
     def get_url_ledger(year):
         """year = 2015"""
         url = 'https://tripletex.no/execute/viewJournal?javaClass=no.tripletex.tcp.web.JournalForm&' + \
-              'documentationComponent=145&contextId=2845076&isExpandedFilter=true&period.startDate=%d-01-01&' + \
+              'documentationComponent=145&contextId=%d&isExpandedFilter=true&period.startDate=%d-01-01&' + \
               'period.endOfPeriodDate=%d-12-31&period.periodType=1&=%d&registeredById=-1&updatedById=-1&' + \
               'numberSeriesId=89077&startNumber=&endNumber=&accountId=-1&minAmountString=&maxAmountString=&' + \
               'amountType=2&ascending=false&rowCount=2&act=content&scope=ajaxContent'
-        return url % (year, year, year)
+        return url % (self.contextId, year, year, year)
 
     def get_ledger(self, year):
         return self.connector.request_get(self.get_url_ledger(year))
@@ -423,7 +621,7 @@ class TripletexImporter(TripletexBase):
             raise ValueError("Need a unicode string as GBAT10-data")
 
         files = [('file', ('bilag.csv', data.encode('utf-8'), 'text/plain')), ]
-        r = self.connector.request_post('https://tripletex.no/execute/uploadCentral?contextId=2845076', files=files)
+        r = self.connector.request_post('https://tripletex.no/execute/uploadCentral?contextId=' + str(self.contextId), files=files)
         # [{"id":"29027318","revision":"1","name":"bilag.csv","size":"0","readableSize":"0","uid":"0","checksum":"da39a3ee5e6b4b0d3255bfef95601890afd80709"}]
 
         if r.status_code != 200:
@@ -456,7 +654,7 @@ class TripletexImporter(TripletexBase):
             ]
         }
 
-        r = self.connector.request_post('https://tripletex.no/JSON-RPC?syncSystem=0&contextId=2845076',
+        r = self.connector.request_post('https://tripletex.no/JSON-RPC?syncSystem=0&contextId=' + str(self.contextId),
                                         json=import_data)
         if r.status_code != 200:
             raise UploadFailedException("Unexpected return code from JSON-RPC when importing")
