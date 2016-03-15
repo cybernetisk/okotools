@@ -28,7 +28,11 @@ class DataWrapper extends React.Component {
         credentials: 'include'
       })
         .then(response => {
-          return response.text()
+          if (!response.ok) {
+            return ''
+          } else {
+            return response.text()
+          }
         })
         .then(responseText => {
           this.setState({
