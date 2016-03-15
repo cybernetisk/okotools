@@ -4,6 +4,12 @@
 import csv
 import requests
 
+def getFloat(val):
+    try:
+        return float(val)
+    except ValueError:
+        return 0
+
 def export_budget(output_handle):
     meta = 'https://spreadsheets.google.com/feeds/worksheets/1pAEq8O5NMkmEWvW-c6x_47abg5IO7HqPO5bs5J-iPt4/public/full?alt=json'
 
@@ -40,16 +46,16 @@ def export_budget(output_handle):
                 'Budsjett',
                 version,
                 row[0],
-                6 if row[0] == 'vår' else 12,
+                6 if row[1] == 'vår' else 12,
                 row[2],
                 row[3],
                 row[4],
-                row[5],
+                getFloat(row[5]) * -1,
                 row[6]
             ])
 
 if __name__ == '__main__':
-    path = '../tripletexweb/reports/'
+    path = '../tripletexweb/web/reports/'
 
     with open(path + 'budget.txt', 'w') as f:
         export_budget(f)
