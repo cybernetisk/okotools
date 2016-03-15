@@ -153,6 +153,7 @@ export default class ProjectReport extends React.Component {
     return (
       <div>
         <h1>Resultatrapport</h1>
+        <p><a href="rebuild.php">Last ny data fra Tripletex</a></p>
         <table className="table table-condensed">
           <thead>
             <tr>
