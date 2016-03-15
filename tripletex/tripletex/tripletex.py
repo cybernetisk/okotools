@@ -7,6 +7,7 @@ import requests
 import http.cookiejar
 import json
 import urllib.parse
+import html
 import re
 import getpass
 from bs4 import BeautifulSoup
@@ -479,7 +480,7 @@ class TripletexProjects(TripletexBase):
 
                 project_list.append({
                     'id': project_id,
-                    'text': re.sub(r'  +', ' ', re.sub(r'<[^>]*?>', '', tdlist[2]).strip()),
+                    'text': html.unescape(re.sub(r'  +', ' ', re.sub(r'<[^>]*?>', '', tdlist[2]).strip())),
                     'start': m.group(1),
                     'end': m.group(3)
                 })
