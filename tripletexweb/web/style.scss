@@ -1,0 +1,59 @@
+h1 {
+  font-size: 1.5em;
+}
+
+table {
+  font-size: 90%;
+
+  th, td {
+    text-align: right;
+    padding: 3px !important;
+    white-space: nowrap;
+  }
+
+  thead tr:nth-child(1) th,
+  thead tr:nth-child(2) th {
+    text-align: center;
+  }
+
+  thead tr:nth-child(1) th:nth-child(1),
+  tfoot tr:nth-child(1) th:nth-child(1),
+  th:nth-child(1),
+  td:nth-child(1) {
+    text-align: left;
+  }
+
+  tbody th {
+    font-weight: normal;
+  }
+}
+
+.project-level-1 {
+  background-color: #DDD;
+}
+.project-level-2 {
+  background-color: #EEE;
+}
+
+.project-result {
+  background-color: #c6e0b4;
+}
+
+.dataset-have-sum {
+  font-weight: normal;
+}
+
+.project-account {
+  td:nth-child(1) {
+    font-style: italic;
+  }
+  td {
+    color: #AAA
+  }
+}
+
+@media print {
+  a[href]:after {
+    content: none !important;
+  }
+}
