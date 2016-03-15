@@ -157,7 +157,7 @@ export default class ProjectReport extends React.Component {
         <table className="table table-condensed">
           <thead>
             <tr>
-              <th rowSpan={3}>Avdeling / prosjekt</th>
+              <th rowSpan={3}>{Object.keys(this.props.departments).length === 0 ? 'Prosjekt' : 'Avdeling / prosjekt'}</th>
               {this.props.datasets.map(dataset => (
                 <th key={dataset.key} colSpan={3} className={dataset.haveSum ? 'dataset-have-sum' : ''}>{dataset.description1}</th>
               ))}

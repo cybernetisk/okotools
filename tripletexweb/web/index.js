@@ -141,8 +141,12 @@ class ProjectReportWrapper extends React.Component {
     const ledger = utils.parseLedger(this.props.ledger) //.concat(utils.parseLedger(this.props.budget))
       // filter out egenkapitalendring og hjelpekonto
       .filter(entry => entry.Kontonummer !== 8960 && entry.Kontonummer !== 9999)
-    const departments = utils.parseDepartments(this.props.departments)
-    //const departments = []
+
+    let departments = utils.parseDepartments(this.props.departments)
+    if (Object.keys(departments).length === 1) {
+      // if only one department ignore departments
+      departments = {}
+    }
 
     //const months = [,'Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Des']
 
