@@ -141,6 +141,9 @@ if __name__ == '__main__':
     tt_projects = TripletexProjects(contextId, connector=connector)
     tt_ledger = TripletexLedger(contextId, connector=connector)
 
+    with open(path + 'context_id.txt', 'w') as f:
+        f.write(str(contextId))
+
     # fetch ledger
     if fetchLedger:
         ledger = tt_ledger.get_ledger('2014-01-01', '2016-12-31')
