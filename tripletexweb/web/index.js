@@ -70,7 +70,7 @@ class ReportTableWrapper extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      showOnlyDatasets: JSON.parse(window.localStorage.showOnlyDatasets || '') || []
+      showOnlyDatasets: JSON.parse(window.localStorage.showOnlyDatasets || '[]')
     }
   }
 
