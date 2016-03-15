@@ -58,8 +58,10 @@ def get_projects_list(tripletex):
 
 
 if __name__ == '__main__':
-    tt_accounts = TripletexAccounts()
-    tt_projects = TripletexProjects()
+    contextId = 2845076
+
+    tt_accounts = TripletexAccounts(contextId)
+    tt_projects = TripletexProjects(contextId)
 
     main_project_number = 40041
     main_project_id = tt_projects.get_project_id(main_project_number)
