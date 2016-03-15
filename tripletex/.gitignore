@@ -1,3 +1,5 @@
 bilag.csv
 cookies.txt
 __pycache__/
+export_settings.py
+env/
