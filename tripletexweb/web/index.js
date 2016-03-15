@@ -92,7 +92,7 @@ class ProjectReportWrapper extends React.Component {
           description1: `${semester} ${entry['År']}`,
           description2: `${entry['Type']} (${entry['Versjon']})`,
           filter,
-          resultReportLink: (departmentId) => this.resultReportLink(dateFrom, dateTo, departmentId),
+          resultReportLink: (departmentId, projectId, showChildProjects) => this.resultReportLink(dateFrom, dateTo, departmentId, projectId, showChildProjects),
           ledgerLink: (departmentId, projectId, accountNumber) => this.ledgerLink(dateFrom, dateTo, departmentId, projectId, accountNumber),
         }
         prev.push(item)
@@ -106,7 +106,7 @@ class ProjectReportWrapper extends React.Component {
           description1: `Sum ${entry['År']}`,
           description2: `${entry['Type']} (${entry['Versjon']})`,
           filter: test => test['År'] === entry['År'] && test['Type'] == entry['Type'] && test['Versjon'] == entry['Versjon'],
-          resultReportLink: (departmentId) => this.resultReportLink(dateFrom, dateTo, departmentId),
+          resultReportLink: (departmentId, projectId, showChildProjects) => this.resultReportLink(dateFrom, dateTo, departmentId, projectId, showChildProjects),
           ledgerLink: (departmentId, projectId, accountNumber) => this.ledgerLink(sumDateFrom, sumDateTo, departmentId, projectId, accountNumber),
           sumItem: item,
           isSum: true,
