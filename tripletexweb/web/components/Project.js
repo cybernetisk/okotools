@@ -139,9 +139,14 @@ export default class Project extends React.Component {
       return this.renderTotalSum()
     }
 
+    let className = `project-level-${this.props.level}`
+    if (this.props.setExpanded) {
+      className += ' pointer'
+    }
+
     return (
       <tbody>
-        <tr className={`project-level-${this.props.level}`} onClick={this.handleClick}>
+        <tr className={className} onClick={this.handleClick}>
           <td>{this.getTitle()}</td>
           {this.props.datasets.map(dataset => [
             <td key={`${dataset['key']}-in`}>

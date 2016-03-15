@@ -52,6 +52,10 @@ table {
   }
 }
 
+.pointer {
+  cursor: pointer;
+}
+
 @media print {
   a[href]:after {
     content: none !important;
