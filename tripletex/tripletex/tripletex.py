@@ -472,7 +472,7 @@ class TripletexProjects(TripletexBase):
         for tr in re.findall(r'<tr.*?>(.+?)</tr>', r.text):
             tdlist = re.findall(r'<td.*?>(.+?)</td>', tr)
 
-            if len(tdlist) == 7 or len(tdlist) == 8:  # 8 if avdeling is enabled/visible
+            if len(tdlist) > 7:
                 project_id = re.search(r'projectId=(\d+)&', tdlist[1]).group(1)
 
                 start_and_end = re.sub(r'<[^>]*?>', '', tdlist[5])
