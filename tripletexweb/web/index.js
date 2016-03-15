@@ -228,7 +228,7 @@ class ReportTableWrapper extends React.Component {
       <div>
         <h1>Resultatrapport</h1>
         <p>
-          <a href="rebuild/fetch_triplete_data.php">Last ny data fra Tripletex</a>
+          <a href="rebuild/fetch_tripletex_data.php">Last ny data fra Tripletex</a>
           {' '}
           <a href="rebuild/fetch_budget_data.php">Last ny data fra budsjett</a>
         </p>
