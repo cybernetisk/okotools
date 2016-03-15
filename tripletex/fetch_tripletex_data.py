@@ -123,14 +123,7 @@ def build_project_list(tripletex):
 
 
 if __name__ == '__main__':
-    # store contextId and credentials_provider in credentials.py
-    # eg:
-    #   contextId=1234
-    #   credentials_provider=lambda: ('user@name', 'password')
-    credentials_provider=None  # will ask for username and password by default
-    path = '../tripletexweb/web/reports/'
-
-    from export_settings import *
+    from settings import *
 
     fetchLedger = True
 
@@ -141,7 +134,7 @@ if __name__ == '__main__':
     tt_projects = TripletexProjects(contextId, connector=connector)
     tt_ledger = TripletexLedger(contextId, connector=connector)
 
-    with open(path + 'context_id.txt', 'w') as f:
+    with open(reports_path + 'context_id.txt', 'w') as f:
         f.write(str(contextId))
 
     # fetch ledger
@@ -151,25 +144,25 @@ if __name__ == '__main__':
 
         aggregated_data = get_aggregated_data(tt_ledger, ledger)
 
-        with open(path + 'aggregated.txt', 'w') as f:
+        with open(reports_path + 'aggregated.txt', 'w') as f:
             write_aggregated_data_report(aggregated_data, f)
 
     # fetch raw list of departments
     if True:
-        with open(path + 'departments.txt', 'w') as f:
+        with open(reports_path + 'departments.txt', 'w') as f:
             f.write(build_department_list(tt_departments))
-        print('Exported department list')
+        print('Fetched department list')
 
     # fetch raw list of accounts
     if True:
-        with open(path + 'accounts.txt', 'w') as f:
+        with open(reports_path + 'accounts.txt', 'w') as f:
             f.write(build_account_list(tt_accounts))
-        print('Exported account list')
+        print('Fetched account list')
 
     # fetch raw list of projects
     if True:
-        with open(path + 'projects.txt', 'w') as f:
+        with open(reports_path + 'projects.txt', 'w') as f:
             f.write(build_project_list(tt_projects))
-        print('Exported project list')
+        print('Fetched project list')
 
-    print('Reports saved to files in %s' % path)
+    print('Reports saved to files in %s' % reports_path)

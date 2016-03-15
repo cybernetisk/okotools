@@ -3,6 +3,7 @@
 
 import csv
 import requests
+import sys
 
 def getFloat(val):
     try:
@@ -11,10 +12,8 @@ def getFloat(val):
         return 0
 
 def export_budget(output_handle):
-    meta = 'https://spreadsheets.google.com/feeds/worksheets/1pAEq8O5NMkmEWvW-c6x_47abg5IO7HqPO5bs5J-iPt4/public/full?alt=json'
-
     csv_out = csv.writer(output_handle, delimiter=';', quoting=csv.QUOTE_NONE)
-    r = requests.get(meta).json()
+    r = requests.get(budget_url).json()
 
     csv_out.writerow([
         'Type',
@@ -55,9 +54,12 @@ def export_budget(output_handle):
             ])
 
 if __name__ == '__main__':
-    path = '../tripletexweb/web/reports/'
+    from settings import *
+    if budget_url is None:
+        print('Fetching data from budget is disabled - skipping budget')
+        sys.exit(0)
 
-    with open(path + 'budget.txt', 'w') as f:
+    with open(reports_path + 'budget.txt', 'w') as f:
         export_budget(f)
 
-    print('Data exported')
+    print('Fetched data from budget and updated report')
