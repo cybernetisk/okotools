@@ -8,4 +8,4 @@ export LANG=nb_NO.UTF-8
 cd ../../../tripletex
 source env/bin/activate
 ./export.py
-
+./budsjett.py
