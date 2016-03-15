@@ -128,7 +128,7 @@ if __name__ == '__main__':
     #   contextId=1234
     #   credentials_provider=lambda: ('user@name', 'password')
     credentials_provider=None  # will ask for username and password by default
-    path = '../tripletexweb/reports/'
+    path = '../tripletexweb/web/reports/'
 
     from export_settings import *
 
