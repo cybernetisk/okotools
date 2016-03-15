@@ -1,7 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import * as data from './data'
 import * as utils from './utils'
 
 import ProjectReport from './components/ProjectReport'
