@@ -2,6 +2,10 @@ import React from 'react'
 
 import { amount as amountFormatter } from '../formatter'
 
+const onlyIn = entry => -entry['BeløpInn']
+const onlyOut = entry => entry['BeløpUt']
+const inAndOut = entry => -entry['BeløpInn'] - entry['BeløpUt']
+
 export default class Account extends React.Component {
   static propTypes = {
     datasets: React.PropTypes.array.isRequired,
@@ -25,22 +29,35 @@ export default class Account extends React.Component {
     }
   }
 
+  renderResult(dataset) {
+    if (dataset.type !== 'Regnskap') {
+      return this.calculateAmount(dataset, inAndOut, true)
+    } else {
+      return (
+        <a href={dataset.ledgerLink(this.props.department.id, this.props.project.sysid, this.props.kontoSet[0].Kontonummer)} target="_blank">
+          {this.calculateAmount(dataset, inAndOut, true)}
+        </a>
+      )
+    }
+  }
+
   render() {
-    const onlyIn = entry => -entry['BeløpInn']
-    const onlyOut = entry => entry['BeløpUt']
-    const inAndOut = entry => -entry['BeløpInn'] - entry['BeløpUt']
-    const name = this.context.accounts[this.props.kontoSet[0].Kontonummer].name
+    let accountText
+    if (this.context.accounts[this.props.kontoSet[0].Kontonummer] === undefined) {
+      accountText = 'Konto ikke valgt'
+    } else {
+      const name = this.context.accounts[this.props.kontoSet[0].Kontonummer].name
+      accountText = `${this.props.kontoSet[0].Kontonummer} ${name}`
+    }
 
     return (
       <tr className="project-account">
-        <td>{Array(this.props.level).join('      ').replace(/ /g, '\u00a0')}{this.props.kontoSet[0].Kontonummer} {name}</td>
+        <td>{Array(this.props.level).join('      ').replace(/ /g, '\u00a0')}{accountText}</td>
         {this.props.datasets.map(dataset => [
           <td key={`${dataset['key']}-in`}>{this.calculateAmount(dataset, onlyIn)}</td>,
           <td key={`${dataset['key']}-out`}>{this.calculateAmount(dataset, onlyOut)}</td>,
           <td key={`${dataset['key']}-inout`} className="project-result">
-            <a href={dataset.ledgerLink(this.props.department.id, this.props.project.sysid, this.props.kontoSet[0].Kontonummer)} target="_blank">
-              {this.calculateAmount(dataset, inAndOut, true)}
-            </a>
+            {this.renderResult(dataset)}
           </td>
         ])}
       </tr>

@@ -1,9 +1,7 @@
 import React from 'react'
 import Project from './Project'
 
-// TODO: stuff missing department
-
-export default class ProjectReport extends React.Component {
+export default class ReportTable extends React.Component {
   static childContextTypes = {
     projectsWithDatasets: React.PropTypes.object.isRequired,
     projectsWithHovedbok: React.PropTypes.object.isRequired,
@@ -151,40 +149,36 @@ export default class ProjectReport extends React.Component {
 
   render() {
     return (
-      <div>
-        <h1>Resultatrapport</h1>
-        <p><a href="rebuild.php">Last ny data fra Tripletex</a></p>
-        <table className="table table-condensed">
-          <thead>
-            <tr>
-              <th rowSpan={3}>{Object.keys(this.props.departments).length === 0 ? 'Prosjekt' : 'Avdeling / prosjekt'}</th>
-              {this.props.datasets.map(dataset => (
-                <th key={dataset.key} colSpan={3} className={dataset.haveSum ? 'dataset-have-sum' : ''}>{dataset.description1}</th>
-              ))}
-            </tr>
-            <tr>
-              {this.props.datasets.map(dataset => (
-                <th key={dataset.key} colSpan={3} className={dataset.haveSum ? 'dataset-have-sum' : ''}>{dataset.description2}</th>
-              ))}
-            </tr>
-            <tr>
-              {this.props.datasets.map(dataset => [
-                <th key={`${dataset.key}-1`} className={dataset.haveSum ? 'dataset-have-sum' : ''}>Inntekter</th>,
-                <th key={`${dataset.key}-2`} className={dataset.haveSum ? 'dataset-have-sum' : ''}>Kostnader</th>,
-                <th key={`${dataset.key}-3`} className={dataset.haveSum ? 'project-result dataset-have-sum' : 'project-result'}>Resultat</th>
-              ])}
-            </tr>
-          </thead>
-          <tfoot>
-            <Project
-              isTotalSum={true}
-              level={0}
-              project={this.props.projects[0]}
-              datasets={this.props.datasets} />
-          </tfoot>
-          {this.buildDepartmentTree()}
-        </table>
-      </div>
+      <table className="table table-condensed">
+        <thead>
+          <tr>
+            <th rowSpan={3}>{Object.keys(this.props.departments).length === 0 ? 'Prosjekt' : 'Avdeling / prosjekt'}</th>
+            {this.props.datasets.map(dataset => (
+              <th key={dataset.key} colSpan={3} className={dataset.haveSum ? 'dataset-have-sum' : ''}>{dataset.description1}</th>
+            ))}
+          </tr>
+          <tr>
+            {this.props.datasets.map(dataset => (
+              <th key={dataset.key} colSpan={3} className={dataset.haveSum ? 'dataset-have-sum' : ''}>{dataset.description2}</th>
+            ))}
+          </tr>
+          <tr>
+            {this.props.datasets.map(dataset => [
+              <th key={`${dataset.key}-1`} className={dataset.haveSum ? 'dataset-have-sum' : ''}>Inntekter</th>,
+              <th key={`${dataset.key}-2`} className={dataset.haveSum ? 'dataset-have-sum' : ''}>Kostnader</th>,
+              <th key={`${dataset.key}-3`} className={dataset.haveSum ? 'project-result dataset-have-sum' : 'project-result'}>Resultat</th>
+            ])}
+          </tr>
+        </thead>
+        <tfoot>
+          <Project
+            isTotalSum={true}
+            level={0}
+            project={this.props.projects[0]}
+            datasets={this.props.datasets} />
+        </tfoot>
+        {this.buildDepartmentTree()}
+      </table>
     )
   }
 }

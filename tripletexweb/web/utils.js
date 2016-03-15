@@ -113,6 +113,7 @@ export function groupHovedbokByDepartmentAndProject(hovedbok, departments, proje
   return hovedbok.reduce((prev, entry) => {
     let departmentNumber = entry['Avdelingsnummer'] || 0
     let projectNumber = entry['Prosjektnummer'] || 0
+    const accountNumber = entry['Kontonummer'] || 0
 
     if (!departments[departmentNumber]) {
       departmentNumber = 0
@@ -130,11 +131,11 @@ export function groupHovedbokByDepartmentAndProject(hovedbok, departments, proje
       prev[departmentNumber][projectNumber] = []
     }
 
-    if (!prev[departmentNumber][projectNumber][entry['Kontonummer']]) {
-      prev[departmentNumber][projectNumber][entry['Kontonummer']] = []
+    if (!prev[departmentNumber][projectNumber][accountNumber]) {
+      prev[departmentNumber][projectNumber][accountNumber] = []
     }
 
-    prev[departmentNumber][projectNumber][entry['Kontonummer']].push(entry)
+    prev[departmentNumber][projectNumber][accountNumber].push(entry)
     return prev
   }, {})
 }

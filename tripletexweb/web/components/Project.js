@@ -98,6 +98,10 @@ export default class Project extends React.Component {
         projectsWithDatasets={this.context.projectsWithDatasets} />
     )
 
+    if (dataset.type !== 'Regnskap') {
+      return totalAmount
+    }
+
     let link
 
     // department links
