@@ -74,8 +74,10 @@ class ReportTableWrapper extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      showOnlyDatasets: JSON.parse(window.localStorage.showOnlyDatasets || '[]')
+      showOnlyDatasets: JSON.parse(window.localStorage.showOnlyDatasets || '[]'),
+      aggregateDatasets: JSON.parse(window.localStorage.aggregateDatasets || 'true'),
     }
+    this.changeAggregation = this.changeAggregation.bind(this)
   }
 
   componentWillMount() {
@@ -196,6 +198,14 @@ class ReportTableWrapper extends React.Component {
     return newDatasets.sort((a, b) => b.key.localeCompare(a.key))
   }
 
+  changeAggregation() {
+    this.setState({
+      aggregateDatasets: !this.state.aggregateDatasets
+    })
+
+    window.localStorage.aggregateDatasets = JSON.stringify(!this.state.aggregateDatasets)
+  }
+
   changeDatasetVisibility(dataset) {
     let showOnlyDatasets = this.state.showOnlyDatasets
     const pos = showOnlyDatasets.indexOf(dataset.key)
@@ -217,7 +227,10 @@ class ReportTableWrapper extends React.Component {
   }
 
   render() {
-    const datasets = this.aggregateDatasets(this.filterDatasets(this.state.datasets, this.state.showOnlyDatasets))
+    let datasets = this.filterDatasets(this.state.datasets, this.state.showOnlyDatasets)
+    if (this.state.aggregateDatasets) {
+      datasets = this.aggregateDatasets(datasets)
+    }
 
     const projectsWithHovedbok = utils.groupHovedbokByDepartmentAndProject(this.state.ledger, this.state.departments, this.state.projects)
     const projectsWithDatasets = utils.populateCache(datasets, this.state.projects, this.state.departments, projectsWithHovedbok)
@@ -240,8 +253,15 @@ class ReportTableWrapper extends React.Component {
           projectsWithHovedbok={projectsWithHovedbok}
           datasets={datasets}
         />
-        <h3>Datasett som vises</h3>
+        <h3>Visningsvalg</h3>
         <ul>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              onChange={this.changeAggregation}
+              checked={this.state.aggregateDatasets}
+            /> Vis sum for år
+          </label>
           {datasetsYears.map(year => (
             <li key={year}>
               {year}
