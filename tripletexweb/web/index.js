@@ -124,18 +124,19 @@ class ReportTableWrapper extends React.Component {
 
   buildDatasets(ledger) {
     return ledger.reduce((prev, entry) => {
-      const key = entry['År'] + entry['Type'] + entry['Versjon'] + (entry['Måned'] < 7 ? 1 : 2)
+      const key = entry['År'] + entry['Type'] + entry['Versjon'] + (entry['Måned'] == 0 ? 0 : (entry['Måned'] < 7 ? 1 : 2))
 
       if (!prev.some(elm => elm.key === key)) {
         const filter = test => test['Type'] == entry['Type']
           && test['Versjon'] == entry['Versjon']
           && test['År'] === entry['År']
-          && (entry['Måned'] < 7 ? test['Måned'] < 7 : test['Måned'] >= 7)
+          && (entry['Måned'] == 0 ? test['Måned'] == 0 : (entry['Måned'] < 7 ? test['Måned'] < 7 : test['Måned'] >= 7))
 
-        const semester = entry['Måned'] < 7 ? 'Vår' : 'Høst'
+        const semester = entry['Måned'] == 0 ? 'År' : (entry['Måned'] < 7 ? 'Vår' : 'Høst')
+        console.log('hm', entry['Måned'])
 
         const dateFrom = `${entry['År']}-${entry['Måned'] < 7 ? '01-01' : '01-06'}`
-        const dateTo = `${entry['År']}-${entry['Måned'] < 7 ? '06-30' : '12-31'}`
+        const dateTo = `${entry['År']}-${entry['Måned'] < 7 && entry['Måned'] !== 0 ? '06-30' : '12-31'}`
 
         prev.push({
           key,

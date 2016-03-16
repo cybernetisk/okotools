@@ -7,7 +7,7 @@ import sys
 
 def getFloat(val):
     try:
-        return float(val)
+        return float(val.replace(' ', '').replace(',', '.').replace(' ', ''))
     except ValueError:
         return 0
 
@@ -42,15 +42,15 @@ def export_budget(output_handle):
                 continue
 
             csv_out.writerow([
-                'Budsjett',
+                row[8] if len(row) >= 9 else 'Budsjett',
                 version,
                 row[0],
-                6 if row[1] == 'vår' else 12,
+                6 if row[1] == 'vår' else (12 if row[1] == 'høst' else 0),
                 row[2],
                 row[3],
                 row[4],
                 getFloat(row[5]) * -1,
-                row[6]
+                getFloat(row[6])
             ])
 
 if __name__ == '__main__':

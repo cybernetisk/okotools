@@ -61,7 +61,7 @@ export function parseLedger(ledger) {
       if (floats.indexOf(header) !== -1) {
         val = parseFloat(val) || 0
       } else if (ints.indexOf(header) !== -1) {
-        val = parseInt(val) || null
+        val = parseInt(val) || 0
       }
 
       prev[header] = val

@@ -72,7 +72,14 @@ export default class ReportTable extends React.Component {
     }
 
     Object.keys(this.props.departments).forEach(departmentNumber => {
-      addDepartment(this.props.departments[departmentNumber])
+      const depDatasets = this.props.projectsWithDatasets[departmentNumber]
+      const haveAnyData = Object.keys(depDatasets).map(key => depDatasets[key]).some(project => {
+        return Object.keys(project).map(key => project[key]).some(summer => summer.count > 0);
+      });
+
+      if (haveAnyData) {
+        addDepartment(this.props.departments[departmentNumber])
+      }
     })
 
     const hasMissingDepartment = Object.keys((this.props.projectsWithDatasets[0] || {})[0] || {})
