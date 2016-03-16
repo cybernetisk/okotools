@@ -124,7 +124,7 @@ class ReportTableWrapper extends React.Component {
 
   buildDatasets(ledger) {
     return ledger.reduce((prev, entry) => {
-      const key = (entry['År'] * 100 + (entry['Måned'] < 7 ? 1 : 2)) + entry['Type'] + entry['Versjon']
+      const key = entry['År'] + entry['Type'] + entry['Versjon'] + (entry['Måned'] < 7 ? 1 : 2)
 
       if (!prev.some(elm => elm.key === key)) {
         const filter = test => test['Type'] == entry['Type']
@@ -160,7 +160,7 @@ class ReportTableWrapper extends React.Component {
 
     datasets.forEach(dataset => {
       const entry = dataset.entry
-      const sumKey = (entry['År'] * 100 + 99) + entry['Type'] + entry['Versjon']
+      const sumKey = entry['År'] + entry['Type'] + entry['Versjon'] + '3'
       const sumDateFrom = `${entry['År']}-01-01`
       const sumDateTo = `${entry['År']}-12-31`
 
