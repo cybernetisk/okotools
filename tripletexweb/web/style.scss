@@ -1,3 +1,7 @@
+body {
+  -webkit-print-color-adjust: exact
+}
+
 h1 {
   //font-size: 1.5em;
 }
@@ -53,7 +57,7 @@ table {
     font-style: italic;
   }
   td {
-    color: #AAA
+    color: #AAA;
   }
 }
 
@@ -64,5 +68,29 @@ table {
 @media print {
   a[href]:after {
     content: none !important;
+  }
+
+  .hidden-print {
+    display: none;
+  }
+
+  .project-number {
+    color: #AAA !important;
+  }
+
+  .project-account td * {
+    color: #AAA !important;
+  }
+
+  table .project-level-1 td {
+    background-color: #EEE !important;
+  }
+  table .project-level-2 td {
+    background-color: #FAFAFA !important;
+  }
+
+  table td.project-result,
+  table th.project-result {
+    background-color: #c6e0b4 !important;
   }
 }

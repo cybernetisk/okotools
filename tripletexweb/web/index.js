@@ -240,7 +240,7 @@ class ReportTableWrapper extends React.Component {
     return (
       <div>
         <h1>Resultatrapport</h1>
-        <p>
+        <p className="hidden-print">
           <a href="rebuild/fetch_tripletex_data.php">Last ny data fra Tripletex</a>
           {' '}
           <a href="rebuild/fetch_budget_data.php">Last ny data fra budsjett</a>
@@ -253,36 +253,38 @@ class ReportTableWrapper extends React.Component {
           projectsWithHovedbok={projectsWithHovedbok}
           datasets={datasets}
         />
-        <h3>Visningsvalg</h3>
-        <ul>
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              onChange={this.changeAggregation}
-              checked={this.state.aggregateDatasets}
-            /> Vis sum for år
-          </label>
-          {datasetsYears.map(year => (
-            <li key={year}>
-              {year}
-              <ul>
-                {this.state.datasets.filter(dataset => dataset.entry['År'] === year).map(dataset => (
-                  <li key={dataset.key} className="checkbox">
-                    <label>
-                      <input
-                        type="checkbox"
-                        onChange={ev => this.changeDatasetVisibility(dataset)}
-                        checked={this.state.showOnlyDatasets.indexOf(dataset.key) !== -1}
-                      />
-                      {' '}
-                      {dataset.description1} {dataset.description2} {dataset.isSum}
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
+        <div className="hidden-print">
+          <h3>Visningsvalg</h3>
+          <ul>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                onChange={this.changeAggregation}
+                checked={this.state.aggregateDatasets}
+              /> Vis sum for år
+            </label>
+            {datasetsYears.map(year => (
+              <li key={year}>
+                {year}
+                <ul>
+                  {this.state.datasets.filter(dataset => dataset.entry['År'] === year).map(dataset => (
+                    <li key={dataset.key} className="checkbox">
+                      <label>
+                        <input
+                          type="checkbox"
+                          onChange={ev => this.changeDatasetVisibility(dataset)}
+                          checked={this.state.showOnlyDatasets.indexOf(dataset.key) !== -1}
+                        />
+                        {' '}
+                        {dataset.description1} {dataset.description2} {dataset.isSum}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     )
   }
