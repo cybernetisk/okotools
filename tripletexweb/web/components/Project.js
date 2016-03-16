@@ -129,13 +129,26 @@ export default class Project extends React.Component {
   getTitle() {
     const title = this.props.onlyThis
       ? 'Uspesifisert'
-      : this.props.project.title
+      : (
+        <span>
+          {this.props.project.title}
+          {' '}
+          <span className="project-number">{this.props.project.id}</span>
+        </span>
+      )
+
 
     const expand = !this.props.isExpanded && this.props.hasChildProjects && !this.props.onlyThis
       ? ' +'
       : ''
 
-    return Array(this.props.level).join('      ').replace(/ /g, '\u00a0') + title + expand
+    return (
+      <span>
+        {Array(this.props.level).join('      ').replace(/ /g, '\u00a0')}
+        {title}
+        {expand}
+      </span>
+    )
   }
 
   render() {

@@ -1,9 +1,9 @@
 h1 {
-  font-size: 1.5em;
+  //font-size: 1.5em;
 }
 
 table {
-  font-size: 90%;
+  //font-size: 90%;
 
   th, td {
     text-align: right;
@@ -37,6 +37,11 @@ table {
 
 .project-result {
   background-color: #c6e0b4;
+}
+
+.project-number {
+  font-size: 80%;
+  color: #AAA;
 }
 
 .dataset-have-sum {
