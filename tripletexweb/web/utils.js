@@ -1,3 +1,8 @@
+/**
+ * Parse CSV of projects into an associative array
+ *
+ * Also generate reference-list of all child-projects in each project
+ */
 export function parseProjects(projectsText) {
   const re = /^(\S+);(\S*);(\S+);(\S.+)$/
   let projects = {
@@ -40,6 +45,12 @@ export function parseProjects(projectsText) {
   return projects
 }
 
+/**
+ * Parse CSV of ledger into an associative array
+ *
+ * The second parameter determines if this data is from Tripletex,
+ * as if we know this we can link to more details in Tripletex
+ */
 export function parseLedger(ledger, isNotFromTripletex) {
   let first = true
   let headers = null
@@ -74,6 +85,9 @@ export function parseLedger(ledger, isNotFromTripletex) {
   return entries
 }
 
+/**
+ * Parse CSV of accounts into an associative array
+ */
 export function parseAccounts(accountsRaw) {
   let entries = {}
 
@@ -92,6 +106,9 @@ export function parseAccounts(accountsRaw) {
   return entries
 }
 
+/**
+ * Parse CSV of departments into an associative array
+ */
 export function parseDepartments(data) {
   let entries = {}
 
@@ -109,6 +126,13 @@ export function parseDepartments(data) {
   return entries
 }
 
+/**
+ * Groups all ledger items into this structure:
+ *
+ * result[departmentNumber][projectNumber][accountNumber]
+ *
+ * where each element is an array containing the ledger items
+ */
 export function groupHovedbokByDepartmentAndProject(hovedbok, departments, projects) {
   return hovedbok.reduce((prev, entry) => {
     let departmentNumber = entry['Avdelingsnummer'] || 0
@@ -140,6 +164,16 @@ export function groupHovedbokByDepartmentAndProject(hovedbok, departments, proje
   }, {})
 }
 
+
+/**
+ * Creates a structure that contain all projects and a sum of kredit and debet
+ * both for this project itself but also including all children
+ *
+ * The structure generated is:
+ * cache[departmentNumber][projectNumber][datasetKey]
+ *
+ * where each element is a object of type `summer`, see the inner function
+ */
 export function populateCache(datasets, projects, departments, projectsWithHovedbok) {
   let cache = {}
 
