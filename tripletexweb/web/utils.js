@@ -40,7 +40,7 @@ export function parseProjects(projectsText) {
   return projects
 }
 
-export function parseLedger(ledger) {
+export function parseLedger(ledger, isNotFromTripletex) {
   let first = true
   let headers = null
   let entries = []
@@ -66,7 +66,7 @@ export function parseLedger(ledger) {
 
       prev[header] = val
       return prev
-    }, {})
+    }, {isTripletex: !isNotFromTripletex})
 
     entries.push(resolved)
   })

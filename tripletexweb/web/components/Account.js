@@ -30,7 +30,7 @@ export default class Account extends React.Component {
   }
 
   renderResult(dataset) {
-    if (dataset.type !== 'Regnskap') {
+    if (!dataset.entry.isTripletex) {
       return this.calculateAmount(dataset, inAndOut, true)
     } else {
       return (

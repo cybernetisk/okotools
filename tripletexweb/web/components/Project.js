@@ -103,7 +103,7 @@ export default class Project extends React.Component {
         projectsWithDatasets={this.context.projectsWithDatasets} />
     )
 
-    if (dataset.type !== 'Regnskap') {
+    if (!dataset.entry.isTripletex) {
       return totalAmount
     }
 

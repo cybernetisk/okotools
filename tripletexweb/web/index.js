@@ -92,7 +92,7 @@ class ReportTableWrapper extends React.Component {
     const accounts = utils.parseAccounts(this.props.accounts)
     const projects = utils.parseProjects(this.props.projects)
 
-    const ledger = utils.parseLedger(this.props.ledger).concat(utils.parseLedger(this.props.budget))
+    const ledger = utils.parseLedger(this.props.ledger).concat(utils.parseLedger(this.props.budget, true))
     //const ledger = utils.parseLedger(this.props.budget)
       // filter out egenkapitalendring og hjelpekonto
       .filter(entry => entry.Kontonummer !== 8960 && entry.Kontonummer !== 9999)
