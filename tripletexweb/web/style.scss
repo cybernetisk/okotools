@@ -45,6 +45,19 @@ table {
 
 .project-result {
   background-color: #c6e0b4;
+  position: relative;
+
+  .account-details {
+    position: absolute;
+    right: 50px;
+    top: -5px;
+    padding: 3px;
+    background: #FFF;
+    border: 1px solid #888;
+    z-index: 100;
+    text-align: left;
+    opacity: 0.9;
+  }
 }
 
 .project-number {
@@ -61,7 +74,7 @@ table {
     font-style: italic;
   }
   td {
-    color: #AAA;
+    color: #888;
   }
 }
 

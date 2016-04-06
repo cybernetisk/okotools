@@ -24,7 +24,8 @@ def export_budget(output_handle):
         'Prosjektnummer',
         'Kontonummer',
         'BeløpInn',
-        'BeløpUt'
+        'BeløpUt',
+        'Beskrivelse'
     ])
 
     for sheet in r['feed']['entry']:
@@ -50,7 +51,8 @@ def export_budget(output_handle):
                 row[3],
                 row[4],
                 getFloat(row[5]) * -1,
-                getFloat(row[6])
+                getFloat(row[6]),
+                row[7]
             ])
 
 if __name__ == '__main__':
