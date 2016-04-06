@@ -42,7 +42,7 @@ def export_budget(output_handle):
                 continue
 
             csv_out.writerow([
-                row[8] if len(row) >= 9 else 'Budsjett',
+                row[8] if len(row) >= 9 and row[8] != "" else 'Budsjett',
                 version,
                 row[0],
                 6 if row[1] == 'vår' else (12 if row[1] == 'høst' else 0),
