@@ -1,3 +1,5 @@
+var webpack = require('webpack');
+
 module.exports = {
   entry: './index.js',
   output: {
@@ -10,5 +12,10 @@ module.exports = {
       {test: /\.scss$/, loader: 'style!css!sass'},
       {test: /\.js$/, exclude: /node_modules/, loader: "babel-loader"}
     ]
-  }
+  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      'fetch': 'imports?this=>global!exports?global.fetch!whatwg-fetch'
+    }),
+  ]
 }
