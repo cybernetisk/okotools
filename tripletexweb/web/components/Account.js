@@ -52,7 +52,7 @@ export default class Account extends React.Component {
 
     return (
       <tr className="project-account">
-        <td>{Array(this.props.level).join('      ').replace(/ /g, '\u00a0')}{accountText}</td>
+        <td>{Array(this.props.level).join('     ').replace(/ /g, '\u00a0')}{accountText}</td>
         {this.props.datasets.map(dataset => [
           <td key={`${dataset['key']}-in`}>{this.calculateAmount(dataset, onlyIn)}</td>,
           <td key={`${dataset['key']}-out`}>{this.calculateAmount(dataset, onlyOut)}</td>,

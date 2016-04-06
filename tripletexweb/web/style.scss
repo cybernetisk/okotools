@@ -3,7 +3,7 @@ body {
 }
 
 h1 {
-  //font-size: 1.5em;
+  font-size: 2.5rem;
 }
 
 table {
@@ -11,7 +11,7 @@ table {
 
   th, td {
     text-align: right;
-    padding: 3px !important;
+    padding: 2px !important;
     white-space: nowrap;
   }
 
@@ -20,9 +20,13 @@ table {
     text-align: center;
   }
 
+  thead th {
+    font-size: 95%;
+  }
+
   thead tr:nth-child(1) th:nth-child(1),
   tfoot tr:nth-child(1) th:nth-child(1),
-  th:nth-child(1),
+  tbody th:nth-child(1),
   td:nth-child(1) {
     text-align: left;
   }

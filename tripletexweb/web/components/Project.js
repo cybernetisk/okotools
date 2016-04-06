@@ -51,7 +51,7 @@ export default class Project extends React.Component {
           department={this.props.department}
           project={this.props.project}
           kontoSet={account}
-          level={this.props.level + 2}
+          level={this.props.level + 1}
           datasets={this.props.datasets} />
       ))
     }
@@ -149,7 +149,7 @@ export default class Project extends React.Component {
 
     return (
       <span>
-        {Array(this.props.level).join('      ').replace(/ /g, '\u00a0')}
+        {Array(this.props.level).join('     ').replace(/ /g, '\u00a0')}
         {title}
         {expand}
       </span>
