@@ -469,8 +469,8 @@ class TripletexProjects(TripletexBase):
             raise TripletexException("Could not fetch project list")
 
         project_list = []
-        for tr in re.findall(r'<tr.*?>(.+?)</tr>', r.text):
-            tdlist = re.findall(r'<td.*?>(.+?)</td>', tr)
+        for tr in re.findall(r'<tr.*?>(.+?)</tr>', r.text, re.DOTALL):
+            tdlist = re.findall(r'<td.*?>(.+?)</td>', tr, re.DOTALL)
 
             if len(tdlist) > 7:
                 project_id = re.search(r'projectId=(\d+)&', tdlist[1]).group(1)
