@@ -596,17 +596,17 @@ class TripletexProjects(TripletexBase):
 
 class TripletexImporter(TripletexBase):
     @staticmethod
-    def get_url_ledger(year):
+    def get_url_ledger(contextId, year):
         """year = 2015"""
         url = 'https://tripletex.no/execute/viewJournal?javaClass=no.tripletex.tcp.web.JournalForm&' + \
               'documentationComponent=145&contextId=%d&isExpandedFilter=true&period.startDate=%d-01-01&' + \
               'period.endOfPeriodDate=%d-12-31&period.periodType=1&=%d&registeredById=-1&updatedById=-1&' + \
               'numberSeriesId=89077&startNumber=&endNumber=&accountId=-1&minAmountString=&maxAmountString=&' + \
               'amountType=2&ascending=false&rowCount=2&act=content&scope=ajaxContent'
-        return url % (self.contextId, year, year, year)
+        return url % (contextId, year, year, year)
 
     def get_ledger(self, year):
-        return self.connector.request_get(self.get_url_ledger(year))
+        return self.connector.request_get(self.get_url_ledger(self.contextId, year))
 
     def get_next_ledger_number(self, year):
         data = self.get_ledger(year)

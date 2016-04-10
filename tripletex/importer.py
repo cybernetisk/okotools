@@ -4,10 +4,11 @@
 import sys
 import re
 from cmd import Cmd
-from tripletex.z import CYBTripletexImport, DATA_FILE_OUT
+from tripletex.z import CYBTripletexImport, DATA_FILE_OUT, ZImportError
 
 DATA_FILE_IN = '../z_www/reports.json'
 
+import settings
 
 # support for ANSI color codes
 try:
@@ -203,9 +204,13 @@ class MyPrompt(Cmd):
         print("--------------------------------------------------------------------------------")
         self.helper.list_selected(header=False)
 
-        exported = self.cyb.export_selected(import_csv=True)
-        if exported is None:
-            print("Ingen bilag er valgt!")
+        try:
+            exported = self.cyb.export_selected(import_csv=True)
+            if exported is None:
+                print("Ingen bilag er valgt!")
+                return
+        except ZImportError as e:
+            print("Feil oppstod ved forsøk på å importere til Tripletex: %s" % e)
             return
 
         print("")
@@ -316,7 +321,7 @@ class MyPrompt(Cmd):
 
 
 if __name__ == '__main__':
-    cyb = CYBTripletexImport(DATA_FILE_IN)
+    cyb = CYBTripletexImport(DATA_FILE_IN, settings.contextId)
     cyb.load_json()
 
     prompt = MyPrompt(cyb)

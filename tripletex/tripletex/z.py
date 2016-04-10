@@ -248,7 +248,7 @@ class ZGroup:
 
 
 class CYBTripletexImport:
-    def __init__(self, json_file):
+    def __init__(self, json_file, contextId):
         self.json_file = json_file
         self.first_num = None
         self.active_year = None
@@ -256,7 +256,7 @@ class CYBTripletexImport:
         self.data = None  # initialized by loadJSON
         self.zgroups = None  # initialized by loadJSON
         self.selected = []  # initialized by loadJSON
-        self.tripletex = TripletexImporter()
+        self.tripletex = TripletexImporter(contextId=contextId)
 
     def load_json(self, show_all=False):
         f = open(self.json_file, 'r')
@@ -316,7 +316,7 @@ class CYBTripletexImport:
             try:
                 self.tripletex.import_gbat10(output_handle.getvalue())
             except TripletexException as e:
-                print("Feil oppstå ved forsøk på å importere til Tripletex: %s" % e)
+                raise ZImportError(e)
 
         else:
             output_handle = open(DATA_FILE_OUT, 'w', encoding="iso-8859-1")
@@ -386,4 +386,7 @@ class CYBTripletexImport:
 
 
 class ZError(Exception):
+    pass
+
+class ZImportError(Exception):
     pass
