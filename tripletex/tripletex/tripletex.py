@@ -625,6 +625,17 @@ class TripletexImporter(TripletexBase):
         r = self.connector.request_post('https://tripletex.no/execute/uploadCentral?contextId=' + str(self.contextId), files=files)
         # [{"id":"29027318","revision":"1","name":"bilag.csv","size":"0","readableSize":"0","uid":"0","checksum":"da39a3ee5e6b4b0d3255bfef95601890afd80709"}]
 
+        # temporary debugging due to random issues
+        with open('debug.log', 'a') as f:
+            f.write('---- LOG START: uploading bilag.csv %s ----\n' % datetime.datetime.now())
+            f.write('URL: %s\n' % r.url)
+            f.write('Status code: %s\n' % r.status_code)
+            f.write('Request headers: %s\n' % r.request.headers)
+            f.write('Request data: %s\n' % r.request.body)
+            f.write('Response headers: %s\n' % r.headers)
+            f.write('Response data: %s\n' % r.text)
+            f.write('---- LOG END ----\n\n')
+
         if r.status_code != 200:
             raise UploadFailedException('Received unexpected status code %d when trying to upload' % r.status_code, r)
 
@@ -657,6 +668,18 @@ class TripletexImporter(TripletexBase):
 
         r = self.connector.request_post('https://tripletex.no/JSON-RPC?syncSystem=0&contextId=' + str(self.contextId),
                                         json=import_data)
+
+        # temporary debugging due to random issues
+        with open('debug.log', 'a') as f:
+            f.write('---- LOG START: importing bilag.csv %s ----\n' % datetime.datetime.now())
+            f.write('URL: %s\n' % r.url)
+            f.write('Status code: %s\n' % r.status_code)
+            f.write('Request headers: %s\n' % r.request.headers)
+            f.write('Request data: %s\n' % r.request.body)
+            f.write('Response headers: %s\n' % r.headers)
+            f.write('Response data: %s\n' % r.text)
+            f.write('---- LOG END ----\n\n')
+
         if r.status_code != 200:
             raise UploadFailedException("Unexpected return code from JSON-RPC when importing")
 
