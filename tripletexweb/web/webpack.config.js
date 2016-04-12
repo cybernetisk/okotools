@@ -1,7 +1,10 @@
 var webpack = require('webpack');
 
+var production = process.env.NODE_ENV === 'production';
+
 module.exports = {
   entry: './index.js',
+  devtool: production ? 'source-map' : 'cheap-module-eval-source-map',
   output: {
     path: __dirname,
     filename: 'bundle.js'
