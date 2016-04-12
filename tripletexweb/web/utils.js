@@ -133,8 +133,14 @@ export function parseDepartments(data) {
  *
  * where each element is an array containing the ledger items
  */
-export function groupHovedbokByDepartmentAndProject(hovedbok, departments, projects) {
+export function groupHovedbokByDepartmentAndProject(hovedbok, departments, projects, filterByDatasets) {
+  const filters = filterByDatasets ? filterByDatasets.map(dataset => dataset.filter) : null
+
   return hovedbok.reduce((prev, entry) => {
+    if (filters && !filters.some(filter => filter(entry))) {
+      return prev
+    }
+
     let departmentNumber = entry['Avdelingsnummer'] || 0
     let projectNumber = entry['Prosjektnummer'] || 0
     const accountNumber = entry['Kontonummer'] || 0

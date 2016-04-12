@@ -77,8 +77,10 @@ class ReportTableWrapper extends React.Component {
     this.state = {
       showOnlyDatasets: JSON.parse(window.localStorage.showOnlyDatasets || '[]'),
       aggregateDatasets: JSON.parse(window.localStorage.aggregateDatasets || 'true'),
+      showHistoricalAccounts: false
     }
     this.changeAggregation = this.changeAggregation.bind(this)
+    this.changeHistoricalAccounts = this.changeHistoricalAccounts.bind(this)
   }
 
   componentWillMount() {
@@ -209,6 +211,14 @@ class ReportTableWrapper extends React.Component {
     window.localStorage.aggregateDatasets = JSON.stringify(!this.state.aggregateDatasets)
   }
 
+  changeHistoricalAccounts() {
+    this.setState({
+      showHistoricalAccounts: !this.state.showHistoricalAccounts
+    })
+
+    window.localStorage.showHistoricalAccounts = JSON.stringify(!this.state.showHistoricalAccounts)
+  }
+
   changeDatasetVisibility(dataset) {
     let showOnlyDatasets = this.state.showOnlyDatasets
     const pos = showOnlyDatasets.indexOf(dataset.key)
@@ -237,7 +247,8 @@ class ReportTableWrapper extends React.Component {
 
     let filteredDatasets = this.filterDatasets(allDatasets, this.state.showOnlyDatasets)
 
-    const projectsWithHovedbok = utils.groupHovedbokByDepartmentAndProject(this.state.ledger, this.state.departments, this.state.projects)
+    const filterByDatasets = this.state.showHistoricalAccounts ? null : filteredDatasets
+    const projectsWithHovedbok = utils.groupHovedbokByDepartmentAndProject(this.state.ledger, this.state.departments, this.state.projects, filterByDatasets)
     const projectsWithDatasets = utils.populateCache(filteredDatasets, this.state.projects, this.state.departments, projectsWithHovedbok)
 
     const datasetsYears = [ ...new Set(allDatasets.map(dataset => dataset.entry['År'])) ]
@@ -292,6 +303,15 @@ class ReportTableWrapper extends React.Component {
                   onChange={this.changeAggregation}
                   checked={this.state.aggregateDatasets}
                 /> Vis sum for år
+              </label>
+            </li>
+            <li>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  onChange={this.changeHistoricalAccounts}
+                  checked={this.state.showHistoricalAccounts}
+                /> Vis også tidligere kontoer benyttet i prosjektene
               </label>
             </li>
           </ul>
