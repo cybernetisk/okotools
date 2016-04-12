@@ -476,7 +476,7 @@ class TripletexProjects(TripletexBase):
                 project_id = re.search(r'projectId=(\d+)&', tdlist[1]).group(1)
 
                 start_and_end = re.sub(r'<[^>]*?>', '', tdlist[5])
-                m = re.match(r'^\s*(.+?)( (.+?))?\s*$', start_and_end)
+                m = re.match(r'^\s*(.+?)(\s+(\S+?))?\s*$', start_and_end, re.DOTALL)
 
                 project_list.append({
                     'id': project_id,
