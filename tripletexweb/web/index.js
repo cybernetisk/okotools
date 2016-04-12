@@ -133,8 +133,6 @@ class ReportTableWrapper extends React.Component {
           && (entry['Måned'] == 0 ? test['Måned'] == 0 : (entry['Måned'] < 7 ? test['Måned'] < 7 : test['Måned'] >= 7))
 
         const semester = entry['Måned'] == 0 ? 'År' : (entry['Måned'] < 7 ? 'Vår' : 'Høst')
-        console.log('hm', entry['Måned'])
-
         const dateFrom = `${entry['År']}-${entry['Måned'] < 7 ? '01-01' : '01-06'}`
         const dateTo = `${entry['År']}-${entry['Måned'] < 7 && entry['Måned'] !== 0 ? '06-30' : '12-31'}`
 
@@ -144,6 +142,7 @@ class ReportTableWrapper extends React.Component {
           entry,
           description1: `${semester} ${entry['År']}`,
           description2: `${entry['Type']} (${entry['Versjon']})`,
+          isYear: entry['Måned'] == 0,
           filter,
           resultReportLink: (departmentId, projectId, showChildProjects) => this.resultReportLink(dateFrom, dateTo, departmentId, projectId, showChildProjects),
           ledgerLink: (departmentId, projectId, accountNumber) => this.ledgerLink(dateFrom, dateTo, departmentId, projectId, accountNumber),
@@ -168,13 +167,15 @@ class ReportTableWrapper extends React.Component {
       sumDetails.push({
         key: sumKey,
         type: entry['Type'],
-        description1: `Sum ${entry['År']}`,
+        description1: `År ${entry['År']}`,
         description2: `${entry['Type']} (${entry['Versjon']})`,
         filter: test => test['År'] === entry['År'] && test['Type'] == entry['Type'] && test['Versjon'] == entry['Versjon'],
         resultReportLink: (departmentId, projectId, showChildProjects) => this.resultReportLink(sumDateFrom, sumDateTo, departmentId, projectId, showChildProjects),
         ledgerLink: (departmentId, projectId, accountNumber) => this.ledgerLink(sumDateFrom, sumDateTo, departmentId, projectId, accountNumber),
         sumItem: dataset,
         isSum: true,
+        isYear: true,
+        entry
       })
 
       dataset.haveSum = false
@@ -228,15 +229,17 @@ class ReportTableWrapper extends React.Component {
   }
 
   render() {
-    let datasets = this.filterDatasets(this.state.datasets, this.state.showOnlyDatasets)
+    let allDatasets = this.state.datasets;
     if (this.state.aggregateDatasets) {
-      datasets = this.aggregateDatasets(datasets)
+      allDatasets = this.aggregateDatasets(allDatasets)
     }
 
-    const projectsWithHovedbok = utils.groupHovedbokByDepartmentAndProject(this.state.ledger, this.state.departments, this.state.projects)
-    const projectsWithDatasets = utils.populateCache(datasets, this.state.projects, this.state.departments, projectsWithHovedbok)
+    let filteredDatasets = this.filterDatasets(allDatasets, this.state.showOnlyDatasets)
 
-    const datasetsYears = [ ...new Set(this.state.datasets.map(dataset => dataset.entry['År'])) ]
+    const projectsWithHovedbok = utils.groupHovedbokByDepartmentAndProject(this.state.ledger, this.state.departments, this.state.projects)
+    const projectsWithDatasets = utils.populateCache(filteredDatasets, this.state.projects, this.state.departments, projectsWithHovedbok)
+
+    const datasetsYears = [ ...new Set(allDatasets.map(dataset => dataset.entry['År'])) ]
 
     return (
       <div>
@@ -252,24 +255,17 @@ class ReportTableWrapper extends React.Component {
           departments={this.state.departments}
           projectsWithDatasets={projectsWithDatasets}
           projectsWithHovedbok={projectsWithHovedbok}
-          datasets={datasets}
+          datasets={filteredDatasets}
         />
         <div className="hidden-print">
           <h3>Visningsvalg</h3>
           <ul>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                onChange={this.changeAggregation}
-                checked={this.state.aggregateDatasets}
-              /> Vis sum for år
-            </label>
             {datasetsYears.map(year => (
               <li key={year}>
                 {year}
                 <ul>
-                  {this.state.datasets.filter(dataset => dataset.entry['År'] === year).map(dataset => (
-                    <li key={dataset.key} className="checkbox">
+                  {allDatasets.filter(dataset => dataset.entry['År'] === year).map(dataset => (
+                    <li key={dataset.key} className={`checkbox${dataset.isYear ? ' dataset-year' : ''}`}>
                       <label>
                         <input
                           type="checkbox"
@@ -284,6 +280,15 @@ class ReportTableWrapper extends React.Component {
                 </ul>
               </li>
             ))}
+            <li>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  onChange={this.changeAggregation}
+                  checked={this.state.aggregateDatasets}
+                /> Vis sum for år
+              </label>
+            </li>
           </ul>
         </div>
       </div>

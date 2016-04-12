@@ -82,6 +82,12 @@ table {
   cursor: pointer;
 }
 
+.dataset-year {
+  label {
+    font-weight: bold;
+  }
+}
+
 @media print {
   a[href]:after {
     content: none !important;
