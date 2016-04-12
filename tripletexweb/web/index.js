@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom'
 import * as utils from './utils'
 
 import ReportTable from './components/ReportTable'
+import ProjectFilter from './components/ProjectFilter'
 
 import './style.scss'
 
@@ -77,10 +78,12 @@ class ReportTableWrapper extends React.Component {
     this.state = {
       showOnlyDatasets: JSON.parse(window.localStorage.showOnlyDatasets || '[]'),
       aggregateDatasets: JSON.parse(window.localStorage.aggregateDatasets || 'true'),
-      showHistoricalAccounts: false
+      showHistoricalAccounts: false,
+      projectFilter: null,
     }
     this.changeAggregation = this.changeAggregation.bind(this)
     this.changeHistoricalAccounts = this.changeHistoricalAccounts.bind(this)
+    this.changeProjectFilter = this.changeProjectFilter.bind(this)
   }
 
   componentWillMount() {
@@ -219,6 +222,12 @@ class ReportTableWrapper extends React.Component {
     window.localStorage.showHistoricalAccounts = JSON.stringify(!this.state.showHistoricalAccounts)
   }
 
+  changeProjectFilter(newValue) {
+    this.setState({
+      projectFilter: newValue
+    })
+  }
+
   changeDatasetVisibility(dataset) {
     let showOnlyDatasets = this.state.showOnlyDatasets
     const pos = showOnlyDatasets.indexOf(dataset.key)
@@ -239,6 +248,43 @@ class ReportTableWrapper extends React.Component {
     return datasets.filter(dataset => showOnly.indexOf(dataset.key) !== -1)
   }
 
+  renderProjectFilter() {
+    if (this.state.projectFilter === null) {
+      return null
+    }
+
+    let projectText
+    if (this.state.projectFilter === false) {
+      projectText = '(Føringer som ikke er tilordnet prosjekt)'
+    } else {
+      const generateProjectTree = () => {
+        let isFirst = true
+        let projectList = []
+        let project = this.state.projectFilter
+        while (project.id !== 0) {
+          let title = project.title
+          if (isFirst) {
+            isFirst = false
+            title += ' (' + project.id + ')'
+          }
+
+          projectList.push(title)
+
+          project = this.state.projects[project.parent]
+        }
+        return projectList.reverse()
+      }
+
+      projectText = generateProjectTree().join(' -> ')
+    }
+
+    return (
+      <p className="visible-print">
+        Filtrert etter prosjekt: {projectText}
+      </p>
+    )
+  }
+
   render() {
     let allDatasets = this.state.datasets;
     if (this.state.aggregateDatasets) {
@@ -248,7 +294,8 @@ class ReportTableWrapper extends React.Component {
     let filteredDatasets = this.filterDatasets(allDatasets, this.state.showOnlyDatasets)
 
     const filterByDatasets = this.state.showHistoricalAccounts ? null : filteredDatasets
-    const projectsWithHovedbok = utils.groupHovedbokByDepartmentAndProject(this.state.ledger, this.state.departments, this.state.projects, filterByDatasets)
+    const ledger = this.state.projectFilter !== null ? utils.filterLedgerByProject(this.state.ledger, this.state.projectFilter) : this.state.ledger
+    const projectsWithHovedbok = utils.groupHovedbokByDepartmentAndProject(ledger, this.state.departments, this.state.projects, filterByDatasets)
     const projectsWithDatasets = utils.populateCache(filteredDatasets, this.state.projects, this.state.departments, projectsWithHovedbok)
 
     const datasetsYears = [ ...new Set(allDatasets.map(dataset => dataset.entry['År'])) ]
@@ -256,6 +303,7 @@ class ReportTableWrapper extends React.Component {
     return (
       <div>
         <h1>Resultatrapport</h1>
+        {this.renderProjectFilter()}
         <ul className="hidden-print">
           <li><a href="rebuild/fetch_tripletex_data.sh">Last ny data fra Tripletex</a></li>
           <li>
@@ -276,6 +324,15 @@ class ReportTableWrapper extends React.Component {
         <div className="hidden-print">
           <h3>Visningsvalg</h3>
           <ul>
+            <li>
+              Filtrer etter prosjekt:
+              {' '}
+              <ProjectFilter
+                currentFilter={this.state.projectFilter}
+                onChange={this.changeProjectFilter}
+                projects={this.state.projects}
+              />
+            </li>
             {datasetsYears.map(year => (
               <li key={year}>
                 {year}

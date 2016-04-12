@@ -238,3 +238,21 @@ export function populateCache(datasets, projects, departments, projectsWithHoved
 
   return cache
 }
+
+/**
+ * Filter ledger by project including subprojects
+ */
+export function filterLedgerByProject(ledger, filterByProject) {
+  function getProjectIds(project) {
+    return project.children.reduce((prev, cur) => {
+      return prev.concat(getProjectIds(cur))
+    }, [project.id])
+  }
+
+  if (filterByProject === false) {
+    return ledger.filter(entry => entry.Prosjektnummer === 0)
+  } else {
+    const projectIdList = getProjectIds(filterByProject)
+    return ledger.filter(entry => projectIdList.indexOf(entry.Prosjektnummer) !== -1)
+  }
+}
