@@ -11,7 +11,7 @@ def getFloat(val):
     except ValueError:
         return 0
 
-def export_budget(output_handle):
+def export_budget(budget_url, output_handle):
     csv_out = csv.writer(output_handle, delimiter=';', quoting=csv.QUOTE_NONE)
     r = requests.get(budget_url).json()
 
@@ -56,12 +56,16 @@ def export_budget(output_handle):
             ])
 
 if __name__ == '__main__':
-    from settings import *
-    if budget_url is None:
+    import settings
+    if settings.budget_url is None:
         print('Fetching data from budget is disabled - skipping budget')
         sys.exit(0)
 
-    with open(reports_path + 'budget.txt', 'w') as f:
-        export_budget(f)
+    with open(settings.reports_path + 'budget.txt', 'w') as f:
+        export_budget(settings.budget_url, f)
+
+    with open(settings.reports_path + 'budget_url.txt', 'w') as f:
+        if settings.budget_edit_url != None:
+            f.write(settings.budget_edit_url)
 
     print('Fetched data from budget and updated report')

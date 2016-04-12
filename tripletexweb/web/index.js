@@ -15,6 +15,7 @@ class DataWrapper extends React.Component {
     departments: 'departments',
     ledger: 'aggregated',
     budget: 'budget',
+    budgetUrl: 'budget_url'
   }
 
   constructor(props) {
@@ -244,11 +245,15 @@ class ReportTableWrapper extends React.Component {
     return (
       <div>
         <h1>Resultatrapport</h1>
-        <p className="hidden-print">
-          <a href="rebuild/fetch_tripletex_data.php">Last ny data fra Tripletex</a>
-          {' '}
-          <a href="rebuild/fetch_budget_data.php">Last ny data fra budsjett</a>
-        </p>
+        <ul className="hidden-print">
+          <li><a href="rebuild/fetch_tripletex_data.sh">Last ny data fra Tripletex</a></li>
+          <li>
+            <a href="rebuild/fetch_budget_data.sh">Last ny data fra budsjett</a>
+            {this.props.budgetUrl ? (
+              <span> (<a href={this.props.budgetUrl} target="_blank">rediger budsjett</a>)</span>
+            ) : null}
+          </li>
+        </ul>
         <ReportTable
           projects={this.state.projects}
           accounts={this.state.accounts}

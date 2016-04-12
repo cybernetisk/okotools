@@ -1,0 +1,12 @@
+# if this .htaccess is parsed we should use php-versions of scripts in this folder
+
+RewriteEngine On
+
+RewriteCond %{ENV:URI} ^$
+RewriteRule ^(.*)$ - [ENV=URI:$1]
+
+RewriteCond %{ENV:BASE} ^$
+RewriteCond %{ENV:URI}::%{REQUEST_URI} ^(.*)::(.*?)\1$
+RewriteRule ^ - [ENV=BASE:%2]
+
+RewriteRule ^(.*)\.sh %{ENV:BASE}$1.php [R]
