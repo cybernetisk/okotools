@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 
 import * as utils from './utils'
 
+import AccountList from './components/AccountList'
 import ReportTable from './components/ReportTable'
 import ProjectFilter from './components/ProjectFilter'
 
@@ -373,6 +374,7 @@ class ReportTableWrapper extends React.Component {
             </li>
           </ul>
         </div>
+        <AccountList accounts={this.state.accounts} />
       </div>
     )
   }
