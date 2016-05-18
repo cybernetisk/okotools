@@ -373,8 +373,8 @@ class ReportTableWrapper extends React.Component {
               </label>
             </li>
           </ul>
+          <AccountList accounts={this.state.accounts} />
         </div>
-        <AccountList accounts={this.state.accounts} />
       </div>
     )
   }
