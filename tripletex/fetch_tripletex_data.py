@@ -122,47 +122,52 @@ def build_project_list(tripletex):
     return ret
 
 
-if __name__ == '__main__':
-    from settings import *
+def run():
+    import settings
 
+    ret = ''
     fetchLedger = True
 
-    connector = TripletexConnector(credentials_provider=credentials_provider)
+    connector = TripletexConnector(credentials_provider=settings.credentials_provider)
 
-    tt_departments = TripletexDepartments(contextId, connector=connector)
-    tt_accounts = TripletexAccounts(contextId, connector=connector)
-    tt_projects = TripletexProjects(contextId, connector=connector)
-    tt_ledger = TripletexLedger(contextId, connector=connector)
+    tt_departments = TripletexDepartments(settings.contextId, connector=connector)
+    tt_accounts = TripletexAccounts(settings.contextId, connector=connector)
+    tt_projects = TripletexProjects(settings.contextId, connector=connector)
+    tt_ledger = TripletexLedger(settings.contextId, connector=connector)
 
-    with open(reports_path + 'context_id.txt', 'w') as f:
-        f.write(str(contextId))
+    with open(settings.reports_path + 'context_id.txt', 'w') as f:
+        f.write(str(settings.contextId))
 
     # fetch ledger
     if fetchLedger:
         ledger = tt_ledger.get_ledger('2014-01-01', '2016-12-31')
-        print('Fetched ledger')
+        ret += 'Fetched ledger\n'
 
         aggregated_data = get_aggregated_data(tt_ledger, ledger)
 
-        with open(reports_path + 'aggregated.txt', 'w') as f:
+        with open(settings.reports_path + 'aggregated.txt', 'w') as f:
             write_aggregated_data_report(aggregated_data, f)
 
     # fetch raw list of departments
     if True:
-        with open(reports_path + 'departments.txt', 'w') as f:
+        with open(settings.reports_path + 'departments.txt', 'w') as f:
             f.write(build_department_list(tt_departments))
-        print('Fetched department list')
+        ret += 'Fetched department list\n'
 
     # fetch raw list of accounts
     if True:
-        with open(reports_path + 'accounts.txt', 'w') as f:
+        with open(settings.reports_path + 'accounts.txt', 'w') as f:
             f.write(build_account_list(tt_accounts))
-        print('Fetched account list')
+        ret += 'Fetched account list\n'
 
     # fetch raw list of projects
     if True:
-        with open(reports_path + 'projects.txt', 'w') as f:
+        with open(settings.reports_path + 'projects.txt', 'w') as f:
             f.write(build_project_list(tt_projects))
-        print('Fetched project list')
+        ret += 'Fetched project list\n'
 
-    print('Reports saved to files in %s' % reports_path)
+    ret += 'Reports saved to files in %s\n' % settings.reports_path
+    return ret
+
+if __name__ == '__main__':
+    print(run())

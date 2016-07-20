@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo "Not updated for Docker-setup"
+exit 1
+
 # deploy script - deploys to internt.cyb.no/okoreports and foreningenbs.no/okoreports
 
 echo "Deploying to internt.cyb.no"

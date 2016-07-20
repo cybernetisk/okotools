@@ -55,11 +55,10 @@ def export_budget(budget_url, output_handle):
                 row[7]
             ])
 
-if __name__ == '__main__':
+def run():
     import settings
     if settings.budget_url is None:
-        print('Fetching data from budget is disabled - skipping budget')
-        sys.exit(0)
+        return 'Fetching data from budget is disabled - skipping budget'
 
     with open(settings.reports_path + 'budget.txt', 'w') as f:
         export_budget(settings.budget_url, f)
@@ -68,4 +67,7 @@ if __name__ == '__main__':
         if settings.budget_edit_url != None:
             f.write(settings.budget_edit_url)
 
-    print('Fetched data from budget and updated report')
+    return 'Fetched data from budget and updated report'
+
+if __name__ == '__main__':
+    print(run())

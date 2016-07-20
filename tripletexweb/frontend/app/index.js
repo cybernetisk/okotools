@@ -306,9 +306,9 @@ class ReportTableWrapper extends React.Component {
         <h1>Resultatrapport</h1>
         {this.renderProjectFilter()}
         <ul className="hidden-print">
-          <li><a href="rebuild/fetch_tripletex_data.sh">Last ny data fra Tripletex</a></li>
+          <li><a href={`${BACKEND_URL}api/fetch-accounting`}>Last ny data fra Tripletex</a></li>
           <li>
-            <a href="rebuild/fetch_budget_data.sh">Last ny data fra budsjett</a>
+            <a href={`${BACKEND_URL}api/fetch-budget`}>Last ny data fra budsjett</a>
             {this.props.budgetUrl ? (
               <span> (<a href={this.props.budgetUrl} target="_blank">rediger budsjett</a>)</span>
             ) : null}

@@ -1,4 +1,6 @@
 var webpack = require('webpack');
+var path = require('path');
+var HtmlWebpackPlugin = require('html-webpack-plugin');
 
 var production = process.env.NODE_ENV === 'production';
 
@@ -6,7 +8,7 @@ module.exports = {
   entry: './index.js',
   devtool: production ? 'source-map' : 'cheap-module-eval-source-map',
   output: {
-    path: __dirname,
+    path: path.join(__dirname, 'dist'),
     filename: 'bundle.js'
   },
   module: {
@@ -19,6 +21,12 @@ module.exports = {
   plugins: [
     new webpack.ProvidePlugin({
       'fetch': 'imports?this=>global!exports?global.fetch!whatwg-fetch'
+    }),
+    new HtmlWebpackPlugin({
+      template: 'index.html',
+    }),
+    new webpack.DefinePlugin({
+        BACKEND_URL: JSON.stringify(process.env.BACKEND_URL || '/'),
     }),
   ]
 }
