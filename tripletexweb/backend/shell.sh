@@ -17,5 +17,5 @@ docker run \
   --rm \
   -v okoreports-reports:/var/okoreports/reports \
   -v "$(pwd)/settings.py":/usr/src/tripletex/settings_local.py \
-  cyb/okoreports \
+  cyb/okoreports-backend \
   $command
