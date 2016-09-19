@@ -5,6 +5,8 @@ import csv
 import requests
 import sys
 
+reports_path = '/var/okoreports/reports/'
+
 def getFloat(val):
     try:
         return float(val.replace(' ', '').replace(',', '.').replace(' ', ''))
@@ -60,10 +62,10 @@ def run():
     if settings.budget_url is None:
         return 'Fetching data from budget is disabled - skipping budget'
 
-    with open(settings.reports_path + 'budget.txt', 'w') as f:
+    with open(reports_path + 'budget.txt', 'w') as f:
         export_budget(settings.budget_url, f)
 
-    with open(settings.reports_path + 'budget_url.txt', 'w') as f:
+    with open(reports_path + 'budget_url.txt', 'w') as f:
         if settings.budget_edit_url != None:
             f.write(settings.budget_edit_url)
 

@@ -12,7 +12,4 @@ budget_url = None
 # the URL the user can go to and edit the spreadsheet
 budget_edit_url = None
 
-# where reports should be saved
-reports_path = '../tripletexweb/web/reports/'
-
 from settings_local import *

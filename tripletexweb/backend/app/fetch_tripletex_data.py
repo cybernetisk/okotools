@@ -10,6 +10,8 @@ import pprint
 
 from tripletex.tripletex import TripletexConnector, TripletexAccounts, TripletexProjects, TripletexLedger, TripletexDepartments
 
+reports_path = '/var/okoreports/reports/'
+
 SEMESTERS = (
     {'id': 1, 'text': 'vår', 'start': '-01-01', 'end': '-06-30'},
     {'id': 2, 'text': 'høst', 'start': '-07-01', 'end': '-12-31'},
@@ -135,7 +137,7 @@ def run():
     tt_projects = TripletexProjects(settings.contextId, connector=connector)
     tt_ledger = TripletexLedger(settings.contextId, connector=connector)
 
-    with open(settings.reports_path + 'context_id.txt', 'w') as f:
+    with open(reports_path + 'context_id.txt', 'w') as f:
         f.write(str(settings.contextId))
 
     # fetch ledger
@@ -145,28 +147,28 @@ def run():
 
         aggregated_data = get_aggregated_data(tt_ledger, ledger)
 
-        with open(settings.reports_path + 'aggregated.txt', 'w') as f:
+        with open(reports_path + 'aggregated.txt', 'w') as f:
             write_aggregated_data_report(aggregated_data, f)
 
     # fetch raw list of departments
     if True:
-        with open(settings.reports_path + 'departments.txt', 'w') as f:
+        with open(reports_path + 'departments.txt', 'w') as f:
             f.write(build_department_list(tt_departments))
         ret += 'Fetched department list\n'
 
     # fetch raw list of accounts
     if True:
-        with open(settings.reports_path + 'accounts.txt', 'w') as f:
+        with open(reports_path + 'accounts.txt', 'w') as f:
             f.write(build_account_list(tt_accounts))
         ret += 'Fetched account list\n'
 
     # fetch raw list of projects
     if True:
-        with open(settings.reports_path + 'projects.txt', 'w') as f:
+        with open(reports_path + 'projects.txt', 'w') as f:
             f.write(build_project_list(tt_projects))
         ret += 'Fetched project list\n'
 
-    ret += 'Reports saved to files in %s\n' % settings.reports_path
+    ret += 'Reports saved to files in %s\n' % reports_path
     return ret
 
 if __name__ == '__main__':
