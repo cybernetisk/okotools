@@ -59,7 +59,7 @@ class AccountResult extends React.Component {
             {entries.map((entry, i) => (
               <tr key={i}>
                 <td>{entry.Beskrivelse || <i>Ingen beskrivelse</i>}</td>
-                <td>{amountFormatter(entry.BeløpInn-entry.BeløpUt, 0)}</td>
+                <td>{amountFormatter(-entry.BeløpInn-entry.BeløpUt, 0)}</td>
               </tr>
             ))}
           </tbody>
