@@ -17,10 +17,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 WORKDIR /usr/src/app
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY tripletex-lib /usr/src/tripletex
-COPY app /usr/src/app
-COPY container/start.sh /start.sh
-COPY container/gunicorn.conf /gunicorn.conf
-
 EXPOSE 8000
 CMD ["/start.sh"]
+
+COPY tripletex-lib /usr/src/tripletex
+COPY container/start.sh /start.sh
+COPY container/gunicorn.conf /gunicorn.conf
+COPY app /usr/src/app
