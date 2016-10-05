@@ -120,18 +120,15 @@ table.table {
 .top-bar {
   background: #e9f3e2;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin: 0 -10px 10px -10px;
+
+  @media print {
+    margin: 0 0 10px 0;
+  }
 
   h1 {
     margin: 10px 0;
     display: inline-block;
-  }
-}
-
-.showMenu .top-bar {
-  @media screen {
-    margin-left: -10px;
-    padding-left: 10px;
   }
 }
 
@@ -140,8 +137,6 @@ table.table {
   padding: 8px 10px 12px;
   vertical-align: -12px;
   width: 45px;
-  border: 0;
-  border-radius: 3px;
   display: inline-block;
 
   @media print {
@@ -169,25 +164,27 @@ table.table {
   padding: 0 10px 10px;
   margin: 0 10px 0 0;
 
-  @media print {
-    display: none;
-  }
-
   ul {
     padding-left: 20px;
   }
 }
 
-.showMenu {
-  .page-content {
-    position: relative;
-    left: 560px;
-    @media print {
-      left: 0;
-    }
-  }
-  .menu {
+.showMenu .menu {
+  @media screen {
     display: block;
+  }
+}
+
+.page-content {
+  @media screen {
+    padding: 0 10px;
+  }
+}
+
+.showMenu .page-content {
+  @media screen {
+    position: relative;
+    left: 550px;
   }
 }
 
