@@ -81,6 +81,7 @@ class ReportTableWrapper extends React.Component {
       aggregateDatasets: JSON.parse(window.localStorage.aggregateDatasets || 'true'),
       showHistoricalAccounts: false,
       projectFilter: null,
+      showMenu: false
     }
     this.changeAggregation = this.changeAggregation.bind(this)
     this.changeHistoricalAccounts = this.changeHistoricalAccounts.bind(this)
@@ -245,6 +246,12 @@ class ReportTableWrapper extends React.Component {
     window.localStorage.showOnlyDatasets = JSON.stringify(showOnlyDatasets)
   }
 
+  showMenu(state) {
+    this.setState({
+      showMenu: state
+    })
+  }
+
   filterDatasets(datasets, showOnly) {
     return datasets.filter(dataset => showOnly.indexOf(dataset.key) !== -1)
   }
@@ -287,7 +294,7 @@ class ReportTableWrapper extends React.Component {
   }
 
   render() {
-    let allDatasets = this.state.datasets;
+    let allDatasets = this.state.datasets
     if (this.state.aggregateDatasets) {
       allDatasets = this.aggregateDatasets(allDatasets)
     }
@@ -302,78 +309,97 @@ class ReportTableWrapper extends React.Component {
     const datasetsYears = [ ...new Set(allDatasets.map(dataset => dataset.entry['År'])) ]
 
     return (
-      <div>
-        <h1>Resultatrapport</h1>
-        {this.renderProjectFilter()}
-        <ul className="hidden-print">
-          <li><a href={`${BACKEND_URL}api/fetch-accounting`}>Last ny data fra Tripletex</a></li>
-          <li>
+      <div className={this.state.showMenu ? 'showMenu' : ''}>
+        <div className="hidden-print menu">
+          <h1>Budsjett- og regnskapsrapporter</h1>
+          <p>
+            <a href={`${BACKEND_URL}api/fetch-accounting`}>Last ny data fra Tripletex</a>
+          </p>
+          <p>
             <a href={`${BACKEND_URL}api/fetch-budget`}>Last ny data fra budsjett</a>
             {this.props.budgetUrl ? (
               <span> (<a href={this.props.budgetUrl} target="_blank">rediger budsjett</a>)</span>
             ) : null}
-          </li>
-        </ul>
-        <ReportTable
-          projects={this.state.projects}
-          accounts={this.state.accounts}
-          departments={this.state.departments}
-          projectsWithDatasets={projectsWithDatasets}
-          projectsWithHovedbok={projectsWithHovedbok}
-          datasets={filteredDatasets}
-        />
-        <div className="hidden-print">
-          <h3>Visningsvalg</h3>
-          <ul>
-            <li>
-              Filtrer etter prosjekt:
-              {' '}
-              <ProjectFilter
-                currentFilter={this.state.projectFilter}
-                onChange={this.changeProjectFilter}
-                projects={this.state.projects}
-              />
-            </li>
-            {datasetsYears.map(year => (
-              <li key={year}>
-                {year}
-                <ul>
-                  {allDatasets.filter(dataset => dataset.entry['År'] === year).map(dataset => (
-                    <li key={dataset.key} className={`checkbox${dataset.isYear ? ' dataset-year' : ''}`}>
-                      <label>
-                        <input
-                          type="checkbox"
-                          onChange={ev => this.changeDatasetVisibility(dataset)}
-                          checked={this.state.showOnlyDatasets.indexOf(dataset.key) !== -1}
-                        />
-                        {' '}
-                        {dataset.description1} {dataset.description2} {dataset.isSum}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-            <li>
-              <label className="checkbox">
-                <input
-                  type="checkbox"
-                  onChange={this.changeAggregation}
-                  checked={this.state.aggregateDatasets}
-                /> Vis sum for år
-              </label>
-            </li>
-            <li>
-              <label className="checkbox">
-                <input
-                  type="checkbox"
-                  onChange={this.changeHistoricalAccounts}
-                  checked={this.state.showHistoricalAccounts}
-                /> Vis også tidligere kontoer benyttet i prosjektene
-              </label>
-            </li>
-          </ul>
+          </p>
+          <p>
+            Filtrer etter prosjekt:
+            {' '}
+            <ProjectFilter
+              currentFilter={this.state.projectFilter}
+              onChange={this.changeProjectFilter}
+              projects={this.state.projects}
+            />
+          </p>
+          <p className="checkbox">
+            <label>
+              <input
+                type="checkbox"
+                onChange={this.changeAggregation}
+                checked={this.state.aggregateDatasets}
+              /> Vis sum for år
+            </label>
+          </p>
+          <p className="checkbox">
+            <label>
+              <input
+                type="checkbox"
+                onChange={this.changeHistoricalAccounts}
+                checked={this.state.showHistoricalAccounts}
+              /> Vis også tidligere kontoer benyttet i prosjektene
+            </label>
+          </p>
+          {datasetsYears.map(year => (
+            <div key={year}>
+              <p>{year}</p>
+              <ul>
+                {allDatasets.filter(dataset => dataset.entry['År'] === year).map(dataset => (
+                  <li key={dataset.key} className={`checkbox${dataset.isYear ? ' dataset-year' : ''}`}>
+                    <label>
+                      <input
+                        type="checkbox"
+                        onChange={ev => this.changeDatasetVisibility(dataset)}
+                        checked={this.state.showOnlyDatasets.indexOf(dataset.key) !== -1}
+                      />
+                      {' '}
+                      {dataset.description1} {dataset.description2} {dataset.isSum}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
           <AccountList accounts={this.state.accounts} />
+        </div>
+        <div className="page-content">
+          <div className="top-bar">
+            <a className={"menu-toggle" + (this.state.showMenu ? ' menu-active' : '')} onClick={() => this.showMenu(!this.state.showMenu)}>
+              <span className="sr-only">Vis meny</span>
+              <span className="icon-bar"></span>
+              <span className="icon-bar"></span>
+              <span className="icon-bar"></span>
+            </a>
+            <h1>Resultatrapport</h1>
+          </div>
+          {this.renderProjectFilter()}
+
+          {filteredDatasets.length == 0 ? (
+            <p>Velg ett eller flere datasett fra menyen for å vise rapport.</p>
+          ) : (
+            <ReportTable
+              projects={this.state.projects}
+              accounts={this.state.accounts}
+              departments={this.state.departments}
+              projectsWithDatasets={projectsWithDatasets}
+              projectsWithHovedbok={projectsWithHovedbok}
+              datasets={filteredDatasets}
+            />
+          )}
+          <div className="hidden-print">
+            <hr />
+            <p>
+              <a href="https://github.com/cybrairai/okotools/tree/master/tripletexweb">GitHub-prosjekt</a> - utviklet for <a href="http://cyb.no/">Cybernetisk Selskab</a> og <a href="http://foreningenbs.no/">Foreningen Blindern Studenterhjem</a>
+            </p>
+          </div>
         </div>
       </div>
     )
