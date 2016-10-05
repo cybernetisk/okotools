@@ -78,12 +78,10 @@ class ReportTableWrapper extends React.Component {
     super(props)
     this.state = {
       showOnlyDatasets: JSON.parse(window.localStorage.showOnlyDatasets || '[]'),
-      aggregateDatasets: JSON.parse(window.localStorage.aggregateDatasets || 'true'),
       showHistoricalAccounts: false,
       projectFilter: null,
       showMenu: false
     }
-    this.changeAggregation = this.changeAggregation.bind(this)
     this.changeHistoricalAccounts = this.changeHistoricalAccounts.bind(this)
     this.changeProjectFilter = this.changeProjectFilter.bind(this)
   }
@@ -208,14 +206,6 @@ class ReportTableWrapper extends React.Component {
     return newDatasets.sort((a, b) => b.key.localeCompare(a.key))
   }
 
-  changeAggregation() {
-    this.setState({
-      aggregateDatasets: !this.state.aggregateDatasets
-    })
-
-    window.localStorage.aggregateDatasets = JSON.stringify(!this.state.aggregateDatasets)
-  }
-
   changeHistoricalAccounts() {
     this.setState({
       showHistoricalAccounts: !this.state.showHistoricalAccounts
@@ -294,10 +284,7 @@ class ReportTableWrapper extends React.Component {
   }
 
   render() {
-    let allDatasets = this.state.datasets
-    if (this.state.aggregateDatasets) {
-      allDatasets = this.aggregateDatasets(allDatasets)
-    }
+    let allDatasets = this.aggregateDatasets(this.state.datasets)
 
     let filteredDatasets = this.filterDatasets(allDatasets, this.state.showOnlyDatasets)
 
@@ -329,15 +316,6 @@ class ReportTableWrapper extends React.Component {
               onChange={this.changeProjectFilter}
               projects={this.state.projects}
             />
-          </p>
-          <p className="checkbox">
-            <label>
-              <input
-                type="checkbox"
-                onChange={this.changeAggregation}
-                checked={this.state.aggregateDatasets}
-              /> Vis sum for år
-            </label>
           </p>
           <p className="checkbox">
             <label>
