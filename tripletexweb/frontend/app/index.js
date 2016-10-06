@@ -361,7 +361,10 @@ class ReportTableWrapper extends React.Component {
           {this.renderProjectFilter()}
 
           {filteredDatasets.length == 0 ? (
-            <p>Velg ett eller flere datasett fra menyen for å vise rapport.</p>
+            <div>
+              <p>Velg ett eller flere datasett fra menyen for å vise rapport.</p>
+              <p>Husk at du må laste ny data fra regnskapet/budsjettet (se i menyen) for å få nyeste rapportene.</p>
+            </div>
           ) : (
             <ReportTable
               projects={this.state.projects}
