@@ -357,6 +357,7 @@ class ReportTableWrapper extends React.Component {
               <span className="icon-bar"></span>
             </a>
             <h1>Resultatrapport</h1>
+            <a className="balance-link" href={`https://tripletex.no/execute/balanceReport2?contextId=${this.props.contextId}`} target="_blank">Balanserapport</a>
           </div>
           {this.renderProjectFilter()}
 
