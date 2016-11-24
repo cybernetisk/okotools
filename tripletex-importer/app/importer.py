@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import sys
+sys.path.append('/usr/src/tripletex')
+
 import re
 from cmd import Cmd
 from tripletex.z import CYBTripletexImport, DATA_FILE_OUT, ZImportError
 
-DATA_FILE_IN = '../z_www/reports.json'
+# this file should be volume mounted to /usr/src/app
+DATA_FILE_IN = 'reports.json'
 
 import settings
 
