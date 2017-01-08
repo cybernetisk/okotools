@@ -142,7 +142,7 @@ def run():
 
     # fetch ledger
     if fetchLedger:
-        ledger = tt_ledger.get_ledger('2014-01-01', '2016-12-31')
+        ledger = tt_ledger.get_ledger('2014-01-01', '2017-12-31')
         ret += 'Fetched ledger\n'
 
         aggregated_data = get_aggregated_data(tt_ledger, ledger)
