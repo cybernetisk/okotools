@@ -30,6 +30,16 @@ def export_budget(budget_url, output_handle):
         'Beskrivelse'
     ])
 
+    COL_AAR = 0
+    COL_SEMESTER = 1
+    COL_AVDELING = 2
+    COL_PROSJEKT = 3
+    COL_KONTO = 4
+    COL_INNTEKTER = 5
+    COL_KOSTNADER = 6
+    COL_KOMMENTAR = 7
+    COL_TYPE = 8
+
     for sheet in r['feed']['entry']:
         version = sheet['title']['$t']
 
@@ -44,17 +54,21 @@ def export_budget(budget_url, output_handle):
                 is_first = False
                 continue
 
+            # ignore rows not including anything useful
+            if row[COL_AVDELING] == '' and row[COL_PROSJEKT] == '' and row[COL_INNTEKTER] == '' and row[COL_KOSTNADER] == '':
+                continue
+
             csv_out.writerow([
-                row[8] if len(row) >= 9 and row[8] != "" else 'Budsjett',
+                row[COL_TYPE] if len(row) >= 9 and row[COL_TYPE] != "" else 'Budsjett',
                 version,
-                row[0],
-                6 if row[1] == 'vår' else (12 if row[1] == 'høst' else 0),
-                row[2],
-                row[3],
-                row[4],
-                getFloat(row[5]) * -1,
-                getFloat(row[6]),
-                row[7]
+                row[COL_AAR],
+                6 if row[COL_SEMESTER] == 'vår' else (12 if row[COL_SEMESTER] == 'høst' else 0),
+                row[COL_AVDELING],
+                row[COL_PROSJEKT],
+                row[COL_KONTO],
+                getFloat(row[COL_INNTEKTER]) * -1,
+                getFloat(row[COL_KOSTNADER]),
+                row[COL_KOMMENTAR]
             ])
 
 def run():
