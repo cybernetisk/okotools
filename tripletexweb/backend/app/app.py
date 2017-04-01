@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, request
 app = Flask(__name__)
 
 import html
@@ -36,7 +36,10 @@ def fetch_budget():
 
 @app.route("/api/fetch-accounting")
 def fetch_accounting():
-    return get_output('Oppdatering av regnskapsdata', fetch_tripletex_data.run())
+    drop_cache = False
+    if 'drop_cache' in request.args:
+        drop_cache = True
+    return get_output('Oppdatering av regnskapsdata', fetch_tripletex_data.run(drop_cache))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8000)

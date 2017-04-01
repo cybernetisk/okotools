@@ -3,6 +3,7 @@
 
 import datetime
 import os
+import os.path
 import csv
 import io
 import time
@@ -16,6 +17,13 @@ SEMESTERS = (
     {'id': 1, 'text': 'vår', 'start': '-01-01', 'end': '-06-30'},
     {'id': 2, 'text': 'høst', 'start': '-07-01', 'end': '-12-31'},
 )
+
+# We cache previous accounting data, and it will only be refetched
+# if we delete the aggregated-previous.txt file
+DATE_RANGES = {
+    'previous': ['2014-01-01', '2015-12-31'],
+    'current': ['2016-01-01', '2017-12-31'],
+}
 
 
 def build_department_list(tripletex):
@@ -78,23 +86,24 @@ def get_aggregated_data(tripletex, ledger):
     return tripletex.aggregate(ledger, group_by_month, group_by_avdeling, group_by_project_number, group_by_account_number)
 
 
-def write_aggregated_data_report(data, output_handle):
+def write_aggregated_data_report(data, output_handle, header=True):
     csv_out = csv.writer(output_handle, delimiter=';', quoting=csv.QUOTE_NONE)
 
-    csv_out.writerow([
-        'Type',
-        'Versjon',
-        'År',
-        'Måned',
-        'Avdelingsnummer',
-        #'Avdelingsnavn',
-        'Prosjektnummer',
-        #'Prosjektnavn',
-        'Kontonummer',
-        #'Kontonavn',
-        'BeløpInn',
-        'BeløpUt'
-    ])
+    if header:
+        csv_out.writerow([
+            'Type',
+            'Versjon',
+            'År',
+            'Måned',
+            'Avdelingsnummer',
+            #'Avdelingsnavn',
+            'Prosjektnummer',
+            #'Prosjektnavn',
+            'Kontonummer',
+            #'Kontonavn',
+            'BeløpInn',
+            'BeløpUt'
+        ])
 
     for month in data.values():
         for avdeling_number, avdeling in month['data'].items():
@@ -124,7 +133,7 @@ def build_project_list(tripletex):
     return ret
 
 
-def run():
+def run(drop_cache=False):
     import settings
 
     ret = ''
@@ -142,13 +151,35 @@ def run():
 
     # fetch ledger
     if fetchLedger:
-        ledger = tt_ledger.get_ledger('2014-01-01', '2017-12-31')
-        ret += 'Fetched ledger\n'
+        prev_file = reports_path + 'aggregated-previous.txt'
+
+        # refetch previous data if missing
+        if not os.path.isfile(prev_file) or drop_cache:
+            ledger = tt_ledger.get_ledger(DATE_RANGES['previous'][0], DATE_RANGES['previous'][1])
+            ret += 'Fetched ledger for %s to %s\n' % (DATE_RANGES['previous'][0], DATE_RANGES['previous'][1])
+
+            prev_aggregated_data = get_aggregated_data(tt_ledger, ledger)
+            with open(prev_file, 'w') as f:
+                write_aggregated_data_report(prev_aggregated_data, f)
+
+        else:
+            ret += 'To fetch older ledger add ?drop_cache to url\n'
+
+        # load previous data
+        prev = ''
+        with open(prev_file, 'r') as f:
+            prev = f.read()
+
+        # fetch current data
+        ledger = tt_ledger.get_ledger(DATE_RANGES['current'][0], DATE_RANGES['current'][1])
+        ret += 'Fetched ledger for %s to %s\n' % (DATE_RANGES['current'][0], DATE_RANGES['current'][1])
 
         aggregated_data = get_aggregated_data(tt_ledger, ledger)
 
         with open(reports_path + 'aggregated.txt', 'w') as f:
-            write_aggregated_data_report(aggregated_data, f)
+            # concatenate previous and current data
+            f.write(prev)
+            write_aggregated_data_report(aggregated_data, f, header=False)
 
     # fetch raw list of departments
     if True:
