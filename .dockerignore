@@ -1,6 +1,7 @@
 *
 !tripletex
 !tripletexweb/backend
+!tripletex-importer/app
 tripletex/bilag.csv
 tripletex/cookies.txt
 tripletex/__pycache__/

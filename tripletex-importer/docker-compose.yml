@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  tripletex-importer:
+    build:
+      context: ..
+      dockerfile: tripletex-importer/Dockerfile
+    image: cybrairai/tripletex-importer
+    volumes:
+      - ../settings.py:/usr/src/tripletex/settings_local.py
+      - ./reports.json:/usr/src/app/reports.json
