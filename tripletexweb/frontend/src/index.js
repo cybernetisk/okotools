@@ -15,7 +15,7 @@ const getBackendUrl = () => {
   }
 
   if (document.location.href.indexOf('localhost:3000') !== -1 ||
-    document.location.href.indexOf('localhost:8050')
+    document.location.href.indexOf('localhost:8050') !== -1
   ) {
     return 'http://localhost:8000/'
   }
