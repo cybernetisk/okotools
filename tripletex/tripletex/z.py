@@ -259,9 +259,8 @@ class CYBTripletexImport:
         self.tripletex = TripletexImporter(contextId=contextId)
 
     def load_json(self, show_all=False):
-        f = open(self.json_file, 'r')
-        self.json = json.loads(f.read(), 'utf-8')['list']
-        f.close()
+        with open(self.json_file, 'r') as f:
+            self.json = json.load(f)['list']
 
         # lets parse it
         self.data = {}
@@ -353,7 +352,7 @@ class CYBTripletexImport:
     def set_hidden(self, zlist):
         """Skjul Z-rapporter fra lista"""
         with open(self.json_file, 'r') as f:
-            data = json.loads(f.read(), 'utf-8')
+            data = json.loads(f.read())
 
         for z in zlist:
             z.data['import_hide'] = time.time()
