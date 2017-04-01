@@ -15,6 +15,11 @@ services:
     ports:
       - '8000:8000'
 
+  okoreports-frontend-dev:
+    extends:
+      file: tripletexweb/frontend/docker-compose.yml
+      service: frontend-builder
+
 networks:
   default:
     external:
