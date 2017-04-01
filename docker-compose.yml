@@ -5,7 +5,7 @@ version: '2'
 services:
   okoreports-backend:
     build:
-      context: ../..
+      context: .
       dockerfile: tripletexweb/backend/Dockerfile
     image: cybrairai/okoreports-backend
     restart: unless-stopped
