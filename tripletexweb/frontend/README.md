@@ -36,6 +36,10 @@ docker-compose run frontend-builder npm run compile:prod
 
 # build docker image
 docker-compose build frontend
+
+# push to Docker hub
+docker login # if you are not already logged in
+docker-compose push frontend
 ```
 
 ## Simulating production
