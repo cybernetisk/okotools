@@ -56,7 +56,7 @@ def reports(path):
 def add_header(response):
     response.cache_control.no_cache = True
     response.cache_control.public = False
-    response.cache_control.max_age = None
+    response.cache_control.max_age = 0
     return response
 
 if __name__ == "__main__":
