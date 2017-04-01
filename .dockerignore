@@ -1,0 +1,8 @@
+*
+!tripletex
+!tripletexweb/backend
+tripletex/bilag.csv
+tripletex/cookies.txt
+tripletex/__pycache__/
+tripletex/settings_local.py
+tripletex/env/

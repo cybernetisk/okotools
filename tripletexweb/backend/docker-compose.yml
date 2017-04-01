@@ -1,0 +1,24 @@
+# This is only used for development.
+# Use this file as an example for your own to run in production.
+version: '2'
+
+services:
+  okoreports-backend:
+    build:
+      context: ../..
+      dockerfile: tripletexweb/backend/Dockerfile
+    image: cybrairai/okoreports-backend
+    restart: unless-stopped
+    volumes:
+      - okoreports-reports-cyb:/var/okoreports/reports
+      - ./settings.py:/usr/src/tripletex/settings_local.py
+    ports:
+      - '8000:8000'
+
+networks:
+  default:
+    external:
+      name: cyb
+
+volumes:
+  okoreports-reports-cyb:
