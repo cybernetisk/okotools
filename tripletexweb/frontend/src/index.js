@@ -20,7 +20,7 @@ const getBackendUrl = () => {
     return 'http://localhost:8000/'
   }
 
-  if (document.location.href.indexOf('/okoreports') !== -1) {
+  if (document.location.href.indexOf('/okoreports/') !== -1) {
     return '/okoreports/'
   }
 
