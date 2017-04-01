@@ -1,0 +1,20 @@
+version: '2'
+
+services:
+  frontend-builder:
+    build: .
+    image: cybrairai/okoreports-frontend-builder
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./:/usr/src/app
+    command: npm run dev
+
+  frontend:
+    build: Dockerfile-nginx
+    image: cybrairai/okoreports-frontend
+    ports:
+      - '8050:80'
+
+volumes:
+  cache-yarn:

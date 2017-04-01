@@ -9,6 +9,30 @@ import ProjectFilter from './components/ProjectFilter'
 
 import './style.scss'
 
+const getBackendUrl = () => {
+  if (BACKEND_URL_RAW !== '') {
+    return BACKEND_URL_RAW
+  }
+
+  if (document.location.href.indexOf('localhost:3000') !== -1 ||
+    document.location.href.indexOf('localhost:8050')
+  ) {
+    return 'http://localhost:8000/'
+  }
+
+  if (document.location.href.indexOf('/okoreports') !== -1) {
+    return '/okoreports/'
+  }
+
+  return '/'
+}
+
+const BACKEND_URL = getBackendUrl()
+
+const getApiUrl = path => {
+  return BACKEND_URL + path
+}
+
 class DataWrapper extends React.Component {
   static reports = {
     contextId: 'context_id',
@@ -26,7 +50,7 @@ class DataWrapper extends React.Component {
     this.state = {}
 
     Object.keys(DataWrapper.reports).forEach(stateName => {
-      const reportUrl = `reports/${DataWrapper.reports[stateName]}.txt`
+      const reportUrl = getApiUrl(`reports/${DataWrapper.reports[stateName]}.txt`)
       fetch(reportUrl, {
         credentials: 'include'
       })
@@ -300,10 +324,10 @@ class ReportTableWrapper extends React.Component {
         <div className="hidden-print menu">
           <h1>Budsjett- og regnskapsrapporter</h1>
           <p>
-            <a href={`${BACKEND_URL}api/fetch-accounting`}>Last ny data fra Tripletex</a>
+            <a href={getApiUrl('api/fetch-accounting')}>Last ny data fra Tripletex</a>
           </p>
           <p>
-            <a href={`${BACKEND_URL}api/fetch-budget`}>Last ny data fra budsjett</a>
+            <a href={getApiUrl('api/fetch-budget')}>Last ny data fra budsjett</a>
             {this.props.budgetUrl ? (
               <span> (<a href={this.props.budgetUrl} target="_blank">rediger budsjett</a>)</span>
             ) : null}

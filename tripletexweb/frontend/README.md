@@ -7,15 +7,41 @@ run or develop the application, all will be done inside Docker.
 
 ## Development
 
-Run `./run-dev.sh` and it will start a Docker-instance,
-mount the data in `app` directory in the container, and
-run webpack development server which recompiles on changes.
+You need to run the backend API to be able to load data into the frontend application.
 
-Running the development server will add a `node_modules` folder
-in the `app`-directory.
+Install javascript dependencies:
 
-## Generate distribution files
+```
+docker-compose run frontend-builder npm install
+```
 
-By running `./update-dist.sh` it will generate distribution files
-which are stored in `okoreports-frontend-dist` Docker volume that
-can be mounted by nginx.
+Make sure to rerun this if `package.json` is modified.
+
+Now you can start the development server:
+
+```
+docker-compose up frontend-builder
+```
+
+And go to http://localhost:3000/
+
+## Building for deployment
+
+```
+# install dependencies
+docker-compose run frontend-builder npm install
+
+# build dist
+docker-compose run frontend-builder npm run compile:prod
+
+# build docker image
+docker-compose build frontend
+```
+
+## Simulating production
+
+```
+docker-compose up frontend
+```
+
+Navigate to http://localhost:8050/
