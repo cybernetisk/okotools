@@ -11,7 +11,9 @@ services:
     command: npm run dev
 
   frontend:
-    build: Dockerfile-nginx
+    build:
+      context: .
+      dockerfile: Dockerfile-nginx
     image: cybrairai/okoreports-frontend
     ports:
       - '8050:80'
