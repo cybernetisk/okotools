@@ -26,9 +26,11 @@ Pulling latest image and running:
 docker-compose up --pull
 ```
 
-## Using the reports
+## Using with reverse proxy
 
-The reports generated are stored in seperate Docker volume that should
-be exposed by nginx at `/reports/`.
+The following paths should reverse proxy to this service:
 
-See `docker-compose.yml` for the name of this volume.
+```
+/reports/
+/api/
+```
