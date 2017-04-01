@@ -21,8 +21,8 @@ SEMESTERS = (
 # We cache previous accounting data, and it will only be refetched
 # if we delete the aggregated-previous.txt file
 DATE_RANGES = {
-    'previous': ['2014-01-01', '2015-12-31'],
-    'current': ['2016-01-01', '2017-12-31'],
+    'previous': ['2014-01-01', '2016-12-31'],
+    'current': ['2017-01-01', '2017-12-31'],
 }
 
 
