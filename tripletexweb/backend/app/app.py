@@ -3,10 +3,17 @@ app = Flask(__name__)
 
 import html
 import sys
+import os.path
 
 sys.path.append('/usr/src/tripletex')
 import fetch_budget_data
 import fetch_tripletex_data
+
+if not os.path.isfile('/usr/src/tripletex/settings_local.py'):
+  print('Missing settings file!')
+  print('You should volume mount a file to /usr/src/tripletex/settings_local.py')
+  print('See https://github.com/cybrairai/okotools/blob/master/tripletex/settings.py as a template')
+  sys.exit(1)
 
 def get_output(title, data):
     ret = """<!DOCTYPE html>
