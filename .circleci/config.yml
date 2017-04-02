@@ -19,7 +19,7 @@ jobs:
       - save_cache:
           key: okoreports-frontend-{{ .Branch }}-{{ checksum "tripletexweb/frontend/package.json" }}
           paths:
-            - "~/build/node_modules"
+            - "~/build/tripletexweb/frontend/node_modules"
 
       - run:
           name: Compile production artifact
