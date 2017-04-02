@@ -52,6 +52,7 @@ jobs:
 
       - deploy:
           name: Push docker image to Docker Hub if master branch
+          working_directory: tripletexweb/frontend
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
