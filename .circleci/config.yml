@@ -45,9 +45,15 @@ jobs:
             chmod +x /usr/local/bin/docker-compose
 
       - run:
-          name: Build and push image
+          name: Build frontend docker image
           working_directory: tripletexweb/frontend
           command: |
             docker-compose build frontend
-            docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
-            docker-compose push frontend
+
+      - deploy:
+          name: Push docker image to Docker Hub if master branch
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+              docker-compose push frontend
+            fi
