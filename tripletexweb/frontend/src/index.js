@@ -163,7 +163,7 @@ class ReportTableWrapper extends React.Component {
           && (entry['Måned'] == 0 ? test['Måned'] == 0 : (entry['Måned'] < 7 ? test['Måned'] < 7 : test['Måned'] >= 7))
 
         const semester = entry['Måned'] == 0 ? 'År' : (entry['Måned'] < 7 ? 'Vår' : 'Høst')
-        const dateFrom = `${entry['År']}-${entry['Måned'] < 7 ? '01-01' : '01-06'}`
+        const dateFrom = `${entry['År']}-${entry['Måned'] < 7 ? '01-01' : '07-01'}`
         const dateTo = `${entry['År']}-${entry['Måned'] < 7 && entry['Måned'] !== 0 ? '06-30' : '12-31'}`
 
         prev.push({
