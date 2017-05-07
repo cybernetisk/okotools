@@ -481,7 +481,7 @@ class TripletexProjects(TripletexBase):
 
                 project_list.append({
                     'id': project_id,
-                    'text': html.unescape(re.sub(r'  +', ' ', re.sub(r'<[^>]*?>', '', tdlist[2]).strip())),
+                    'text': html.unescape(re.sub(r'  +', ' ', re.sub(r'<[^>]*?>', '', tdlist[1]).strip())),
                     'start': m.group(1),
                     'end': m.group(3)
                 })
