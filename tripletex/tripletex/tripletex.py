@@ -310,14 +310,14 @@ class TripletexAccounts(TripletexBase):
         account_list = []
 
         for tr in soup.tbody.find_all('tr'):
-            if len(tr.contents) < 8:
+            if len(tr.contents) < 7:
                 continue
 
             account_list.append({
-                'id': tr.contents[1].text.strip(),
-                'text': tr.contents[2].text.strip(),
-                'group': tr.contents[3].text.strip(),
-                'active': len(tr.contents[7].text.strip()) == 0
+                'id': tr.contents[0].text.strip(),
+                'text': tr.contents[1].text.strip(),
+                'group': tr.contents[2].text.strip(),
+                'active': len(tr.contents[6].text.strip()) == 0
             })
 
         return account_list
