@@ -5,7 +5,7 @@ services:
     build:
       context: ..
       dockerfile: tripletex-importer/Dockerfile
-    image: cybrairai/tripletex-importer
+    image: cybernetisk/tripletex-importer
     volumes:
       - ../settings.py:/usr/src/tripletex/settings_local.py
       - ./reports.json:/usr/src/app/reports.json

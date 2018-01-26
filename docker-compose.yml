@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: tripletexweb/backend/Dockerfile
-    image: cybrairai/okoreports-backend
+    image: cybernetisk/okoreports-backend
     restart: unless-stopped
     volumes:
       - okoreports-reports-cyb:/var/okoreports/reports

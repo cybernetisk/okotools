@@ -3,7 +3,7 @@
 Dette repoet tilbyr en CLI for å importere kasseoppgjør for CYB.
 
 Når kasseoppgjør genereres ved hjelp av Google Disk
-[forklart i eget dokument](https://github.com/cybrairai/z-backend)
+[forklart i eget dokument](https://github.com/cybernetisk/z-backend)
 vil dataen bli lagret i en fil som heter ```reports.json``` i en egen mappe.
 denne filen brukes til å generere import til Tripletex.
 

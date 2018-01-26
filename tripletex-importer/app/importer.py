@@ -332,7 +332,7 @@ if __name__ == '__main__':
     print("--------------------------------------------------------------------------------")
     print("         Generering av importeringsfil til Tripletex for Z-rapporter")
     print("         System laget av kasserer Henrik Steen våren og høsten 2015")
-    print("                 se http://github.com/cybrairai/okotools")
+    print("                 se http://github.com/cybernetisk/okotools")
     print("--------------------------------------------------------------------------------")
     print("")
 

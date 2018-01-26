@@ -406,7 +406,7 @@ class ReportTableWrapper extends React.Component {
           <div className="hidden-print">
             <hr />
             <p>
-              <a href="https://github.com/cybrairai/okotools/tree/master/tripletexweb">GitHub-prosjekt</a> - utviklet for <a href="http://cyb.no/">Cybernetisk Selskab</a> og <a href="http://foreningenbs.no/">Foreningen Blindern Studenterhjem</a>
+              <a href="https://github.com/cybernetisk/okotools/tree/master/tripletexweb">GitHub-prosjekt</a> - utviklet for <a href="http://cyb.no/">Cybernetisk Selskab</a> og <a href="http://foreningenbs.no/">Foreningen Blindern Studenterhjem</a>
             </p>
           </div>
         </div>

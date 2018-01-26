@@ -3,7 +3,7 @@ version: '2'
 services:
   frontend-builder:
     build: .
-    image: cybrairai/okoreports-frontend-builder
+    image: cybernetisk/okoreports-frontend-builder
     ports:
       - '3000:3000'
     volumes:
@@ -14,7 +14,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-nginx
-    image: cybrairai/okoreports-frontend
+    image: cybernetisk/okoreports-frontend
     ports:
       - '8050:80'
 
