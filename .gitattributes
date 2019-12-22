@@ -1,0 +1,2 @@
+# Use lf (\n) endings, also on Windows.
+* text=auto eol=lf
