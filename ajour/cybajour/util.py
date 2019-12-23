@@ -1,9 +1,29 @@
+from enum import Enum
+
 from pathlib import Path
 from typing import List, Optional
 
 import pandas
 
 import pyodbc
+
+
+class Database(Enum):
+    CASHREGN = "Cashregn.mdb"
+    CASHDATA = "Cashdata.mdb"
+    DATAFLET = "DataFlet.mdb"
+
+
+class DatabaseCollection:
+    def __init__(self, path: Path = Path.cwd()):
+        self._paths = {
+            Database.CASHREGN: path / Database.CASHREGN.value,
+            Database.CASHDATA: path / Database.CASHDATA.value,
+            Database.DATAFLET: path / Database.DATAFLET.value,
+        }
+
+    def __getitem__(self, database: Database):
+        return self._paths[database]
 
 
 class Col:
@@ -15,16 +35,18 @@ class Col:
 class DataSet:
     def __init__(
         self,
-        filename: str,
+        dbcol: DatabaseCollection,
+        database: Database,
         tablename: str,
         columns: Optional[List[Col]] = None
     ):
-        self.filename = filename
+        self.dbcol = dbcol
+        self.database = database
         self.tablename = tablename
         self.columns = columns
 
     def df(self):
-        cnxn = connect(self.filename)
+        cnxn = connect(self.dbcol[self.database])
 
         cols = "*"
         if self.columns is not None:
@@ -57,11 +79,10 @@ def relative_path(name):
     return str(Path().cwd() / name)
 
 
-def connect(name):
-    dbpath = relative_path(name)
+def connect(database_path: Path):
     conn_str = (
         r'DRIVER={Microsoft Access Driver (*.mdb, *.accdb)};'
-        f'DBQ={dbpath};'
+        f'DBQ={str(database_path)};'
     )
     cnxn = pyodbc.connect(conn_str)
     return cnxn
