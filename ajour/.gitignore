@@ -1,0 +1,6 @@
+.venv/
+__pycache__
+*.mdb
+*.ldb
+.vscode
+.ipynb_checkpoints
