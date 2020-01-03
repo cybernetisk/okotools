@@ -7,7 +7,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Flask, escape, request, Response
+from flask import Flask, Response, escape, request
 
 storage_dir = Path(os.getenv("STORAGE_DIR"))
 
@@ -18,7 +18,7 @@ app.logger.setLevel(logging.INFO)
 
 
 def text_response(value, status):
-    return Response(value, mimetype='text/plain', status=status)
+    return Response(value, mimetype="text/plain", status=status)
 
 
 @app.route("/archive", methods=["PUT"])
@@ -43,7 +43,7 @@ def upload_rpm():
                 app.logger.info("- " + name)
 
         now = datetime.now().replace(tzinfo=timezone.utc)
-        target_path = storage_dir / "{}.tgz".format(now.strftime("%Y%m%d-%H%M%SZ.tgz"))
+        target_path = storage_dir / now.strftime("%Y%m%d-%H%M%SZ.tgz")
 
         app.logger.info("Storing to {}".format(target_path))
 
