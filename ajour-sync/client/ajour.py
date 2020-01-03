@@ -66,7 +66,7 @@ def sync():
     upload(output_file)
     print("Upload complete")
 
-    # os.remove(output_file)
+    os.remove(output_file)
 
 
 def self_update():
