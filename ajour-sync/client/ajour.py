@@ -71,7 +71,7 @@ def sync():
 
 def self_update():
     print("Self-updating")
-    url = "https://raw.githubusercontent.com/cybernetisk/okotools/ajour-sync/ajour-sync/client/ajour.py"
+    url = "https://raw.githubusercontent.com/cybernetisk/okotools/master/ajour-sync/client/ajour.py"
 
     response = urllib.request.urlopen(url)
     data = response.read().decode("utf-8")
