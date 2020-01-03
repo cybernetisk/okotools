@@ -36,6 +36,23 @@ def create_archive() -> str:
     return output_file
 
 
+def upload(arc_file):
+    # Not very memory efficient, but want to stick to built-in libraries.
+    # The compressed tgz file is about 29 MiB as of 2020-01-03.
+    data = Path(arc_file).read_bytes()
+    req = urllib.request.Request(
+        url="https://ajour-sync.cyb.no/archive",
+        data=data,
+        method="PUT",
+        headers={"Content-Type": "application/gzip"},
+    )
+    with urllib.request.urlopen(req) as f:
+        pass
+
+    if f.status != 201:
+        print("Unexpected status: {} ({})".format(f.status, f.reason))
+
+
 def sync():
     print("Creating archive")
     output_file = create_archive()
@@ -43,6 +60,11 @@ def sync():
     print(
         "Compressed size: {}".format(human_readable_size(os.path.getsize(output_file)))
     )
+
+    print("Will now upload")
+
+    upload(output_file)
+    print("Upload complete")
 
     # os.remove(output_file)
 
