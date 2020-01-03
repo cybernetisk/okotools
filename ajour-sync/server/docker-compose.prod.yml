@@ -1,0 +1,16 @@
+# This runs on in.cyb.no and available at ajour-sync.cyb.no
+version: '2'
+
+services:
+  cyb-ajour-sync-server:
+    container_name: cyb-ajour-sync-server
+    build: .
+    image: cybernetisk/ajour-sync-server
+    restart: unless-stopped
+    volumes:
+      - /root/ajour-data:/data
+
+networks:
+  default:
+    external:
+      name: cyb

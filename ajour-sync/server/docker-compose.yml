@@ -1,0 +1,15 @@
+# This is only used for development.
+version: '2'
+
+services:
+  server:
+    build: .
+    image: cybernetisk/ajour-sync-server
+    restart: unless-stopped
+    volumes:
+      - data:/data
+    ports:
+      - '127.0.0.1:8000:8000'
+
+volumes:
+  data:
