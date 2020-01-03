@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import tarfile
 import tempfile
 import urllib.request
@@ -60,8 +60,9 @@ def usage():
     print("Unknown command")
     sys.exit(1)
 
+
 if __name__ == "__main__":
-    if len(sys.argv) != 1:
+    if len(sys.argv) != 2:
         usage()
 
     command = sys.argv[1]
