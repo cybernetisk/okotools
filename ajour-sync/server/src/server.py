@@ -31,24 +31,28 @@ def upload_rpm():
 
     tmp_fd, tmp_path = tempfile.mkstemp()
     os.close(tmp_fd)
-    with open(tmp_path, "wb") as f:
-        f.write(request.stream.read())
 
-    # Verify the tarfile can be read.
-    with tarfile.open(tmp_path, "r:gz") as tar:
-        app.logger.info("Contents of tarfile")
-        for name in tar.getnames():
-            app.logger.info("- " + name)
+    try:
+        with open(tmp_path, "wb") as f:
+            f.write(request.stream.read())
 
-    now = datetime.now().replace(tzinfo=timezone.utc)
-    target_path = storage_dir / "{}.tgz".format(now.strftime("%Y%m%d-%H%M%SZ.tgz"))
+        # Verify the tarfile can be read.
+        with tarfile.open(tmp_path, "r:gz") as tar:
+            app.logger.info("Contents of tarfile")
+            for name in tar.getnames():
+                app.logger.info("- " + name)
 
-    app.logger.info("Storing to {}".format(target_path))
+        now = datetime.now().replace(tzinfo=timezone.utc)
+        target_path = storage_dir / "{}.tgz".format(now.strftime("%Y%m%d-%H%M%SZ.tgz"))
 
-    shutil.move(tmp_path, target_path)
-    os.remove(tmp_path)
+        app.logger.info("Storing to {}".format(target_path))
 
-    return text_response("Created\n", 201)
+        shutil.move(tmp_path, target_path)
+
+        return text_response("Created\n", 201)
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 
 @app.route("/")
