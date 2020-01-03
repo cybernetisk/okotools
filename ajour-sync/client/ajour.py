@@ -37,6 +37,7 @@ def create_archive() -> str:
 
 
 def sync():
+    print("Creating archive")
     output_file = create_archive()
 
     print(
@@ -47,6 +48,7 @@ def sync():
 
 
 def self_update():
+    print("Self-updating")
     url = "https://raw.githubusercontent.com/cybernetisk/okotools/ajour-sync/ajour-sync/client/ajour.py"
 
     response = urllib.request.urlopen(url)
