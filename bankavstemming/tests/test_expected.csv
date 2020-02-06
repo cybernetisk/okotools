@@ -1,0 +1,10 @@
+Konto;Kontonavn
+;
+Inngående saldo;Utgående saldo
+123,22;89466,05
+Bokført dato;Forklarende tekst;Inn;Ut
+10.10.2019;Nettbetaling Til Navn Navnesen, Nr.400123 Oppdragsdato: 2019-10-09 Arkiv *85111234 Id 00170400123 Buntnr: 600104123;;-79,40
+10.10.2019;Nettbetaling Til Navn Navnesen 2, Nr.403123 Oppdragsdato: 2019-10-09 Arkiv *85111123 Id 00170403123 Buntnr: 600104123;;-84,81
+14.10.2019;Omsetning bank axept Escape Gaustadallee Oslo 388123, Nr. 10123 Oppdragsdato: 2019-10-09 Avs.ref 00000010123 Arkiv *17401123 Id 00000010123 Buntnr: 600108123;48108,00;
+18.10.2019;Overførsel Fra Leverandør 12 Støtte Til Gala 16.10 42.600,00, Nr.701123 Oppdragsdato: 2019-10-10 Avs.ref 701123 Arkiv 797450123 Id 00000701123 Buntnr: 600100123;42600,00;
+14.10.2019;Autogiro Bankaxept - Navn As, Nr.601123 Oppdragsdato: 2019-10-14 Arkiv *87654123 Id 00172601123 Buntnr: 600126123;;-1200,96

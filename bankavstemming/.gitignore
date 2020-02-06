@@ -1,0 +1,4 @@
+.venv
+out.csv
+*.txt
+__pycache__
