@@ -10,11 +10,14 @@ ssh root@okoreports.cyb.no /bin/bash <<EOF
   docker-compose up -d
 EOF
 
-echo
-echo "Deploying to foreningenbs.no"
-ssh henrste@foreningenbs.no /bin/bash <<EOF
-  set -e
-  cd /fbs/drift/services/okoreports
-  docker-compose pull
-  docker-compose up -d
-EOF
+# deploy of foreningenbs.no is now controlled from
+# https://github.com/blindern/drift/blob/master/ansible/site.yml
+
+# echo
+# echo "Deploying to foreningenbs.no"
+# ssh henrste@foreningenbs.no /bin/bash <<EOF
+#   set -e
+#   cd /fbs/drift/services/okoreports
+#   docker-compose pull
+#   docker-compose up -d
+# EOF
