@@ -1,3 +1,2 @@
 Options +Indexes
 IndexOptions FancyIndexing NameWidth=* Charset=UTF-8
-IndexIgnore oppdater_siste.sh header.html

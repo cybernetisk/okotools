@@ -1,0 +1,30 @@
+name: Build dist and sync files to webserver
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "skjemaer/**"
+jobs:
+  build-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install SSH key
+        env:
+          CYB_SSH_KEY: ${{ secrets.CYB_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$CYB_SSH_KEY" >~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+      - name: Setup known hosts
+        run: ssh-keyscan login.ifi.uio.no >> ~/.ssh/known_hosts
+      # See https://askubuntu.com/a/1081907
+      - name: Remove policies for ImageMagic to be able to convert PDFs
+        run: sudo rm /etc/ImageMagick-*/policy.xml
+      - name: Build dist
+        run: ./create-dist.sh
+        working-directory: ./skjemaer
+      - name: Sync files
+        run: rsync -v -a --delete-after dist/ cyb@login.ifi.uio.no:automation/github-okotools-skjemaer/
+        working-directory: ./skjemaer
