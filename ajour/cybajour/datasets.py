@@ -1,7 +1,6 @@
 import numpy as np
 
-from cybajour.util import DataSet, Col, DatabaseCollection, Database
-
+from cybajour.util import Col, Database, DatabaseCollection, DataSet
 
 # Usikker om vi har tabeller som holder på info om dette.
 BILAG_NR = "bilag_nr"
@@ -261,7 +260,7 @@ class Salgslinje(DataSet):
             Col("VAREID", Vare.id),
             Col("TEKST", "tekst"),
             Col("GRUPPE", Varegruppe.nr),
-            Col("SOLGT", "antall"),
+            Col("SOLGT", "antall_abs"),
             Col("EnHed", "enhet_tekst"),
             Col("SalgMomsYN", "beloep_inkl_mva_pr"),
             Col("SALG1", "beloep_eks_mva_pr"),
@@ -276,6 +275,22 @@ class Salgslinje(DataSet):
             Col("Bordnr", "bord_nr"),
             Col("Kode", "kode"),  # 00, 02
         ])
+
+    def df(self):
+        result = super().df()
+
+        # Sett antall til å være negativt ved kreditering, slik
+        # at kolonnen kan summeres for å få korrekt antall.
+        result["antall"] = (
+            result["antall_abs"] *
+            result["type"].apply(lambda x: (-1 if x == "KRED" else 1))
+        )
+
+        # Priser for alle antall.
+        result["beloep_inkl_mva"] = result["beloep_inkl_mva_pr"] * result["antall_abs"]
+        result["beloep_eks_mva"] = result["beloep_eks_mva_pr"] * result["antall_abs"]
+
+        return result
 
 
 class Faktura(DataSet):
