@@ -1,12 +1,10 @@
 import pandas
-from pprint import pprint
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 from cybajour.datasets import (
     Betaling,
     Faktura,
-    Journal,
     Kvittering,
     Salgslinje,
     Zrapport,
@@ -16,7 +14,7 @@ from cybajour.datasets import (
 )
 from cybajour.util import DatabaseCollection
 
-#pandas.set_option('display.max_columns', 300)
+# pandas.set_option('display.max_columns', 300)
 pandas.set_option('display.max_rows', 3000)
 
 standard_prosjekt = "20009"  # Varer
@@ -31,11 +29,11 @@ mappings_df = pandas.DataFrame([
     {"vare_id": "354001", "linje_tekst": "Whisky-seminar", "konto_nr": "3090", "prosjekt": "20011"},
 ])
 
-datadir = Path.cwd() / "data" / "20200128-172526Z"
+datadir = Path.cwd() / "data" / "20200219-112506Z"
 dbcol = DatabaseCollection(path=datadir)
 
-dato_start = str(date(2019, 9, 1))
-dato_slutt = str(date(2019, 10, 31))
+dato_start = str(date(2019, 11, 1))
+dato_slutt = str(date(2019, 12, 31))
 
 # Hent alle data så det caches.
 kvittering_df_all = Kvittering(dbcol).df()
@@ -110,36 +108,39 @@ sum_per_dag["snittbeloep_inkl_mva"] = sum_per_dag["beloep_inkl_mva"] / sum_per_d
 
 beloep_inkl_mva = sum_per_varegruppe_per_dato.sum()["beloep_inkl_mva"]
 
-# Vis data.
+# Lagre data.
 
-print("Periode: {} - {}".format(dato_start, dato_slutt))
+data = ""
+data += "Periode: {} - {}\n".format(dato_start, dato_slutt)
 
-print()
-print("Oppsummering:")
-print("-------------")
-print("Sum omsetning inkl mva:  {:15}".format(sum_omsetning))
-print("Antall kvitteringer:     {:15}".format(kvittering_df.count()[0]))
-print("Antall produkter solgt:  {:15}".format(antall_produkter))
+data += "\n"
+data += "Oppsummering:\n"
+data += "-------------\n"
+data += "Sum omsetning inkl mva:  {:15}\n".format(sum_omsetning)
+data += "Antall kvitteringer:     {:15}\n".format(kvittering_df.count()[0])
+data += "Antall produkter solgt:  {:15}\n".format(antall_produkter)
 
-print()
-print("Alle produktlinjer:")
-print("-------------------")
-print(alle_produkter)
+data += "\n"
+data += "Alle produktlinjer:\n"
+data += "-------------------\n"
+data += alle_produkter.to_string() + "\n"
 
-print()
-print("Salgslinjer:")
-print("------------")
-print(sum_per_varegruppe)
+data += "\n"
+data += "Salgslinjer:\n"
+data += "------------\n"
+data += sum_per_varegruppe.to_string() + "\n"
 
-print()
-print("Sum per konto:")
-print("--------------")
-print(sum_per_konto)
+data += "\n"
+data += "Sum per konto:\n"
+data += "--------------\n"
+data += sum_per_konto.to_string() + "\n"
 
-print()
-print("Sum per dato:")
-print("-------------")
-print(sum_per_dag)
+data += "\n"
+data += "Sum per dato:\n"
+data += "-------------\n"
+data += sum_per_dag.to_string() + "\n"
 
-print()
-print("Kontrollsum: {}".format(beloep_inkl_mva))
+data += "\n"
+data += "Kontrollsum: {}\n".format(beloep_inkl_mva)
+
+Path("report.txt").write_text(data, encoding="utf-8")
