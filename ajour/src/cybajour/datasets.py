@@ -286,6 +286,9 @@ class Salgslinje(DataSet):
             result["type"].apply(lambda x: (-1 if x == "KRED" else 1))
         )
 
+        # Fjern whitespace så ikke "x " og "x" havner på forskjellige linjer.
+        result["tekst"] = result["tekst"].apply(lambda x: x.strip())
+
         # Priser for alle antall.
         result["beloep_inkl_mva"] = result["beloep_inkl_mva_pr"] * result["antall_abs"]
         result["beloep_eks_mva"] = result["beloep_eks_mva_pr"] * result["antall_abs"]
