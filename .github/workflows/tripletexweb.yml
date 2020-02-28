@@ -1,0 +1,25 @@
+name: tripletexweb
+on: [push]
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+      - run: npm install
+        working-directory: tripletexweb/frontend
+      - run: npm run compile:prod
+        working-directory: tripletexweb/frontend
+      - run: docker-compose build frontend
+        working-directory: tripletexweb/frontend
+      - name: Push docker image to Docker Hub if master branch
+        if: github.ref == 'refs/heads/master'
+        run: |
+          docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+          docker-compose push frontend
+        working-directory: tripletexweb/frontend
+        env:
+          DOCKER_LOGIN: ${{ secrets.DOCKER_LOGIN }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
