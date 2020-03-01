@@ -1,6 +1,8 @@
+import pandas
 import numpy as np
 
 from cybajour.util import Col, Database, DatabaseCollection, DataSet
+from cybajour.config import mappings_df, standard_prosjekt
 
 # Usikker om vi har tabeller som holder på info om dette.
 BILAG_NR = "bilag_nr"
@@ -294,6 +296,20 @@ class Salgslinje(DataSet):
         result["beloep_eks_mva"] = result["beloep_eks_mva_pr"] * result["antall_abs"]
 
         return result
+
+    @staticmethod
+    def utvid(salgslinje_df, varegruppe_df):
+        salgslinje_utvidet_df = (
+            salgslinje_df[salgslinje_df["beloep_inkl_mva"] != 0]
+            .join(varegruppe_df.set_index("varegruppe_nr"), on="varegruppe_nr", rsuffix="_vg")
+            .join(mappings_df.set_index("vare_id"), on="vare_id", rsuffix="_m")
+        )
+
+        salgslinje_utvidet_df["ny_konto_nr"] = salgslinje_utvidet_df["konto_nr_m"].mask(pandas.isnull, salgslinje_utvidet_df["konto_nr"])
+        salgslinje_utvidet_df["ny_tekst"] = salgslinje_utvidet_df["linje_tekst"].mask(pandas.isnull, salgslinje_utvidet_df["varegruppe_nr"] + " " + salgslinje_utvidet_df["tekst_vg"])
+        salgslinje_utvidet_df["ny_prosjekt"] = salgslinje_utvidet_df["prosjekt"].mask(pandas.isnull, standard_prosjekt)
+
+        return salgslinje_utvidet_df
 
 
 class Faktura(DataSet):
