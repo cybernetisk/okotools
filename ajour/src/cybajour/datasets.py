@@ -285,7 +285,7 @@ class Salgslinje(DataSet):
         # at kolonnen kan summeres for å få korrekt antall.
         result["antall"] = (
             result["antall_abs"] *
-            result["type"].apply(lambda x: (-1 if x == "KRED" else 1))
+            result["beloep_inkl_mva_pr"].apply(lambda x: (-1 if x < 0 else 1))
         )
 
         # Fjern whitespace så ikke "x " og "x" havner på forskjellige linjer.
