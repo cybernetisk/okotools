@@ -291,6 +291,10 @@ class Salgslinje(DataSet):
         # Fjern whitespace så ikke "x " og "x" havner på forskjellige linjer.
         result["tekst"] = result["tekst"].apply(lambda x: x.strip())
 
+        # Kolonne slik at vi kan gruppere alle like beløp, uavhengig
+        # om varen er i retur eller ikke.
+        result["beloep_inkl_mva_pr_abs"] = result["beloep_inkl_mva_pr"].apply(lambda x: abs(x))
+
         # Priser for alle antall.
         result["beloep_inkl_mva"] = result["beloep_inkl_mva_pr"] * result["antall_abs"]
         result["beloep_eks_mva"] = result["beloep_eks_mva_pr"] * result["antall_abs"]

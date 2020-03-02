@@ -1,23 +1,25 @@
 from __future__ import annotations
 
-from datetime import date as ddate, timedelta
-from pandas import DataFrame
 from cmd import Cmd
-from typing import Optional
+from datetime import date as ddate
+from datetime import timedelta
 from pathlib import Path
+from typing import Optional
 
 import colorama
+from pandas import DataFrame
 
 from cybajour.datasets import (
     Betaling,
     Faktura,
     Journal,
+    Kunde,
     Kvittering,
     Salgslinje,
-    Zrapport,
-    ZrapportLinje,
     Vare,
     Varegruppe,
+    Zrapport,
+    ZrapportLinje
 )
 from cybajour.util import DatabaseCollection
 
@@ -103,11 +105,10 @@ class Rapport:
         # Lag liste gruppert etter produkt.
         alle_produkter = (
             salgslinje_utvidet_df
-            .groupby(["varegruppe_nr", "tekst_vg", "vare_id", "tekst"])[["antall", "beloep_inkl_mva", "beloep_mva_sum"]]
+            .groupby(["varegruppe_nr", "tekst_vg", "vare_id", "tekst", "beloep_inkl_mva_pr_abs"])[["antall", "beloep_inkl_mva", "beloep_mva_sum"]]
             .agg("sum")
             # .sort_values(by="antall", ascending=False)
         )
-        alle_produkter["snittbeloep_inkl_mva"] = alle_produkter["beloep_inkl_mva"] / alle_produkter["antall"]
 
         sum_per_varegruppe_per_dato = (
             salgslinje_utvidet_df
@@ -198,6 +199,7 @@ class PromptHelper:
         print("  varegrupper   Vis alle varegrupper")
         print("  varer         Vis alle varer")
         print("  journal       Vis alle oppføringer fra journal")
+        print("  kunder        Vis alle kunder")
         print("  quit          Avslutt (evt. trykk Ctrl+D)")
         print("")
         print("Trykk enter for å se hjelp")
@@ -357,6 +359,11 @@ class MyPrompt(Cmd):
         journal_df = self.dfcache.memoize(Journal)
         journal_df = journal_df.sort_values(by="tid_registrert")
         print(journal_df.to_string())
+
+    def do_kunder(self, args):
+        kunder_df = self.dfcache.memoize(Kunde)
+        kunder_df = kunder_df.sort_values(by=Kunde.nr)
+        print(kunder_df[[Kunde.nr, "kundenavn", "prisvariant"]].to_string())
 
     def do_quit(self, args):
         """Avslutter programmet"""
