@@ -13,6 +13,7 @@ from cybajour.datasets import (
     Betaling,
     Faktura,
     Journal,
+    Kontosalg,
     Kunde,
     Kvittering,
     Salgslinje,
@@ -196,6 +197,7 @@ class PromptHelper:
         print("  zlist [<n>]   Vis oversikt over n siste Z, -1 for alle")
         print("  report <date> <date>")
         print("                Generer rapport for periode fra og med og til og med")
+        print("  kontosalg     Vis oppsummering for åpne kontosalg")
         print("  varegrupper   Vis alle varegrupper")
         print("  varer         Vis alle varer")
         print("  journal       Vis alle oppføringer fra journal")
@@ -344,6 +346,19 @@ class MyPrompt(Cmd):
             return
 
         Rapport(self.dfcache, dato_start=date1, dato_slutt=date2).show()
+
+    def do_kontosalg(self, args):
+        kontosalg_df = self.dfcache.memoize(Kontosalg)
+        df = kontosalg_df[kontosalg_df["beloep_inkl_mva"] != 0]
+        df = df.groupby(by=["bord_nr", "salgsdato"])[["antall", "beloep_inkl_mva", "beloep_mva_sum"]].sum()
+
+        print("Fordelt per dag:")
+        print(df.to_string())
+
+        print()
+        print("Oppsummert per konto:")
+        df = df.groupby(by=["bord_nr"])[["antall", "beloep_inkl_mva", "beloep_mva_sum"]].sum()
+        print(df.to_string())
 
     def do_varegrupper(self, args):
         varegrupper_df = self.dfcache.memoize(Varegruppe)

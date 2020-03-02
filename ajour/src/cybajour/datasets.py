@@ -501,3 +501,52 @@ class FinansBilagLog(DataSet):
         result[Faktura.nr].replace({-1: None}, inplace=True)
 
         return result
+
+
+class Kontosalg(DataSet):
+    """
+    Ufullstendige kontosalg. Når man fakturerer en konto vil linjene
+    bli flyttet fra denne tabellen til en vanlig salgslinje.
+
+    Denne tabellen inneholder altså det som slås inn på en
+    konto uten å bli betalt med en gang.
+    """
+
+    id = "kontosalg_id"
+
+    def __init__(self, dbcol: DatabaseCollection):
+        super().__init__(dbcol, Database.CASHDATA, "ButikDetail_Net", [
+            Col("ID", Kontosalg.id),
+            # Kunde er her angitt med Vxxxx, f.eks. V1234 for internbong.
+            # Det er bordnr som benyttes som "gruppe" for en konto.
+            Col("BordNr", "bord_nr"),
+            Col("VareID", Vare.id),
+            Col("Gruppe", Varegruppe.nr),
+            Col("Tekst", "tekst"),
+            Col("Antal", "antall"),
+            Col("Pris", "beloep_inkl_mva_pr"),
+            Col("PrisMomsYN", "beloep_eks_mva_pr"),
+            Col("MomsBelb", "beloep_mva_sum"),
+            Col("SalgsDato", "salgsdato"),
+            Col("BetalingsDato", "betalingsdato"),
+            Col("Saelger", "selger"),
+            Col("UdskTid", "utskrevet_tid"),
+            # Kundenr er kun oppgitt på den ene spesielle linjen som angir
+            # kunde, ikke på andre linjer. Se bordnr.
+            Col("KundeNr", Kunde.nr),
+            Col("Kontokode", "kunde_tekst"),
+            Col("Enhed", "enhet"),
+            # For hver av BordNr, så er dette et løpenr som starter på 1.
+            # Når man betaler/fakturerer en konto vil nye oppføringer start
+            # på 1 igjen.
+            Col("LinieNr", "linjenr"),
+        ])
+
+    def df(self):
+        result = super().df()
+
+        # Priser for alle antall.
+        result["beloep_inkl_mva"] = result["beloep_inkl_mva_pr"] * result["antall"]
+        result["beloep_eks_mva"] = result["beloep_eks_mva_pr"] * result["antall"]
+
+        return result
