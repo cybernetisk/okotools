@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from cmd import Cmd
-from datetime import date as ddate
-from datetime import timedelta
+from datetime import datetime, date as ddate, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -88,7 +87,7 @@ class Rapport:
 
         return self._cache[name]
 
-    def show(self):
+    def generate(self) -> str:
         kvittering_df = self.memoize(Kvittering)
         salgslinje_df = self.memoize(Salgslinje)
 
@@ -139,19 +138,42 @@ class Rapport:
         )
         sum_per_dag["snittbeloep_inkl_mva"] = sum_per_dag["beloep_inkl_mva"] / sum_per_dag["antall"]
 
+        kunder = self.dfcache.memoize(Kunde)
+
+        kontosalg = salgslinje_df[salgslinje_df["bord_nr"].str.startswith("V", na=False)].copy()
+        kontosalg["kunde_nr"] = kontosalg["bord_nr"].apply(lambda v: v[1:])
+        kontosalg["aar"] = kontosalg["salgsdato"].dt.year
+        kontosalg = (
+            kontosalg
+            .join(kunder.set_index("kunde_nr"), on="kunde_nr", rsuffix="_k")
+        )
+
+        kontosalg_detalj = kontosalg.groupby(
+            by=["bord_nr", "kundenavn", "dato", "salgsdato"]
+        )[["antall", "beloep_inkl_mva", "beloep_mva_sum"]].sum()
+
+        kontosalg_oppsummert = kontosalg.groupby(
+            by=["bord_nr", "kundenavn", "aar"]
+        )[["antall", "beloep_inkl_mva", "beloep_mva_sum"]].sum()
+
+        kontosalg_totalt = kontosalg["beloep_inkl_mva"].sum()
+
         beloep_inkl_mva = sum_per_varegruppe_per_dato.sum()["beloep_inkl_mva"]
 
         # Lagre data.
 
         data = ""
         data += "Periode: {} - {}\n".format(self.dato_start, self.dato_slutt)
+        data += "Rapport-tidspunkt: {}\n".format(datetime.now())
 
         data += "\n"
         data += "Oppsummering:\n"
         data += "-------------\n"
-        data += "Sum omsetning inkl mva:  {:15}\n".format(sum_omsetning)
-        data += "Antall kvitteringer:     {:15}\n".format(kvittering_df.count()[0])
-        data += "Antall produkter solgt:  {:15}\n".format(antall_produkter)
+        data += "Sum omsetning inkl mva:        {:15}\n".format(sum_omsetning)
+        data += "Kontrollsum:                   {:15} (skal være lik summen over)\n".format(beloep_inkl_mva)
+        data += "Fakturert kontosalg inkl mva:  {:15}\n".format(kontosalg_totalt)
+        data += "Antall kvitteringer:           {:15}\n".format(kvittering_df.count()[0])
+        data += "Antall produkter solgt:        {:15}\n".format(antall_produkter)
 
         data += "\n"
         data += "Alle produktlinjer:\n"
@@ -173,12 +195,18 @@ class Rapport:
         data += "-------------\n"
         data += sum_per_dag.to_string() + "\n"
 
-        data += "\n"
-        data += "Kontrollsum: {}\n".format(beloep_inkl_mva)
+        if len(kontosalg_detalj.index) > 0:
+            data += "\n"
+            data += "Fakturert kontosalg (detalj):\n"
+            data += "-----------------------\n"
+            data += kontosalg_detalj.to_string() + "\n"
 
-        # TODO: Conditional console/file.
-        # Path("report.txt").write_text(data, encoding="utf-8")
-        print(data, end="")
+            data += "\n"
+            data += "Fakturert kontosalg (oppsummert):\n"
+            data += "---------------------------\n"
+            data += kontosalg_oppsummert.to_string() + "\n"
+
+        return data
 
 
 class PromptHelper:
@@ -195,7 +223,7 @@ class PromptHelper:
         print("  z <nr>        Vis oppgjør med angitt nr")
         print("  dato <dato>   Vis informasjon om dato")
         print("  zlist [<n>]   Vis oversikt over n siste Z, -1 for alle")
-        print("  report <date> <date>")
+        print("  rapport <dato> <dato> [<rapportfil>]")
         print("                Generer rapport for periode fra og med og til og med")
         print("  kontosalg     Vis oppsummering for åpne kontosalg")
         print("  varegrupper   Vis alle varegrupper")
@@ -333,19 +361,28 @@ class MyPrompt(Cmd):
         print("Sum per konto:")
         print(sum_per_konto.to_string())
 
-    def do_report(self, args):
+    def do_rapport(self, args):
         if not self.check_dbcol():
             return
 
+        arglist = args.split()
+
         try:
-            arg1, arg2 = args.split()
-            date1 = ddate.fromisoformat(arg1)
-            date2 = ddate.fromisoformat(arg2)
+            date1 = ddate.fromisoformat(arglist[0])
+            date2 = ddate.fromisoformat(arglist[1])
         except Exception:
             print("Ugyldig datoer")
             return
 
-        Rapport(self.dfcache, dato_start=date1, dato_slutt=date2).show()
+        outfile = arglist[2] if len(arglist) > 2 else None
+
+        report = Rapport(self.dfcache, dato_start=date1, dato_slutt=date2).generate()
+
+        if outfile:
+            print("Skriver til {}".format(outfile))
+            Path(outfile).write_text(report, encoding="utf-8")
+        else:
+            print(report, end="")
 
     def do_kontosalg(self, args):
         kontosalg_df = self.dfcache.memoize(Kontosalg)
