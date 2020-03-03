@@ -242,7 +242,7 @@ class Salgslinje(DataSet):
 
     Feltet beloep_inkl_mva_pr og beloep_eks_mva_pr angir priser for ett stk
     av varen, og må ganges opp med antall for å få korrekt sum.
-    Feltet beloep_mva_sum er derimot den totale mengden MVA.
+    Feltet beloep_mva er derimot den totale mengden MVA.
 
     Feltet beloep_rabatt_inkl_mva er uvisst om gjelder pr antall eller sum,
     fordi vi p.t. kun har 1 i antall på oppføringene.
@@ -266,7 +266,7 @@ class Salgslinje(DataSet):
             Col("EnHed", "enhet_tekst"),
             Col("SalgMomsYN", "beloep_inkl_mva_pr"),
             Col("SALG1", "beloep_eks_mva_pr"),
-            Col("MomsBelb", "beloep_mva_sum"),
+            Col("MomsBelb", "beloep_mva"),
             Col("RabatBelb", "beloep_rabatt_inkl_mva"),
             Col("TYPE", "type"),  # FAKT, KRED, REKV
             Col("Dato", "dato"),
@@ -309,9 +309,9 @@ class Salgslinje(DataSet):
             .join(mappings_df.set_index("vare_id"), on="vare_id", rsuffix="_m")
         )
 
-        salgslinje_utvidet_df["ny_konto_nr"] = salgslinje_utvidet_df["konto_nr_m"].mask(pandas.isnull, salgslinje_utvidet_df["konto_nr"])
-        salgslinje_utvidet_df["ny_tekst"] = salgslinje_utvidet_df["linje_tekst"].mask(pandas.isnull, salgslinje_utvidet_df["varegruppe_nr"] + " " + salgslinje_utvidet_df["tekst_vg"])
-        salgslinje_utvidet_df["ny_prosjekt"] = salgslinje_utvidet_df["prosjekt"].mask(pandas.isnull, standard_prosjekt)
+        salgslinje_utvidet_df["konto_nr"] = salgslinje_utvidet_df["konto_nr_m"].mask(pandas.isnull, salgslinje_utvidet_df["konto_nr"])
+        salgslinje_utvidet_df["linje_tekst"] = salgslinje_utvidet_df["linje_tekst"].mask(pandas.isnull, salgslinje_utvidet_df["varegruppe_nr"] + " " + salgslinje_utvidet_df["tekst_vg"])
+        salgslinje_utvidet_df["prosjekt_nr"] = salgslinje_utvidet_df["prosjekt_nr"].mask(pandas.isnull, standard_prosjekt)
 
         return salgslinje_utvidet_df
 
@@ -450,7 +450,7 @@ class ZrapportLinje(DataSet):
             Col("Kredit", "beloep_kredit_eks_mva"),
             Col("Vdebet", "beloep_debet_inkl_mva"),
             Col("Vkredit", "beloep_kredit_inkl_mva"),
-            Col("SysMoms", "beloep_mva_negativt"),
+            Col("SysMoms", "beloep_mva_invertert"),
             Col("TidsPunkt", TID_REGISTRERT),
             Col("DebKrNr", Kunde.nr),
             Col("TFirma", "kunde_navn"),
@@ -526,7 +526,7 @@ class Kontosalg(DataSet):
             Col("Antal", "antall"),
             Col("Pris", "beloep_inkl_mva_pr"),
             Col("PrisMomsYN", "beloep_eks_mva_pr"),
-            Col("MomsBelb", "beloep_mva_sum"),
+            Col("MomsBelb", "beloep_mva"),
             Col("SalgsDato", "salgsdato"),
             Col("BetalingsDato", "betalingsdato"),
             Col("Saelger", "selger"),
