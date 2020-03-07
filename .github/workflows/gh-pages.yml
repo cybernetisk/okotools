@@ -1,0 +1,28 @@
+name: Build gh-pages
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "skjemaer/**"
+      - "okolinks/**"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # See https://askubuntu.com/a/1081907
+      - name: Remove policies for ImageMagic to be able to convert PDFs
+        run: sudo rm /etc/ImageMagick-*/policy.xml
+      - run: |
+          git fetch --no-tags --prune --progress --depth=1 origin gh-pages
+          git worktree add dist gh-pages
+      - name: Build dist
+        run: ./create-web.sh
+      - name: Update gh-pages branch
+        run: |
+          git config --global user.email "okonomi+github@cyb.no"
+          git config --global user.name "GitHub"
+          git commit -am "Update gh-pages"
+          git push -f
+        working-directory: ./dist
