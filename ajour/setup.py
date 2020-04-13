@@ -8,6 +8,7 @@ setuptools.setup(
     entry_points={"console_scripts": ["ajour = cybajour.cli:main"]},
     python_requires='>=3.6',
     install_requires=[
+        "colorama==0.4.3",
         "numpy==1.18.1",
         "pandas==1.0.1",
         "pyodbc==4.0.30",
