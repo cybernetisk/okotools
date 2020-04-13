@@ -11,6 +11,5 @@ setuptools.setup(
         "colorama==0.4.3",
         "numpy==1.18.1",
         "pandas==1.0.1",
-        "pyodbc==4.0.30",
     ]
 )
