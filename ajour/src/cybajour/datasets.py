@@ -1,6 +1,8 @@
+import pandas
 import numpy as np
 
 from cybajour.util import Col, Database, DatabaseCollection, DataSet
+from cybajour.config import mappings_df, standard_prosjekt
 
 # Usikker om vi har tabeller som holder på info om dette.
 BILAG_NR = "bilag_nr"
@@ -240,7 +242,7 @@ class Salgslinje(DataSet):
 
     Feltet beloep_inkl_mva_pr og beloep_eks_mva_pr angir priser for ett stk
     av varen, og må ganges opp med antall for å få korrekt sum.
-    Feltet beloep_mva_sum er derimot den totale mengden MVA.
+    Feltet beloep_mva er derimot den totale mengden MVA.
 
     Feltet beloep_rabatt_inkl_mva er uvisst om gjelder pr antall eller sum,
     fordi vi p.t. kun har 1 i antall på oppføringene.
@@ -264,7 +266,7 @@ class Salgslinje(DataSet):
             Col("EnHed", "enhet_tekst"),
             Col("SalgMomsYN", "beloep_inkl_mva_pr"),
             Col("SALG1", "beloep_eks_mva_pr"),
-            Col("MomsBelb", "beloep_mva_sum"),
+            Col("MomsBelb", "beloep_mva"),
             Col("RabatBelb", "beloep_rabatt_inkl_mva"),
             Col("TYPE", "type"),  # FAKT, KRED, REKV
             Col("Dato", "dato"),
@@ -283,17 +285,35 @@ class Salgslinje(DataSet):
         # at kolonnen kan summeres for å få korrekt antall.
         result["antall"] = (
             result["antall_abs"] *
-            result["type"].apply(lambda x: (-1 if x == "KRED" else 1))
+            result["beloep_inkl_mva_pr"].apply(lambda x: (-1 if x < 0 else 1))
         )
 
         # Fjern whitespace så ikke "x " og "x" havner på forskjellige linjer.
         result["tekst"] = result["tekst"].apply(lambda x: x.strip())
+
+        # Kolonne slik at vi kan gruppere alle like beløp, uavhengig
+        # om varen er i retur eller ikke.
+        result["beloep_inkl_mva_pr_abs"] = result["beloep_inkl_mva_pr"].apply(lambda x: abs(x))
 
         # Priser for alle antall.
         result["beloep_inkl_mva"] = result["beloep_inkl_mva_pr"] * result["antall_abs"]
         result["beloep_eks_mva"] = result["beloep_eks_mva_pr"] * result["antall_abs"]
 
         return result
+
+    @staticmethod
+    def utvid(salgslinje_df, varegruppe_df):
+        salgslinje_utvidet_df = (
+            salgslinje_df[salgslinje_df["beloep_inkl_mva"] != 0]
+            .join(varegruppe_df.set_index("varegruppe_nr"), on="varegruppe_nr", rsuffix="_vg")
+            .join(mappings_df.set_index("vare_id"), on="vare_id", rsuffix="_m")
+        )
+
+        salgslinje_utvidet_df["konto_nr"] = salgslinje_utvidet_df["konto_nr_m"].mask(pandas.isnull, salgslinje_utvidet_df["konto_nr"])
+        salgslinje_utvidet_df["linje_tekst"] = salgslinje_utvidet_df["linje_tekst"].mask(pandas.isnull, salgslinje_utvidet_df["varegruppe_nr"] + " " + salgslinje_utvidet_df["tekst_vg"])
+        salgslinje_utvidet_df["prosjekt_nr"] = salgslinje_utvidet_df["prosjekt_nr"].mask(pandas.isnull, standard_prosjekt)
+
+        return salgslinje_utvidet_df
 
 
 class Faktura(DataSet):
@@ -430,7 +450,7 @@ class ZrapportLinje(DataSet):
             Col("Kredit", "beloep_kredit_eks_mva"),
             Col("Vdebet", "beloep_debet_inkl_mva"),
             Col("Vkredit", "beloep_kredit_inkl_mva"),
-            Col("SysMoms", "beloep_mva_negativt"),
+            Col("SysMoms", "beloep_mva_invertert"),
             Col("TidsPunkt", TID_REGISTRERT),
             Col("DebKrNr", Kunde.nr),
             Col("TFirma", "kunde_navn"),
@@ -479,5 +499,54 @@ class FinansBilagLog(DataSet):
         # Blank ut faktura_nr der dette også benyttes som bilag_nr.
         result.loc[result[Faktura.nr] == result[BILAG_NR], Faktura.nr] = -1
         result[Faktura.nr].replace({-1: None}, inplace=True)
+
+        return result
+
+
+class Kontosalg(DataSet):
+    """
+    Ufullstendige kontosalg. Når man fakturerer en konto vil linjene
+    bli flyttet fra denne tabellen til en vanlig salgslinje.
+
+    Denne tabellen inneholder altså det som slås inn på en
+    konto uten å bli betalt med en gang.
+    """
+
+    id = "kontosalg_id"
+
+    def __init__(self, dbcol: DatabaseCollection):
+        super().__init__(dbcol, Database.CASHDATA, "ButikDetail_Net", [
+            Col("ID", Kontosalg.id),
+            # Kunde er her angitt med Vxxxx, f.eks. V1234 for internbong.
+            # Det er bordnr som benyttes som "gruppe" for en konto.
+            Col("BordNr", "bord_nr"),
+            Col("VareID", Vare.id),
+            Col("Gruppe", Varegruppe.nr),
+            Col("Tekst", "tekst"),
+            Col("Antal", "antall"),
+            Col("Pris", "beloep_inkl_mva_pr"),
+            Col("PrisMomsYN", "beloep_eks_mva_pr"),
+            Col("MomsBelb", "beloep_mva"),
+            Col("SalgsDato", "salgsdato"),
+            Col("BetalingsDato", "betalingsdato"),
+            Col("Saelger", "selger"),
+            Col("UdskTid", "utskrevet_tid"),
+            # Kundenr er kun oppgitt på den ene spesielle linjen som angir
+            # kunde, ikke på andre linjer. Se bordnr.
+            Col("KundeNr", Kunde.nr),
+            Col("Kontokode", "kunde_tekst"),
+            Col("Enhed", "enhet"),
+            # For hver av BordNr, så er dette et løpenr som starter på 1.
+            # Når man betaler/fakturerer en konto vil nye oppføringer start
+            # på 1 igjen.
+            Col("LinieNr", "linjenr"),
+        ])
+
+    def df(self):
+        result = super().df()
+
+        # Priser for alle antall.
+        result["beloep_inkl_mva"] = result["beloep_inkl_mva_pr"] * result["antall"]
+        result["beloep_eks_mva"] = result["beloep_eks_mva_pr"] * result["antall"]
 
         return result

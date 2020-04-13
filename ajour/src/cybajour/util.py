@@ -11,6 +11,7 @@ class Database(Enum):
     CASHREGN = "Cashregn.mdb"
     CASHDATA = "Cashdata.mdb"
     DATAFLET = "DataFlet.mdb"
+    MODULERX = "ModulerX.mdb"
 
 
 class DatabaseCollection:
