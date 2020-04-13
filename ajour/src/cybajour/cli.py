@@ -255,7 +255,11 @@ class MyPrompt(Cmd):
         base = Path.cwd() / "data"
 
         if args == "":
-            args = next(reversed(sorted(base.glob("*Z")))).name
+            reports = sorted(base.glob("*Z"))
+            if len(reports) == 0:
+                print("No reports found in '{}'".format(base))
+                return
+            args = next(reversed(reports)).name
 
         datadir = base / args
         if not datadir.exists():
