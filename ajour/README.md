@@ -9,5 +9,6 @@ Run with Git Bash.
 python -m venv .venv
 source .venv/Scripts/activate
 pip install -e .
-python -Xutf8 -m cybajour.til_regnskap
+export PYTHONUTF8=1
+ajour
 ```
