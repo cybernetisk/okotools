@@ -25,7 +25,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e .
 # Install our patched version of pandas_access.
-(cd pandas_access && pip install -e .)
+(cd ../pandas_access && pip install -e .)
 ```
 
 Running:

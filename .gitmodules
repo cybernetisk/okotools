@@ -1,4 +1,4 @@
-[submodule "ajour/pandas_access"]
-	path = ajour/pandas_access
+[submodule "pandas_access"]
+	path = pandas_access
 	url = https://github.com/cybernetisk/pandas_access.git
 	branch = master
