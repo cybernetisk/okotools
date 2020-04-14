@@ -3,5 +3,6 @@ __pycache__
 .vscode
 .ipynb_checkpoints
 /data/
+/report.pdf
 /report.txt
 *.egg-info

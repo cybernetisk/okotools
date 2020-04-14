@@ -7,6 +7,10 @@ from typing import Optional
 
 import colorama
 from pandas import DataFrame
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import Preformatted, SimpleDocTemplate
 
 from cybajour.datasets import (
     Betaling,
@@ -22,6 +26,24 @@ from cybajour.datasets import (
     ZrapportLinje
 )
 from cybajour.util import DatabaseCollection
+
+
+def create_pdf(path: Path, data: str) -> None:
+    styles = getSampleStyleSheet()
+    styles["Code"].fontSize = 9
+    styles["Code"].leftIndent = 0
+
+    doc = SimpleDocTemplate(
+        str(path),
+        pagesize=landscape(A4),
+        bottomMargin=5 * mm,
+        topMargin=5 * mm,
+        rightMargin=5 * mm,
+        leftMargin=5 * mm,
+    )
+
+    P = Preformatted(data, styles['Code'])
+    doc.build([P])
 
 
 class BColors:
@@ -392,7 +414,10 @@ class MyPrompt(Cmd):
 
         report = Rapport(self.dfcache, dato_start=date1, dato_slutt=date2).generate()
 
-        if outfile:
+        if outfile and outfile.endswith(".pdf"):
+            print("Skriver til {}".format(outfile))
+            create_pdf(Path(outfile), report)
+        elif outfile:
             print("Skriver til {}".format(outfile))
             Path(outfile).write_text(report, encoding="utf-8")
         else:
