@@ -109,6 +109,23 @@ class Rapport:
 
         return self._cache[name]
 
+    def csv(self, path: Path) -> str:
+        salgslinje_utvidet_df = Salgslinje.utvid(
+            salgslinje_df=self._salgslinje_df(),
+            varegruppe_df=self.dfcache.memoize(Varegruppe)
+        )
+
+        kunder = self.dfcache.memoize(Kunde)[["kunde_nr", "kundenavn"]]
+
+        salgslinje_utvidet_df["kunde_nr"] = None
+        salgslinje_utvidet_df.loc[salgslinje_utvidet_df["bord_nr"].str.startswith("V", na=False), "kunde_nr"] = salgslinje_utvidet_df["bord_nr"].apply(lambda v: v[1:])
+        salgslinje_utvidet_df = (
+            salgslinje_utvidet_df
+            .join(kunder.set_index("kunde_nr"), on="kunde_nr", rsuffix="_k")
+        )
+
+        salgslinje_utvidet_df.to_csv(path)
+
     def _salgslinje_df(self) -> DataFrame:
         salgslinje_df = self.memoize(Salgslinje)
 
@@ -290,6 +307,9 @@ class PromptHelper:
         print("  zlist [<n>]   Vis oversikt over n siste Z, -1 for alle")
         print("  rapport <dato> <dato> [<rapportfil>]")
         print("                Generer rapport for periode fra og med og til og med")
+        print("  salgslinjer_csv <dato> <dato> <rapportfil>")
+        print("                Generere CSV-fil over alle salg for periode fra og med")
+        print("                og til og med")
         print("  kontosalg     Vis oppsummering for åpne kontosalg")
         print("  varegrupper   Vis alle varegrupper")
         print("  varer         Vis alle varer")
@@ -455,6 +475,30 @@ class MyPrompt(Cmd):
             Path(outfile).write_text(report, encoding="utf-8")
         else:
             print(report, end="")
+
+    def do_salgslinjer_csv(self, args):
+        if not self.check_dbcol():
+            return
+
+        arglist = args.split()
+
+        try:
+            date1 = ddate.fromisoformat(arglist[0])
+            date2 = ddate.fromisoformat(arglist[1])
+        except Exception:
+            print("Ugyldig datoer")
+            return
+
+        if len(arglist) <= 2:
+            print("Mangler filnavn")
+            return
+
+        outfile = arglist[2]
+
+        report = Rapport(self.dfcache, dato_start=date1, dato_slutt=date2)
+
+        print("Skriver til {}".format(outfile))
+        report.csv(Path(outfile))
 
     def do_kontosalg(self, args):
         kontosalg_df = self.dfcache.memoize(Kontosalg)
