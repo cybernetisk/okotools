@@ -116,19 +116,22 @@ class Rapport:
             .agg("sum")
         )
 
+        # Fiks problem med avrunding som gir tall som -8.881784e-16.
+        alle_produkter["beloep_mva"] = alle_produkter["beloep_mva"].round(2)
+
         sum_per_varegruppe_per_dato = (
             salgslinje_utvidet_df
             .groupby(["dato", "prosjekt_nr", "konto_nr", "mva_kode", "linje_tekst"])[["antall", "beloep_inkl_mva", "beloep_mva"]]
             .agg("sum")
         )
-        sum_per_varegruppe_per_dato["snittbeloep_inkl_mva"] = sum_per_varegruppe_per_dato["beloep_inkl_mva"] / sum_per_varegruppe_per_dato["antall"]
+        sum_per_varegruppe_per_dato["snittbeloep_inkl_mva"] = (sum_per_varegruppe_per_dato["beloep_inkl_mva"] / sum_per_varegruppe_per_dato["antall"]).round(2)
 
         sum_per_varegruppe = (
             sum_per_varegruppe_per_dato
             .groupby(["prosjekt_nr", "konto_nr", "mva_kode", "linje_tekst"])
             .agg("sum")
         )
-        sum_per_varegruppe["snittbeloep_inkl_mva"] = sum_per_varegruppe["beloep_inkl_mva"] / sum_per_varegruppe["antall"]
+        sum_per_varegruppe["snittbeloep_inkl_mva"] = (sum_per_varegruppe["beloep_inkl_mva"] / sum_per_varegruppe["antall"]).round(2)
 
         sum_per_konto = (
             sum_per_varegruppe_per_dato
@@ -141,7 +144,7 @@ class Rapport:
             .groupby(["dato"])
             .agg("sum")
         )
-        sum_per_dag["snittbeloep_inkl_mva"] = sum_per_dag["beloep_inkl_mva"] / sum_per_dag["antall"]
+        sum_per_dag["snittbeloep_inkl_mva"] = (sum_per_dag["beloep_inkl_mva"] / sum_per_dag["antall"]).round(2)
 
         kunder = self.dfcache.memoize(Kunde)
 
