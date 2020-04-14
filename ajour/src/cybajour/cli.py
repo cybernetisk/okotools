@@ -109,9 +109,31 @@ class Rapport:
 
         return self._cache[name]
 
+    def _salgslinje_df(self) -> DataFrame:
+        salgslinje_df = self.memoize(Salgslinje)
+
+        # Sett aar_mnd utifra hvorvidt dette er kontosalg eller vanlig salg.
+        # Dette gjør at vi tilbakeskriver kontosalg til korrekt måned, men
+        # ikke annet salg som blir slått gjennom på kassa den aktuelle dagen.
+        # Annet salg kan gjelde ting som har ligget i "åpne poster" og som
+        # senere slås gjennom for å bli reversert. Dersom vi tilbakeskriver
+        # det vil ikke reverseringen komme på samme dag som salget.
+        salgslinje_df.loc[salgslinje_df["bord_nr"].str.startswith("V", na=False), "aar_mnd"] = (
+            salgslinje_df["salgsdato"].dt.year.astype(str)
+            + "-"
+            + salgslinje_df["salgsdato"].dt.month.astype(str).str.zfill(2)
+        )
+        salgslinje_df.loc[~ salgslinje_df["bord_nr"].str.startswith("V", na=False), "aar_mnd"] = (
+            salgslinje_df["dato"].dt.year.astype(str)
+            + "-"
+            + salgslinje_df["dato"].dt.month.astype(str).str.zfill(2)
+        )
+
+        return salgslinje_df
+
     def generate(self) -> str:
         kvittering_df = self.memoize(Kvittering)
-        salgslinje_df = self.memoize(Salgslinje)
+        salgslinje_df = self._salgslinje_df()
 
         data = kvittering_df
         data["beloep_inkl_mva"] = data["beloep_eks_mva"] + data["beloep_mva"]
@@ -134,7 +156,7 @@ class Rapport:
                 "konto_nr": "konto",
                 "mva_kode": "mva",
             })
-            .groupby(["prosjekt", "konto", "mva", "varegr", "tekst_vg", "vare_id", "tekst", "pris"])[["antall", "beloep_inkl_mva", "beloep_mva"]]
+            .groupby(["aar_mnd", "prosjekt", "konto", "mva", "varegr", "tekst_vg", "vare_id", "tekst", "pris"])[["antall", "beloep_inkl_mva", "beloep_mva"]]
             .agg("sum")
         )
 
@@ -143,7 +165,7 @@ class Rapport:
 
         sum_per_varegruppe_per_dato = (
             salgslinje_utvidet_df
-            .groupby(["dato", "prosjekt_nr", "konto_nr", "mva_kode", "linje_tekst"])[["antall", "beloep_inkl_mva", "beloep_mva"]]
+            .groupby(["aar_mnd", "dato", "salgsdato", "prosjekt_nr", "konto_nr", "mva_kode", "linje_tekst"])[["antall", "beloep_inkl_mva", "beloep_mva"]]
             .agg("sum")
         )
         sum_per_varegruppe_per_dato["snittbeloep_inkl_mva"] = (sum_per_varegruppe_per_dato["beloep_inkl_mva"] / sum_per_varegruppe_per_dato["antall"]).round(2)
@@ -157,7 +179,7 @@ class Rapport:
 
         sum_per_konto = (
             sum_per_varegruppe_per_dato
-            .groupby(["prosjekt_nr", "konto_nr", "mva_kode"])
+            .groupby(["aar_mnd", "prosjekt_nr", "konto_nr", "mva_kode"])
             .agg("sum")
         )
 
@@ -168,22 +190,28 @@ class Rapport:
         )
         sum_per_dag["snittbeloep_inkl_mva"] = (sum_per_dag["beloep_inkl_mva"] / sum_per_dag["antall"]).round(2)
 
+        sum_per_dag_detalj = (
+            sum_per_varegruppe_per_dato
+            .groupby(["dato", "aar_mnd", "salgsdato"])
+            .agg("sum")
+        )
+        sum_per_dag_detalj["snittbeloep_inkl_mva"] = (sum_per_dag_detalj["beloep_inkl_mva"] / sum_per_dag_detalj["antall"]).round(2)
+
         kunder = self.dfcache.memoize(Kunde)
 
         kontosalg = salgslinje_df[salgslinje_df["bord_nr"].str.startswith("V", na=False)].copy()
         kontosalg["kunde_nr"] = kontosalg["bord_nr"].apply(lambda v: v[1:])
-        kontosalg["aar"] = kontosalg["salgsdato"].dt.year
         kontosalg = (
             kontosalg
             .join(kunder.set_index("kunde_nr"), on="kunde_nr", rsuffix="_k")
         )
 
         kontosalg_detalj = kontosalg.groupby(
-            by=["bord_nr", "kundenavn", "dato", "salgsdato"]
+            by=["bord_nr", "kundenavn", "dato", "aar_mnd", "salgsdato"]
         )[["antall", "beloep_inkl_mva", "beloep_mva"]].sum()
 
         kontosalg_oppsummert = kontosalg.groupby(
-            by=["bord_nr", "kundenavn", "aar"]
+            by=["aar_mnd", "bord_nr", "kundenavn"]
         )[["antall", "beloep_inkl_mva", "beloep_mva"]].sum()
 
         kontosalg_totalt = kontosalg["beloep_inkl_mva"].sum()
@@ -232,6 +260,11 @@ class Rapport:
         data += "Salg per dag:\n"
         data += "-------------\n"
         data += sum_per_dag.to_string() + "\n"
+
+        data += "\n"
+        data += "Salg per dag (detalj):\n"
+        data += "----------------------\n"
+        data += sum_per_dag_detalj.to_string() + "\n"
 
         data += "\n"
         data += "Produkter solgt:\n"
@@ -378,7 +411,7 @@ class MyPrompt(Cmd):
 
         sum_per_varegruppe_per_dato = (
             salgslinje_utvidet_df
-            .groupby(["dato", "prosjekt_nr", "konto_nr", "mva_kode", "linje_tekst"])[["antall", "beloep_inkl_mva", "beloep_mva"]]
+            .groupby(["dato", "salgsdato", "prosjekt_nr", "konto_nr", "mva_kode", "linje_tekst"])[["antall", "beloep_inkl_mva", "beloep_mva"]]
             .agg("sum")
         )
         sum_per_varegruppe_per_dato["snittbeloep_inkl_mva"] = sum_per_varegruppe_per_dato["beloep_inkl_mva"] / sum_per_varegruppe_per_dato["antall"]
