@@ -6,6 +6,9 @@ mappings_df = pandas.DataFrame([
     {"vare_id": "80001", "linje_tekst": "Magic", "konto_nr": "3000", "prosjekt_nr": "40013"},
     {"vare_id": "600035", "linje_tekst": "Danskebåttur", "konto_nr": "3290", "prosjekt_nr": "40022"},
     {"vare_id": "600036", "linje_tekst": "Danskebåttur", "konto_nr": "3290", "prosjekt_nr": "40022"},
+    {"vare_id": "600200", "linje_tekst": "Danskebåttur", "konto_nr": "3290", "prosjekt_nr": "40022"},
+    {"vare_id": "600201", "linje_tekst": "Danskebåttur", "konto_nr": "3290", "prosjekt_nr": "40022"},
+    {"vare_id": "600202", "linje_tekst": "Danskebåttur", "konto_nr": "3290", "prosjekt_nr": "40022"},
     {"vare_id": "600025", "linje_tekst": "Medlemsskap", "konto_nr": "3220", "prosjekt_nr": "40041"},
     {"vare_id": "600026", "linje_tekst": "Livstidsmedlemsskap", "konto_nr": "3220", "prosjekt_nr": "40041"},
     # NB! CYB50 hardcover ligger med feil MVA i kassa.
