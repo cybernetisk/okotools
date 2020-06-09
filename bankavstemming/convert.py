@@ -86,8 +86,17 @@ def parse_trans(data: str, year: int):
     return [parse_single_trans(item, year) for item in group_all_trans(data)]
 
 
-def format_num(value: str):
+def format_num(value: str) -> str:
     return value.replace(".", ",")
+
+
+def remove_delimiter(value: str) -> str:
+    """
+    Tripletex does not seem to support quoted fields, so we cannot include
+    the delimiter character as data. We replace it will comma so it is
+    almost the same.
+    """
+    return value.replace(";", ",")
 
 
 def convert(out, data: str, year: int, open_amount, close_amount):
@@ -107,7 +116,7 @@ def convert(out, data: str, year: int, open_amount, close_amount):
         )
         sys.exit(1)
 
-    writer = csv.writer(out, delimiter=";", lineterminator="\n")
+    writer = csv.writer(out, delimiter=";", lineterminator="\n", quoting=csv.QUOTE_NONE)
     writer.writerows(
         [
             ["Konto", "Kontonavn"],
@@ -118,7 +127,7 @@ def convert(out, data: str, year: int, open_amount, close_amount):
             *[
                 [
                     trans.posting_date,
-                    trans.description,
+                    remove_delimiter(trans.description),
                     format_num(trans.amount) if not trans.is_negative else "",
                     format_num(trans.amount) if trans.is_negative else "",
                 ]
