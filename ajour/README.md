@@ -16,6 +16,14 @@
     git submodule update --init
     ```
 
+## Getting latest data
+
+You need keys to the server. See script.
+
+```bash
+./fetch-latest-data.sh
+```
+
 ## Running
 
 Setting up:
