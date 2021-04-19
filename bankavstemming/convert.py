@@ -151,5 +151,5 @@ if __name__ == "__main__":
 
     data = Path(sys.argv[1]).read_text(encoding="utf-8")
 
-    with open(out_file, "w", encoding="iso-8859-1") as f:
+    with open(out_file, "w", encoding="utf-8") as f:
         convert(f, data, int(sys.argv[2]), sys.argv[3], sys.argv[4])
