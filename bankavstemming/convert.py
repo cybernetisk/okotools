@@ -149,7 +149,7 @@ if __name__ == "__main__":
     out_file = "out.csv"
     print("Will write to " + out_file)
 
-    data = Path(sys.argv[1]).read_text(encoding="utf-8")
+    data = Path(sys.argv[1]).read_text(encoding="iso-8859-1")
 
     with open(out_file, "w", encoding="iso-8859-1") as f:
         convert(f, data, int(sys.argv[2]), sys.argv[3], sys.argv[4])
