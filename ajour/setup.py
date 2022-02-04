@@ -9,7 +9,7 @@ setuptools.setup(
     python_requires='>=3.6',
     install_requires=[
         "colorama==0.4.4",
-        "numpy==1.19.4",
+        "numpy==1.21.0",
         "pandas==1.2.0",
         "reportlab==3.5.57",
     ]
