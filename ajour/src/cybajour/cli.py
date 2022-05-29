@@ -128,25 +128,7 @@ class Rapport:
 
     def _salgslinje_df(self) -> DataFrame:
         salgslinje_df = self.memoize(Salgslinje)
-
-        # Sett aar_mnd utifra hvorvidt dette er kontosalg eller vanlig salg.
-        # Dette gjør at vi tilbakeskriver kontosalg til korrekt måned, men
-        # ikke annet salg som blir slått gjennom på kassa den aktuelle dagen.
-        # Annet salg kan gjelde ting som har ligget i "åpne poster" og som
-        # senere slås gjennom for å bli reversert. Dersom vi tilbakeskriver
-        # det vil ikke reverseringen komme på samme dag som salget.
-        salgslinje_df.loc[salgslinje_df["bord_nr"].str.startswith("V", na=False), "aar_mnd"] = (
-            salgslinje_df["salgsdato"].dt.year.astype(str)
-            + "-"
-            + salgslinje_df["salgsdato"].dt.month.astype(str).str.zfill(2)
-        )
-        salgslinje_df.loc[~ salgslinje_df["bord_nr"].str.startswith("V", na=False), "aar_mnd"] = (
-            salgslinje_df["dato"].dt.year.astype(str)
-            + "-"
-            + salgslinje_df["dato"].dt.month.astype(str).str.zfill(2)
-        )
-
-        return salgslinje_df
+        return Salgslinje.with_aar_mnd(salgslinje_df)
 
     def generate(self) -> str:
         kvittering_df = self.memoize(Kvittering)

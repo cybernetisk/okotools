@@ -315,6 +315,27 @@ class Salgslinje(DataSet):
 
         return salgslinje_utvidet_df
 
+    @staticmethod
+    def with_aar_mnd(salgslinje_df):
+        # Sett aar_mnd utifra hvorvidt dette er kontosalg eller vanlig salg.
+        # Dette gjør at vi tilbakeskriver kontosalg til korrekt måned, men
+        # ikke annet salg som blir slått gjennom på kassa den aktuelle dagen.
+        # Annet salg kan gjelde ting som har ligget i "åpne poster" og som
+        # senere slås gjennom for å bli reversert. Dersom vi tilbakeskriver
+        # det vil ikke reverseringen komme på samme dag som salget.
+        salgslinje_df.loc[salgslinje_df["bord_nr"].str.startswith("V", na=False), "aar_mnd"] = (
+            salgslinje_df["salgsdato"].dt.year.fillna(0).astype("int64").astype(str)
+            + "-"
+            + salgslinje_df["salgsdato"].dt.month.fillna(0).astype("int64").astype(str).str.zfill(2)
+        )
+        salgslinje_df.loc[~ salgslinje_df["bord_nr"].str.startswith("V", na=False), "aar_mnd"] = (
+            salgslinje_df["dato"].dt.year.fillna(0).astype("int64").astype(str)
+            + "-"
+            + salgslinje_df["dato"].dt.month.fillna(0).astype("int64").astype(str).str.zfill(2)
+        )
+
+        return salgslinje_df
+
 
 class Faktura(DataSet):
     """
