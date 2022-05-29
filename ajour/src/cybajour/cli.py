@@ -25,7 +25,7 @@ from cybajour.datasets import (
     Zrapport,
     ZrapportLinje
 )
-from cybajour.util import DatabaseCollection
+from cybajour.util import DatabaseCollection, find_latest_datadir
 
 
 def create_pdf(path: Path, data: str) -> None:
@@ -330,24 +330,13 @@ class MyPrompt(Cmd):
         self.dfcache: Optional[DfCache] = None
 
     def do_db(self, args):
-        base = Path.cwd() / "data"
-
-        if args == "":
-            reports = sorted(base.glob("*Z"))
-            if len(reports) == 0:
-                print("No reports found in '{}'".format(base))
-                return
-            args = next(reversed(reports)).name
-
-        datadir = base / args
-        if not datadir.exists():
-            print("Not found: " + str(datadir))
+        try:
+            datadir = find_latest_datadir(args)
+        except ValueError as e:
+            print(str(e))
             return
-        elif not datadir.is_dir():
-            print("Not a dir: " + str(datadir))
-            return
-        else:
-            print("Data dir: " + str(datadir))
+
+        print("Data dir: " + str(datadir))
 
         self.dbcol = DatabaseCollection(path=datadir)
         self.dfcache = DfCache(self.dbcol)

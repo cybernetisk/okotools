@@ -71,3 +71,22 @@ def remove_onevalue_columns(data):
         if len(data[col].unique()) > 1:
             cols.append(col)
     return data[cols]
+
+
+def find_latest_datadir(args):
+    base = Path.cwd() / "data"
+
+    if args == "":
+        reports = sorted(base.glob("*Z"))
+        if len(reports) == 0:
+            print("No reports found in '{}'".format(base))
+            return
+        args = next(reversed(reports)).name
+
+    datadir = base / args
+    if not datadir.exists():
+        raise ValueError("Not found: " + str(datadir))
+    elif not datadir.is_dir():
+        raise ValueError("Not a dir: " + str(datadir))
+
+    return datadir
