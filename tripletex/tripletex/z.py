@@ -1,15 +1,13 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import csv
-import re
-import json
-import time
 import io
+import json
+import re
+import time
 
-from .tripletex import TripletexImporter, TripletexException, LedgerNumberFailed
-from .mamut import Transform
-from .utils import get_num, get_float
+from tripletex._utils import get_num, get_float
+from tripletex.mamut import Transform
+from tripletex.tripletex import TripletexException
+from tripletex.tripletex import TripletexImporter, LedgerNumberFailed
 
 LEDGER_SERIES = 80000
 DEVIATION_ACCOUNT = '1909'  # konto for kasseavvik
@@ -248,7 +246,7 @@ class ZGroup:
 
 
 class CYBTripletexImport:
-    def __init__(self, json_file, contextId):
+    def __init__(self, json_file, context_id):
         self.json_file = json_file
         self.first_num = None
         self.active_year = None
@@ -256,7 +254,7 @@ class CYBTripletexImport:
         self.data = None  # initialized by loadJSON
         self.zgroups = None  # initialized by loadJSON
         self.selected = []  # initialized by loadJSON
-        self.tripletex = TripletexImporter(contextId=contextId)
+        self.tripletex = TripletexImporter(context_id=context_id)
 
     def load_json(self, show_all=False):
         with open(self.json_file, 'r') as f:
@@ -386,6 +384,7 @@ class CYBTripletexImport:
 
 class ZError(Exception):
     pass
+
 
 class ZImportError(Exception):
     pass

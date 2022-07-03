@@ -11,7 +11,7 @@ from tripletex.z import CYBTripletexImport, DATA_FILE_OUT, ZImportError
 # this file should be volume mounted to /usr/src/app
 DATA_FILE_IN = 'reports.json'
 
-import settings
+from tripletex import settings
 
 # support for ANSI color codes
 try:

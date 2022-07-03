@@ -3,3 +3,8 @@ cookies.txt
 __pycache__/
 settings_local.py
 env/
+/.venv/
+*.egg-info
+/.pytest_cache
+/.python-version
+/build/

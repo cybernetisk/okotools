@@ -1,23 +1,32 @@
 # Tripletex-integrasjon for CYB
-CYB benytter regnskapssystemet Tripletex fra og med høst 2015. Tripletex har et eget API,
-men dette er så pass mangelfullt at det ikke egner seg til bruk av oss. Denne mappen inneholder imidlertid
-scripts som bruker de vanlige sidene for å laste opp bilag og hente ut data. Dette er ikke
-garantert å være like stabilt som hvis vi kunne benyttet et API.
+
+CYB benytter regnskapssystemet Tripletex fra og med høst 2015.
+Denne mappen inneholder abstraksjoner på toppen av Tripletex API
+for å passe de behovene vi har.
 
 Se også https://confluence.cyb.no/display/okonomi/Tripletex+API for mer info rundt API-et.
 
-Ved bruk av scriptene her blir man spurt om brukernavn og passord til Tripletex, slik
-at den kan logge på med en personlig bruker.
+## Teste lokalt
 
-## Krav
-Må ha følgende på systemet:
-* Python3
-* Python3-pakker: `pip3 install --user requests beautifulsoup4`
-* (Kan også skrive `pip3 install --user -r requirements.txt` - sløyf `--user` hvis i virtualenv)
+Sørg for at du har Python 3 installert.
 
-Filen `settings_local.py` må settes opp. Se `settings.py` for mulige innstillinger.
+Filen `settings_local.py` må settes opp. Se `tripletex/settings.py` for mulige innstillinger.
+
+For å installere og kjøre tester:
+
+```bash
+cd okotools
+python -m venv .venv
+source .venv/bin/activate
+cd tripletex
+pip install -e ".[dev]"
+pytest
+```
 
 ## Hente ut kontoplan, prosjektoversikt og rapporter
+
+NB! Dette brukes ikke per 2022 og fungerer trolig heller ikke.
+
 Vi bruker også disse scriptene for å hente ut kontoplan, prosjektoversikt, resultatregnskap for
 driftsprosjektet og overordnet resultatregnskap for alle prosjekter.
 
