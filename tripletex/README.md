@@ -10,7 +10,13 @@ Se også https://confluence.cyb.no/display/okonomi/Tripletex+API for mer info ru
 
 Sørg for at du har Python 3 installert.
 
-Filen `settings_local.py` må settes opp. Se `tripletex/settings.py` for mulige innstillinger.
+Lag filen `.env` og sett følgende med riktige verdier:
+
+```text
+TRIPLETEX_CONTEXT_ID=xxx
+TRIPLETEX_CUSTOMER_TOKEN=xxx
+TRIPLETEX_EMPLOYEE_TOKEN=xxx
+```
 
 For å installere og kjøre tester:
 

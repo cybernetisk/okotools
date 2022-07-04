@@ -1,12 +1,27 @@
-from ast import Import
 import html
-import os.path
+import os
 import sys
+
+from dotenv import load_dotenv
 
 import fetch_budget_data
 import fetch_tripletex_data
 from flask import Flask, Response, request, send_from_directory
 from flask_cors import CORS
+
+load_dotenv()
+
+def require_env(name: str) -> str:
+    value = os.environ.get(name, None)
+    if value is None:
+        raise RuntimeError(f"Missing {name} - please set in .env file")
+    return value
+
+context_id = int(require_env("TRIPLETEX_CONTEXT_ID"))
+customer_token = require_env("TRIPLETEX_CUSTOMER_TOKEN")
+employee_token = require_env("TRIPLETEX_EMPLOYEE_TOKEN")
+budget_url = os.environ.get("OKOREPORTS_BUDGET_URL", None)
+budget_edit_url = os.environ.get("OKOREPORTS_BUDGET_EDIT_URL", None)
 
 app = Flask(__name__)
 
@@ -15,14 +30,6 @@ CORS(
     origins=('http://localhost:3000', 'http://localhost:8050'),
     supports_credentials=True
 )
-
-try:
-    import settings_local
-except ImportError:
-    print('Missing local settings file!')
-    print('You should volume mount settings_local.py to the working directory')
-    print('See https://github.com/cybernetisk/okotools/blob/master/tripletex/tripletex/settings.py as a template')
-    sys.exit(1)
 
 def get_output(title, data):
     ret = """<!DOCTYPE html>
@@ -41,14 +48,24 @@ def get_output(title, data):
 
 @app.route("/api/fetch-budget")
 def fetch_budget():
-    return get_output('Oppdatering av budsjettdata', fetch_budget_data.run())
+    result = fetch_budget_data.run(
+        budget_url=budget_url,
+        budget_edit_url=budget_edit_url,
+    )
+    return get_output('Oppdatering av budsjettdata', result)
 
 @app.route("/api/fetch-accounting")
 def fetch_accounting():
     drop_cache = False
     if 'drop_cache' in request.args:
         drop_cache = True
-    return get_output('Oppdatering av regnskapsdata', fetch_tripletex_data.run(drop_cache))
+    result = fetch_tripletex_data.run(
+        context_id=context_id,
+        customer_token=customer_token,
+        employee_token=employee_token,
+        drop_cache=drop_cache,
+    )
+    return get_output('Oppdatering av regnskapsdata', result)
 
 @app.route('/reports/<path:path>')
 def reports(path):

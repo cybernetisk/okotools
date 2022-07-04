@@ -127,17 +127,15 @@ def build_project_list(tripletex: Tripletex) -> str:
     return ret
 
 
-def run(drop_cache=False):
-    from tripletex import settings
-
+def run(context_id: int, customer_token: str, employee_token: str, drop_cache=False):
     ret = ''
     fetch_postings = True
 
-    connector = TripletexConnectorV2(credentials_provider=settings.credentials_provider)
-    tripletex = Tripletex(settings.context_id, connector=connector)
+    connector = TripletexConnectorV2(customer_token=customer_token, employee_token=employee_token)
+    tripletex = Tripletex(context_id, connector=connector)
 
     with open(reports_path + 'context_id.txt', 'w') as f:
-        f.write(str(settings.context_id))
+        f.write(str(context_id))
 
     # fetch postings
     if fetch_postings:

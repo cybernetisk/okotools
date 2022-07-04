@@ -1,10 +1,11 @@
 import logging
+import os
 from pprint import pformat
 from typing import Tuple
+from dotenv import load_dotenv
 
 import pytest
 
-from tripletex import settings
 from tripletex.tripletex import (
     TripletexConnectorV2,
     Tripletex,
@@ -13,15 +14,27 @@ from tripletex.tripletex import (
 
 logger = logging.getLogger(__name__)
 
+load_dotenv()
+
+def require_env(name: str) -> str:
+    value = os.environ.get(name, None)
+    if value is None:
+        raise RuntimeError(f"Missing {name} - please set in .env file")
+    return value
+
+context_id = int(require_env("TRIPLETEX_CONTEXT_ID"))
+customer_token = require_env("TRIPLETEX_CUSTOMER_TOKEN")
+employee_token = require_env("TRIPLETEX_EMPLOYEE_TOKEN")
+
 
 @pytest.fixture(scope="class")
 def connector():
-    return TripletexConnectorV2(credentials_provider=settings.credentials_provider)
+    return TripletexConnectorV2(customer_token=customer_token, employee_token=employee_token)
 
 
 @pytest.fixture(scope="class")
 def tripletex(connector):
-    return Tripletex(settings.context_id, connector=connector)
+    return Tripletex(context_id, connector=connector)
 
 
 class TestTripletex:

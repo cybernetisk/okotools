@@ -17,6 +17,7 @@ setuptools.setup(
             # trouble updating this if it goes in one line.
             # fmt: off
             "pytest>=6.2.5",
+            "python-dotenv==0.20.0",
             "wheel",
             # fmt: on
         ]

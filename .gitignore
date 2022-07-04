@@ -1,6 +1,6 @@
 .vscode/
 .idea/
 dist/
-settings.py
 /*.whl
 /.venv/
+.env

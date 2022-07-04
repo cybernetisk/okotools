@@ -25,12 +25,6 @@ def raise_for_status_pretty(response: requests.Response):
 
 
 @dataclass
-class Credentials:
-    customer_token: str
-    employee_token: str
-
-
-@dataclass
 class Project:
     id: int
     number: Optional[int]
@@ -94,9 +88,10 @@ class TripletexConnectorV2:
     This class has the support role of communicating with Tripletex.
     """
 
-    def __init__(self, credentials_provider: Callable[[], Credentials]):
-        self.credentials_provider = credentials_provider
-        self.credentials_cache: Optional[Tuple(datetime.date, str)] = None
+    def __init__(self, customer_token: str, employee_token: str):
+        self.customer_token = customer_token
+        self.employee_token = employee_token
+        self.session_token_cache: Optional[Tuple(datetime.date, str)] = None
 
     @staticmethod
     def _compute_expiration_date() -> datetime.date:
@@ -110,17 +105,15 @@ class TripletexConnectorV2:
     def _get_session_token(self) -> str:
         expiration_date = self._compute_expiration_date()
 
-        if self.credentials_cache is None or self.credentials_cache[0] != expiration_date:
-            self.credentials_cache = (expiration_date, self._create_session_token(expiration_date))
+        if self.session_token_cache is None or self.session_token_cache[0] != expiration_date:
+            self.session_token_cache = (expiration_date, self._create_session_token(expiration_date))
 
-        return self.credentials_cache[1]
+        return self.session_token_cache[1]
 
     def _create_session_token(self, expiration_date) -> str:
         logger.info("Creating session token")
 
-        credentials = self.credentials_provider()
-
-        url = f"https://tripletex.no/v2/token/session/:create?consumerToken={credentials.customer_token}&employeeToken={credentials.employee_token}&expirationDate={expiration_date}"
+        url = f"https://tripletex.no/v2/token/session/:create?consumerToken={self.customer_token}&employeeToken={self.employee_token}&expirationDate={expiration_date}"
         response = requests.request("PUT", url)
         raise_for_status_pretty(response)
 

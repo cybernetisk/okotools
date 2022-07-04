@@ -1,5 +1,4 @@
 import csv
-import sys
 
 import requests
 
@@ -69,17 +68,16 @@ def export_budget(budget_url, output_handle):
                 row[COL_KOMMENTAR]
             ])
 
-def run():
-    from tripletex import settings
-    if settings.budget_url is None:
+def run(budget_url: str, budget_edit_url: str):
+    if budget_url is None:
         return 'Fetching data from budget is disabled - skipping budget'
 
     with open(reports_path + 'budget.txt', 'w') as f:
-        export_budget(settings.budget_url, f)
+        export_budget(budget_url, f)
 
     with open(reports_path + 'budget_url.txt', 'w') as f:
-        if settings.budget_edit_url != None:
-            f.write(settings.budget_edit_url)
+        if budget_edit_url != None:
+            f.write(budget_edit_url)
 
     return 'Fetched data from budget and updated report'
 
