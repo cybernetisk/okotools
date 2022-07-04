@@ -4,3 +4,4 @@ dist/
 /*.whl
 /.venv/
 .env
+__pycache__/
