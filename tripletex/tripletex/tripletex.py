@@ -2,24 +2,16 @@ from __future__ import annotations
 
 import base64
 import datetime
-import getpass
-import http.cookiejar
-import json
 import logging
-import re
-import urllib.parse
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional, Tuple, TypedDict, Union
 
 import requests
 
-from tripletex._api_types import (
-    ListResponseAccount,
-    ListResponseDepartment,
-    ListResponseProject,
-    Posting as ApiPosting, ListResponsePosting,
-)
+from tripletex._api_types import (ListResponseAccount, ListResponseDepartment,
+                                  ListResponsePosting, ListResponseProject)
+from tripletex._api_types import Posting as ApiPosting
 
 logger = logging.getLogger(__name__)
 
@@ -95,105 +87,6 @@ PostingAggregate = Union[
     PostingAggregateLeaf,
     Dict[str, PostingAggregateNode]
 ]
-
-
-class TripletexConnectorLegacy:
-    """
-    This class has the support role of communicating with Tripletex
-    """
-    default_object = None
-
-    def __init__(self, cookies_file=None, credentials_provider=None):
-        if cookies_file is None:
-            cookies_file = "/tmp/tripletex-cookies-%s.txt" % getpass.getuser()
-        self.session = None
-        self.cookies_file = cookies_file
-        self.credentials_provider = credentials_provider if credentials_provider else self.default_credentials_provider
-
-    @staticmethod
-    def get_default_object():
-        if not TripletexConnectorLegacy.default_object:
-            TripletexConnectorLegacy.default_object = TripletexConnectorLegacy()
-        return TripletexConnectorLegacy.default_object
-
-    @staticmethod
-    def default_credentials_provider():
-        print('Må logge inn på Tripletex. Fyll inn brukernavn og passord som det skal logges inn med:')
-        return (input('Brukernavn: '),
-                getpass.getpass('Passord: '))
-
-    def get_session_object(self):
-        if self.session is not None:
-            return self.session
-
-        cj = http.cookiejar.MozillaCookieJar(self.cookies_file)
-        try:
-            cj.load(ignore_discard=True)
-        except FileNotFoundError:
-            pass
-
-        self.session = requests.Session()
-        self.session.cookies = cj
-
-        return self.session
-
-    @staticmethod
-    def is_401(request):
-        if request.status_code == 401:
-            return True
-
-        if request.status_code == 200 and request.headers['Content-Type'].lower().find('application/json') != -1:
-            # tripletex don't always return valid json, and not always 401 neither
-            parsed = json.loads(request.text.replace("'", '"'))
-            try:
-                if parsed['error']['javaClass'] == 'no.tripletex.common.exception.NotLoggedInException':
-                    return True
-            except KeyError:
-                pass
-
-        return False
-
-    def force_user_logged_in(self, request, session, *args, **kwargs):
-        if self.is_401(request):
-            self.do_login()
-            request = session.get(*args, **kwargs)
-            if self.is_401(request):
-                raise NotLoggedInException(request.text)
-        return request
-
-    def request_get(self, *args, **kwargs):
-        s = self.get_session_object()
-        r = s.get(*args, **kwargs)
-
-        r = self.force_user_logged_in(r, s, *args, **kwargs)
-
-        s.cookies.save(ignore_discard=True)
-        return r
-
-    def request_post(self, *args, **kwargs):
-        s = self.get_session_object()
-        r = s.post(*args, **kwargs)
-
-        r = self.force_user_logged_in(r, s, *args, **kwargs)
-
-        s.cookies.save()
-        return r
-
-    @staticmethod
-    def get_login_data(credentials_provider):
-        credentials = credentials_provider()
-
-        return 'username=%s&password=%s&act=login&contentUrl=&site=no&recaptcha=false' % (
-            urllib.parse.quote(credentials[0]), urllib.parse.quote(credentials[1]))
-
-    def do_login(self):
-        r = self.get_session_object().post('https://tripletex.no/execute/login',
-                                           data=self.get_login_data(self.credentials_provider),
-                                           headers={'content-type': 'application/x-www-form-urlencoded'},
-                                           allow_redirects=False)
-
-        if r.status_code != 302:
-            raise LoginFailedException(r.text)
 
 
 class TripletexConnectorV2:
@@ -424,104 +317,6 @@ class Tripletex:
             raise TripletexException("Could not locate project id of project %s" % project_number)
 
         return project_id
-
-
-# This is not rewritten to support Tripletex API v2 yet.
-# Not sure if this works or not.
-class TripletexImporter:
-    def __init__(self, context_id: str, connector: TripletexConnectorLegacy):
-        self.context_id = context_id
-        self.connector = connector
-
-    @staticmethod
-    def get_url_ledger(context_id, year):
-        url = 'https://tripletex.no/execute/viewJournal?javaClass=no.tripletex.tcp.web.JournalForm&' + \
-              'documentationComponent=145&contextId=%d&isExpandedFilter=true&period.startDate=%d-01-01&' + \
-              'period.endOfPeriodDate=%d-12-31&period.periodType=1&=%d&registeredById=-1&updatedById=-1&' + \
-              'numberSeriesId=89077&startNumber=&endNumber=&accountId=-1&minAmountString=&maxAmountString=&' + \
-              'amountType=2&ascending=false&rowCount=2&act=content&scope=ajaxContent'
-        return url % (context_id, year, year, year)
-
-    def get_ledger(self, year):
-        return self.connector.request_get(self.get_url_ledger(self.context_id, year))
-
-    def get_next_ledger_number(self, year):
-        data = self.get_ledger(year)
-
-        m = re.search(r'Bilag nummer (\d+)-(\d+)', data.text)
-        if m is None:
-            raise LedgerNumberFailed(data.text)
-
-        return int(m.group(1)) + 1
-
-    def import_gbat10(self, data):
-        if not isinstance(data, str):
-            raise ValueError("Need a unicode string as GBAT10-data")
-
-        files = [('file', ('bilag.csv', data.encode('utf-8'), 'text/plain')), ]
-        r = self.connector.request_post('https://tripletex.no/execute/uploadCentral?contextId=' + str(self.context_id), files=files)
-        # [{"id":"29027318","revision":"1","name":"bilag.csv","size":"0","readableSize":"0","uid":"0","checksum":"da39a3ee5e6b4b0d3255bfef95601890afd80709"}]
-
-        # temporary debugging due to random issues
-        with open('debug.log', 'a') as f:
-            f.write('---- LOG START: uploading bilag.csv %s ----\n' % datetime.datetime.now())
-            f.write('URL: %s\n' % r.url)
-            f.write('Status code: %s\n' % r.status_code)
-            f.write('Request headers: %s\n' % r.request.headers)
-            f.write('Request data: %s\n' % r.request.body)
-            f.write('Response headers: %s\n' % r.headers)
-            f.write('Response data: %s\n' % r.text)
-            f.write('---- LOG END ----\n\n')
-
-        if r.status_code != 200:
-            raise UploadFailedException('Received unexpected status code %d when trying to upload' % r.status_code, r)
-
-        file_data = r.json()[0]
-        if 'checksum' not in file_data:
-            raise UploadFailedException('Could not extract checksum from response of uploaded data', r)
-
-        import_data = {
-            "id": 2,
-            "method": "BaseForm.invoke",
-            "params": [
-                {
-                    "javaClass": "no.tripletex.tcp.web.AccountingImportForm",
-                    "documentationComponent": "154",
-                    "system": "3",
-                    "encoding": "UTF-8",
-                    "upload": {
-                        "name": file_data['name'],
-                        "id": file_data['id'],
-                        "revision": file_data['revision'],
-                        "checksum": file_data['checksum'],
-                        "clientId": "upload"
-                    },
-                    "file": '',
-                    "generateVatPostings": True
-                },
-                "doImportVouchers"
-            ]
-        }
-
-        r = self.connector.request_post('https://tripletex.no/JSON-RPC?syncSystem=0&contextId=' + str(self.context_id),
-                                        json=import_data)
-
-        # temporary debugging due to random issues
-        with open('debug.log', 'a') as f:
-            f.write('---- LOG START: importing bilag.csv %s ----\n' % datetime.datetime.now())
-            f.write('URL: %s\n' % r.url)
-            f.write('Status code: %s\n' % r.status_code)
-            f.write('Request headers: %s\n' % r.request.headers)
-            f.write('Request data: %s\n' % r.request.body)
-            f.write('Response headers: %s\n' % r.headers)
-            f.write('Response data: %s\n' % r.text)
-            f.write('---- LOG END ----\n\n')
-
-        if r.status_code != 200:
-            raise UploadFailedException("Unexpected return code from JSON-RPC when importing")
-
-        if 'error' in r.json():
-            raise UploadFailedException("Upload failed: %s" % r.json()['error'])
 
 
 class TripletexException(Exception):
