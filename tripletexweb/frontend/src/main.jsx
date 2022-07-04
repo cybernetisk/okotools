@@ -1,11 +1,11 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import ReactDOM from 'react-dom/client'
 
 import * as utils from './utils'
 
 import AccountList from './components/AccountList'
-import ReportTable from './components/ReportTable'
 import ProjectFilter from './components/ProjectFilter'
+import ReportTable from './components/ReportTable'
 
 import './style.scss'
 
@@ -122,7 +122,7 @@ class ReportTableWrapper extends React.Component {
     const accounts = utils.parseAccounts(this.props.accounts)
     const projects = utils.parseProjects(this.props.projects)
 
-    const ledger = utils.parseLedger(this.props.ledger).concat(utils.parseLedger(this.props.budget, true))
+    const ledger = utils.parseLedger(this.props.ledger).concat(utils.mapProjectIdsForBudget(projects, utils.parseLedger(this.props.budget, true)))
     //const ledger = utils.parseLedger(this.props.budget)
       // filter out egenkapitalendring og hjelpekonto
       .filter(entry => entry.Kontonummer !== 8960 && entry.Kontonummer !== 9999)
@@ -415,7 +415,8 @@ class ReportTableWrapper extends React.Component {
   }
 }
 
-ReactDOM.render(
-    <DataWrapper />,
-    document.getElementById('app')
+ReactDOM.createRoot(document.getElementById('app')).render(
+  <React.StrictMode>
+    <DataWrapper />
+  </React.StrictMode>
 )

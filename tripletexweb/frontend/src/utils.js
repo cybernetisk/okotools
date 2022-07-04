@@ -7,8 +7,8 @@ export function parseProjects(projectsText) {
   const re = /^(\S+);(\S*);(\S+);(\S.+)$/
   let projects = {
     0: {
-      sysid: 0,
       id: 0,
+      number: 0,
       parent: null,
       title: '* Ikke satt prosjekt',
       children: []
@@ -17,14 +17,11 @@ export function parseProjects(projectsText) {
   projectsText.split('\n').forEach(line => {
     let match = line.match(re)
     if (match) {
-      if (!parseInt(match[3])) {
-        console.error(`Project ${match[4]} missing ID! Will cause unexpected results`)
-      }
-      let id = parseInt(match[3])
-      let sysid = parseInt(match[1])
+      let number = parseInt(match[3])
+      let id = parseInt(match[1])
       projects[id] = {
-        sysid,
         id,
+        number,
         parent: parseInt(match[2]) || 0,
         title: match[4],
         children: []
@@ -46,6 +43,34 @@ export function parseProjects(projectsText) {
 }
 
 /**
+ * Map project data for budget.
+ *
+ * Budget data has prosjektnummer while we use prosjektId internally.
+ */
+export function mapProjectIdsForBudget(projects, parsed_ledger) {
+  const projectIdByNumber = Object.fromEntries(
+    Object.values(projects).map((project) => [project.number, project.id])
+  )
+
+  return parsed_ledger.map((it) => {
+    const projectNumber = it.Prosjektnummer || 0
+    const projectId = projectIdByNumber[it.Prosjektnummer] || 0
+
+    if (projectNumber !== 0 && projectId === 0) {
+      console.warn("Lookup of project failed for row", it)
+    }
+
+    const result = {
+      ...it,
+      ProsjektId: projectId,
+    }
+
+    delete result.Prosjektnummer
+    return result
+  })
+}
+
+/**
  * Parse CSV of ledger into an associative array
  *
  * The second parameter determines if this data is from Tripletex,
@@ -57,7 +82,7 @@ export function parseLedger(ledger, isNotFromTripletex) {
   let entries = []
 
   const floats = ['BeløpInn', 'BeløpUt']
-  const ints = ['Avdelingsnummer', 'Kontonummer', 'Prosjektnummer', 'År', 'Måned']
+  const ints = ['Avdelingsnummer', 'Kontonummer', 'Prosjektnummer', 'ProsjektId', 'År', 'Måned']
 
   ledger.split('\n').forEach(line => {
     line = line.trim()
@@ -129,7 +154,7 @@ export function parseDepartments(data) {
 /**
  * Groups all ledger items into this structure:
  *
- * result[departmentNumber][projectNumber][accountNumber]
+ * result[departmentNumber][projectId][accountNumber]
  *
  * where each element is an array containing the ledger items
  */
@@ -142,30 +167,31 @@ export function groupHovedbokByDepartmentAndProject(hovedbok, departments, proje
     }
 
     let departmentNumber = entry['Avdelingsnummer'] || 0
-    let projectNumber = entry['Prosjektnummer'] || 0
+    let projectId = entry['ProsjektId'] || 0
+
     const accountNumber = entry['Kontonummer'] || 0
 
     if (!departments[departmentNumber]) {
       departmentNumber = 0
     }
 
-    if (!projects[projectNumber]) {
-      projectNumber = 0
+    if (!projects[projectId]) {
+      projectId = 0
     }
 
     if (!prev[departmentNumber]) {
       prev[departmentNumber] = []
     }
 
-    if (!prev[departmentNumber][projectNumber]) {
-      prev[departmentNumber][projectNumber] = []
+    if (!prev[departmentNumber][projectId]) {
+      prev[departmentNumber][projectId] = []
     }
 
-    if (!prev[departmentNumber][projectNumber][accountNumber]) {
-      prev[departmentNumber][projectNumber][accountNumber] = []
+    if (!prev[departmentNumber][projectId][accountNumber]) {
+      prev[departmentNumber][projectId][accountNumber] = []
     }
 
-    prev[departmentNumber][projectNumber][accountNumber].push(entry)
+    prev[departmentNumber][projectId][accountNumber].push(entry)
     return prev
   }, {})
 }

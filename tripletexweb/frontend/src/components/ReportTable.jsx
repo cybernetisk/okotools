@@ -1,11 +1,12 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import Project from './Project'
 
 export default class ReportTable extends React.Component {
   static childContextTypes = {
-    projectsWithDatasets: React.PropTypes.object.isRequired,
-    projectsWithHovedbok: React.PropTypes.object.isRequired,
-    accounts: React.PropTypes.object.isRequired,
+    projectsWithDatasets: PropTypes.object.isRequired,
+    projectsWithHovedbok: PropTypes.object.isRequired,
+    accounts: PropTypes.object.isRequired,
   }
 
   getChildContext() {

@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 import { amount as amountFormatter } from '../formatter'
 
@@ -28,7 +29,7 @@ class AccountResult extends React.Component {
       return calculateAmount(dataset, this.props.kontoSet, inAndOut, true)
     } else {
       return (
-        <a href={dataset.ledgerLink(this.props.department.id, this.props.project.sysid, this.props.kontoSet[0].Kontonummer)} target="_blank">
+        <a href={dataset.ledgerLink(this.props.department.id, this.props.project.id, this.props.kontoSet[0].Kontonummer)} target="_blank">
           {calculateAmount(dataset, this.props.kontoSet, inAndOut, true)}
         </a>
       )
@@ -80,15 +81,15 @@ class AccountResult extends React.Component {
 
 export default class Account extends React.Component {
   static propTypes = {
-    datasets: React.PropTypes.array.isRequired,
-    department: React.PropTypes.object.isRequired,
-    kontoSet: React.PropTypes.array.isRequired,
-    level: React.PropTypes.number.isRequired,
-    project: React.PropTypes.object.isRequired,
+    datasets: PropTypes.array.isRequired,
+    department: PropTypes.object.isRequired,
+    kontoSet: PropTypes.array.isRequired,
+    level: PropTypes.number.isRequired,
+    project: PropTypes.object.isRequired,
   }
 
   static contextTypes = {
-    accounts: React.PropTypes.object.isRequired,
+    accounts: PropTypes.object.isRequired,
   }
 
   render() {

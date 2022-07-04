@@ -1,10 +1,11 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 export default class ProjectFilter extends React.Component {
   static propTypes = {
-    currentFilter: React.PropTypes.any,
-    onChange: React.PropTypes.func.isRequired,
-    projects: React.PropTypes.object.isRequired,
+    currentFilter: PropTypes.any,
+    onChange: PropTypes.func.isRequired,
+    projects: PropTypes.object.isRequired,
   }
 
   constructor(props) {

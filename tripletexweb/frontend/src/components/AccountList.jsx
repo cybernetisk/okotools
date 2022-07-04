@@ -1,8 +1,9 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 export default class AccountList extends React.Component {
   static propTypes = {
-    accounts: React.PropTypes.object.isRequired,
+    accounts: PropTypes.object.isRequired,
   }
 
   constructor(props) {

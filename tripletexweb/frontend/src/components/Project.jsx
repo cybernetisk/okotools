@@ -1,5 +1,6 @@
 import React from 'react'
-import Account from './Account'
+import PropTypes from 'prop-types'
+import Account from './Account.jsx'
 import ProjectAmount from './ProjectAmount'
 
 import { amount as amountFormatter } from '../formatter'
@@ -10,21 +11,21 @@ const inAndOut = entry => -entry.in - entry.out
 
 export default class Project extends React.Component {
   static contextTypes = {
-    projectsWithDatasets: React.PropTypes.object.isRequired,
-    projectsWithHovedbok: React.PropTypes.object.isRequired,
-    accounts: React.PropTypes.object.isRequired,
+    projectsWithDatasets: PropTypes.object.isRequired,
+    projectsWithHovedbok: PropTypes.object.isRequired,
+    accounts: PropTypes.object.isRequired,
   }
 
   static propTypes = {
-    datasets: React.PropTypes.array.isRequired,
-    department: React.PropTypes.object,
-    hasChildProjects: React.PropTypes.bool,
-    isExpanded: React.PropTypes.bool,
-    isTotalSum: React.PropTypes.bool,
-    level: React.PropTypes.number.isRequired,
-    onlyThis: React.PropTypes.bool,
-    project: React.PropTypes.object,
-    setExpanded: React.PropTypes.func,
+    datasets: PropTypes.array.isRequired,
+    department: PropTypes.object,
+    hasChildProjects: PropTypes.bool,
+    isExpanded: PropTypes.bool,
+    isTotalSum: PropTypes.bool,
+    level: PropTypes.number.isRequired,
+    onlyThis: PropTypes.bool,
+    project: PropTypes.object,
+    setExpanded: PropTypes.func,
   }
 
   constructor(props) {
@@ -116,12 +117,12 @@ export default class Project extends React.Component {
 
     // project specific links
     else if (this.props.selfData && (this.props.onlyThis || !this.props.hasChildProjects)) {
-      link = dataset.resultReportLink(this.props.department.id, this.props.project.sysid)
+      link = dataset.resultReportLink(this.props.department.id, this.props.project.id)
     }
 
     // accumulated projects links
     else {
-      link = dataset.resultReportLink(this.props.department.id, this.props.project.sysid, true)
+      link = dataset.resultReportLink(this.props.department.id, this.props.project.id, true)
     }
 
     return (
@@ -138,7 +139,7 @@ export default class Project extends React.Component {
         <span>
           {this.props.project.title}
           {' '}
-          <span className="project-number">{this.props.project.id}</span>
+          <span className="project-number">{this.props.project.number}</span>
         </span>
       )
 
