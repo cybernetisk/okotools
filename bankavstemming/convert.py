@@ -36,7 +36,7 @@ def group_all_trans(data: str) -> List[str]:
 
 def guess_is_amount_in(description: str) -> bool:
     return (
-        description.startswith("Overførsel")
+        (description.startswith("Overførsel") and "Fra" in description)
         or description.startswith("Omsetning bank axept")
         or description.startswith("Renter")
         # Covering "Straksinnbetaling" and possibly others.
@@ -90,13 +90,13 @@ def format_num(value: str) -> str:
     return value.replace(".", ",")
 
 
-def remove_delimiter(value: str) -> str:
+def replace_special_chars(value: str) -> str:
     """
     Tripletex does not seem to support quoted fields, so we cannot include
     the delimiter character as data. We replace it will comma so it is
     almost the same.
     """
-    return value.replace(";", ",")
+    return value.replace(";", ",").replace('"', " ")
 
 
 def convert(out, data: str, year: int, open_amount, close_amount):
@@ -127,7 +127,7 @@ def convert(out, data: str, year: int, open_amount, close_amount):
             *[
                 [
                     trans.posting_date,
-                    remove_delimiter(trans.description),
+                    replace_special_chars(trans.description),
                     format_num(trans.amount) if not trans.is_negative else "",
                     format_num(trans.amount) if trans.is_negative else "",
                 ]
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     out_file = "out.csv"
     print("Will write to " + out_file)
 
-    data = Path(sys.argv[1]).read_text(encoding="iso-8859-1")
+    data = Path(sys.argv[1]).read_text(encoding="utf-8")
 
     with open(out_file, "w", encoding="iso-8859-1") as f:
         convert(f, data, int(sys.argv[2]), sys.argv[3], sys.argv[4])
