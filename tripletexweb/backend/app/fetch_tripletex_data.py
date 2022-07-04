@@ -63,19 +63,19 @@ def get_aggregated_data(tripletex: Tripletex, postings: list[Posting]) -> Postin
             row.department_name,
         )
 
-    def group_by_project_number(row: Posting):
+    def group_by_project(row: Posting):
         return (
-            str(row.project_number) if row.project_number is not None else "",
-            row.project_name,
+            str(row.project_id) if row.project_id is not None else "",
+            {'id': row.project_id, 'name': row.project_name, 'number': row.project_number},
         )
 
-    def group_by_account_number(row: Posting):
+    def group_by_account(row: Posting):
         return (
             str(row.account_number),
             row.account_name,
         )
 
-    return tripletex.aggregate_postings(postings, group_by_month, group_by_avdeling, group_by_project_number, group_by_account_number)
+    return tripletex.aggregate_postings(postings, group_by_month, group_by_avdeling, group_by_project, group_by_account)
 
 
 def write_aggregated_data_report(data: PostingAggregate, output_handle, header=True):
@@ -89,7 +89,7 @@ def write_aggregated_data_report(data: PostingAggregate, output_handle, header=T
             'Måned',
             'Avdelingsnummer',
             #'Avdelingsnavn',
-            'Prosjektnummer',
+            'ProsjektId',
             #'Prosjektnavn',
             'Kontonummer',
             #'Kontonavn',
@@ -99,7 +99,7 @@ def write_aggregated_data_report(data: PostingAggregate, output_handle, header=T
 
     for month in data.values():
         for avdeling_number, avdeling in month['data'].items():
-            for project_number, project in avdeling['data'].items():
+            for project_id, project in avdeling['data'].items():
                 for account_number, account in project['data'].items():
                     csv_out.writerow([
                         'Regnskap',
@@ -108,8 +108,8 @@ def write_aggregated_data_report(data: PostingAggregate, output_handle, header=T
                         month['meta']['month'],
                         avdeling_number,
                         #avdeling['meta'],
-                        project_number,
-                        #project['meta'],
+                        project_id,
+                        #project['meta']['name'],
                         account_number,
                         #account['meta'],
                         account['data']['in'],
