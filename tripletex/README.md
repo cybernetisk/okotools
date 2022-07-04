@@ -22,18 +22,3 @@ cd tripletex
 pip install -e ".[dev]"
 pytest
 ```
-
-## Hente ut kontoplan, prosjektoversikt og rapporter
-
-NB! Dette brukes ikke per 2022 og fungerer trolig heller ikke.
-
-Vi bruker også disse scriptene for å hente ut kontoplan, prosjektoversikt, resultatregnskap for
-driftsprosjektet og overordnet resultatregnskap for alle prosjekter.
-
-Dette gjøres ved å kjøre:
-
-```bash
-./reports.py
-```
-
-Juster innstillinger i reports.py etter eget ønske.
