@@ -10,8 +10,7 @@ import re
 import urllib.parse
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Callable, Tuple
-from typing import Optional, TypedDict, Any, Dict, Union
+from typing import Any, Callable, Dict, Optional, Tuple, TypedDict, Union
 
 import requests
 
@@ -69,6 +68,7 @@ class Posting:
     department_number: Optional[int]
     account_name: str
     account_number: int
+    project_id: Optional[int]
     project_name: Optional[str]
     project_number: Optional[int]
 
@@ -312,6 +312,7 @@ class Tripletex:
                 department_number=str_to_int(none_for_empty(row['department']['departmentNumber'])) if row['department'] is not None else None,
                 account_name=account['name'],
                 account_number=account['number'],
+                project_id=project['id'] if project else None,
                 project_name=project['name'] if project else None,
                 project_number=str_to_int(project['number']) if project else None,
             ))

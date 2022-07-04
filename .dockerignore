@@ -8,3 +8,4 @@ tripletex/__pycache__/
 tripletex/settings_local.py
 tripletex/env/
 **/__pycache__
+!/*.whl

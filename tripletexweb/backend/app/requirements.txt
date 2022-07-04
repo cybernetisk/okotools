@@ -1,4 +1,0 @@
-Flask
-flask-cors
-gunicorn
-requests==2.9.1

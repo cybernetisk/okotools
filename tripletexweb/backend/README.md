@@ -22,11 +22,12 @@ https://github.com/cybernetisk/okotools/blob/master/tripletex/settings.py
 
 ### Running
 
-See `docker-compose.yml` for how you can use this image.
+See `docker-compose.yml` (in repo root) for how you can use this image.
 
 Pulling latest image and running:
 
-```
+```bash
+cd okotools
 docker-compose up --pull
 ```
 
@@ -34,7 +35,7 @@ docker-compose up --pull
 
 The following paths should reverse proxy to this service:
 
-```
+```bash
 /reports/
 /api/
 ```

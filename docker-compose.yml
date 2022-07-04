@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
     volumes:
       - okoreports-reports-cyb:/var/okoreports/reports
-      - ./settings.py:/usr/src/tripletex/settings_local.py
+      - ./settings.py:/usr/src/app/settings_local.py
     ports:
       - '8000:8000'
 

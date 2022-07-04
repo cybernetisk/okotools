@@ -2,4 +2,5 @@
 .idea/
 dist/
 settings.py
+/*.whl
 /.venv/

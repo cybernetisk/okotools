@@ -1,26 +1,28 @@
+from ast import Import
+import html
+import os.path
+import sys
+
+import fetch_budget_data
+import fetch_tripletex_data
 from flask import Flask, Response, request, send_from_directory
 from flask_cors import CORS
+
 app = Flask(__name__)
 
 CORS(
-  app,
-  origins=('http://localhost:3000', 'http://localhost:8050'),
-  supports_credentials=True
+    app,
+    origins=('http://localhost:3000', 'http://localhost:8050'),
+    supports_credentials=True
 )
 
-import html
-import sys
-import os.path
-
-sys.path.append('/usr/src/tripletex')
-import fetch_budget_data
-import fetch_tripletex_data
-
-if not os.path.isfile('/usr/src/tripletex/settings_local.py'):
-  print('Missing settings file!')
-  print('You should volume mount a file to /usr/src/tripletex/settings_local.py')
-  print('See https://github.com/cybernetisk/okotools/blob/master/tripletex/settings.py as a template')
-  sys.exit(1)
+try:
+    import settings_local
+except ImportError:
+    print('Missing local settings file!')
+    print('You should volume mount settings_local.py to the working directory')
+    print('See https://github.com/cybernetisk/okotools/blob/master/tripletex/tripletex/settings.py as a template')
+    sys.exit(1)
 
 def get_output(title, data):
     ret = """<!DOCTYPE html>

@@ -1,7 +1,7 @@
 #!/bin/sh
 
-gunicorn \
-  --config=/gunicorn.conf \
+exec gunicorn \
+  --config=/gunicorn.py \
   --access-logfile '-' \
   --error-logfile '-' \
   --timeout 120 \

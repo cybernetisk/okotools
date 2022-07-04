@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import csv
-import requests
 import sys
+
+import requests
 
 reports_path = '/var/okoreports/reports/'
 
@@ -72,7 +70,7 @@ def export_budget(budget_url, output_handle):
             ])
 
 def run():
-    import settings
+    from tripletex import settings
     if settings.budget_url is None:
         return 'Fetching data from budget is disabled - skipping budget'
 

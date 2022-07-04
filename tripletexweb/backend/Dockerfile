@@ -1,26 +1,23 @@
-FROM python:3-alpine
-MAINTAINER Henrik Steen <henrist@henrist.net>
+FROM python:3.10-alpine
 
-RUN apk --update add \
+RUN apk --no-cache add \
       ca-certificates
 
 RUN mkdir -p /usr/src/app
-RUN mkdir -p /usr/src/tripletex
+RUN mkdir -p /usr/src/libs
 RUN mkdir -p /var/okoreports/reports
 
-COPY tripletex/requirements.txt /usr/src/tripletex/
-COPY tripletexweb/backend/app/requirements.txt /usr/src/app/
+# (cd tripletex && python setup.py bdist_wheel -d ..)
+COPY cyb_tripletex-0.0.1-py3-none-any.whl /usr/src/libs/
 
-WORKDIR /usr/src/tripletex
-RUN pip install --no-cache-dir -r requirements.txt
+COPY tripletexweb/backend/requirements.txt /usr/src/app/
 
 WORKDIR /usr/src/app
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt --find-links /usr/src/libs
 
 EXPOSE 8000
 CMD ["/start.sh"]
 
-COPY tripletex /usr/src/tripletex
 COPY tripletexweb/backend/container/start.sh /start.sh
-COPY tripletexweb/backend/container/gunicorn.conf /gunicorn.conf
+COPY tripletexweb/backend/container/gunicorn.py /gunicorn.py
 COPY tripletexweb/backend/app /usr/src/app
