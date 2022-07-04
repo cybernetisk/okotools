@@ -2,8 +2,6 @@ import csv
 
 import requests
 
-reports_path = '/var/okoreports/reports/'
-
 def getFloat(val):
     try:
         return float(val.replace(' ', '').replace(',', '.').replace(' ', ''))
@@ -68,7 +66,7 @@ def export_budget(budget_url, output_handle):
                 row[COL_KOMMENTAR]
             ])
 
-def run(budget_url: str, budget_edit_url: str):
+def run(budget_url: str, budget_edit_url: str, reports_path: str):
     if budget_url is None:
         return 'Fetching data from budget is disabled - skipping budget'
 

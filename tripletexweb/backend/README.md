@@ -15,6 +15,10 @@ TRIPLETEX_EMPLOYEE_TOKEN=xxx
 
 # the following is optional
 
+# where to persist data - should include trailing slash
+# defaults to $PWD/reports/
+REPORTS_DIR=/var/okoreports/reports/
+
 # this is the link to a Google Spreadsheet feed - the document must be published for this to work
 # e.g. https://spreadsheets.google.com/feeds/worksheets/1pAEq8O5NMkmEWvW-c6x_47abg5IO7HqPO5bs5J-iPt4/public/full?alt=json
 # set to None to disable budget

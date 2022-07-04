@@ -5,8 +5,6 @@ import csv
 
 from tripletex.tripletex import Posting, PostingAggregate, TripletexConnectorV2, Tripletex
 
-reports_path = os.environ.get("REPORTS_DIR", '/var/okoreports/reports/')
-
 SEMESTERS = (
     {'id': 1, 'text': 'vår', 'start': '-01-01', 'end': '-06-30'},
     {'id': 2, 'text': 'høst', 'start': '-07-01', 'end': '-12-31'},
@@ -127,7 +125,7 @@ def build_project_list(tripletex: Tripletex) -> str:
     return ret
 
 
-def run(context_id: int, customer_token: str, employee_token: str, drop_cache=False):
+def run(context_id: int, customer_token: str, employee_token: str, reports_path: str, drop_cache=False):
     ret = ''
     fetch_postings = True
 

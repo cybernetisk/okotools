@@ -23,6 +23,11 @@ employee_token = require_env("TRIPLETEX_EMPLOYEE_TOKEN")
 budget_url = os.environ.get("OKOREPORTS_BUDGET_URL", None)
 budget_edit_url = os.environ.get("OKOREPORTS_BUDGET_EDIT_URL", None)
 
+reports_path = os.environ.get("REPORTS_DIR", os.getcwd() + "/reports/")
+
+if not os.path.exists(reports_path):
+    raise RuntimeError(f"Path {reports_path} does not exist")
+
 app = Flask(__name__)
 
 CORS(
@@ -51,6 +56,7 @@ def fetch_budget():
     result = fetch_budget_data.run(
         budget_url=budget_url,
         budget_edit_url=budget_edit_url,
+        reports_path=reports_path,
     )
     return get_output('Oppdatering av budsjettdata', result)
 
@@ -63,13 +69,14 @@ def fetch_accounting():
         context_id=context_id,
         customer_token=customer_token,
         employee_token=employee_token,
+        reports_path=reports_path,
         drop_cache=drop_cache,
     )
     return get_output('Oppdatering av regnskapsdata', result)
 
 @app.route('/reports/<path:path>')
 def reports(path):
-    return send_from_directory('/var/okoreports/reports', path)
+    return send_from_directory(reports_path, path)
 
 @app.after_request
 def add_header(response):
