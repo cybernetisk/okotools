@@ -1,17 +1,42 @@
 import csv
+import re
+from pathlib import Path
 
-import requests
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 
-def getFloat(val):
+
+def get_float(val):
+    if type(val) == float or type(val) == int:
+        return val
+
     try:
         return float(val.replace(' ', '').replace(',', '.').replace(' ', ''))
     except ValueError:
         return 0
 
-def export_budget(budget_url, output_handle):
-    csv_out = csv.writer(output_handle, delimiter=';', quoting=csv.QUOTE_NONE)
-    r = requests.get(budget_url).json()
+def get_name_from_range(range: str) -> str:
+    return re.compile(r"^'?(.+?)'?!.+").sub("\\1", range)
 
+def export_budget(spreadsheet_id, credentials_file, output_handle) -> str:
+    """Retrieve spreadsheet data and write CSV to output_handle.
+
+    Returns edit URL for spreadsheet.
+    """
+    credentials = Credentials.from_service_account_file(credentials_file)
+    service = build("sheets", "v4", credentials=credentials)
+
+    spreadsheet_info = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+
+    sheet_names = [sheet["properties"]["title"] for sheet in spreadsheet_info["sheets"]]
+
+    result = service.spreadsheets().values().batchGet(
+        spreadsheetId=spreadsheet_id,
+        ranges=sheet_names,
+        valueRenderOption="UNFORMATTED_VALUE",
+    ).execute()
+
+    csv_out = csv.writer(output_handle, delimiter=';', quoting=csv.QUOTE_NONE)
     csv_out.writerow([
         'Type',
         'Versjon',
@@ -35,47 +60,45 @@ def export_budget(budget_url, output_handle):
     COL_KOMMENTAR = 7
     COL_TYPE = 8
 
-    for sheet in r['feed']['entry']:
-        version = sheet['title']['$t']
+    def col(row, idx):
+        if len(row) < idx + 1:
+            return ''
+        return row[idx]
 
-        link = [x for x in sheet['link'] if x['type'] == 'text/csv'][0]['href']
+    for value_range in result["valueRanges"]:
+        version = get_name_from_range(value_range['range'])
 
-        csv_data = requests.get(link).content.decode('utf-8').split('\n')
-        csv_f = csv.reader(csv_data)
-
-        is_first = True
-        for row in csv_f:
-            if is_first:
-                is_first = False
-                continue
+        for row in value_range["values"][1:]:
+            aar = col(row, COL_AAR)
 
             # ignore rows not including anything useful
-            if row[COL_AVDELING] == '' and row[COL_PROSJEKT] == '' and row[COL_INNTEKTER] == '' and row[COL_KOSTNADER] == '':
+            if aar == '' or (col(row, COL_INNTEKTER) == '' and col(row, COL_KOSTNADER) == ''):
                 continue
 
             csv_out.writerow([
-                row[COL_TYPE] if len(row) >= 9 and row[COL_TYPE] != "" else 'Budsjett',
+                col(row, COL_TYPE) or 'Budsjett',
                 version,
-                row[COL_AAR],
-                6 if row[COL_SEMESTER] == 'vår' else (12 if row[COL_SEMESTER] == 'høst' else 0),
-                row[COL_AVDELING],
-                row[COL_PROSJEKT],
-                row[COL_KONTO],
-                getFloat(row[COL_INNTEKTER]) * -1,
-                getFloat(row[COL_KOSTNADER]),
-                row[COL_KOMMENTAR]
+                col(row, COL_AAR),
+                6 if col(row, COL_SEMESTER) == 'vår' else (12 if col(row, COL_SEMESTER) == 'høst' else 0),
+                col(row, COL_AVDELING),
+                col(row, COL_PROSJEKT),
+                col(row, COL_KONTO),
+                get_float(col(row, COL_INNTEKTER)) * -1,
+                get_float(col(row, COL_KOSTNADER)),
+                col(row, COL_KOMMENTAR)
             ])
 
-def run(budget_url: str, budget_edit_url: str, reports_path: str):
-    if budget_url is None:
-        return 'Fetching data from budget is disabled - skipping budget'
+    return spreadsheet_info["spreadsheetUrl"]
+
+def run(spreadsheet_id: str, credentials_file: str, reports_path: str):
+    if spreadsheet_id is None or credentials_file is None:
+        return 'Fetching data from budget is not configured - skipping budget'
 
     with open(reports_path + 'budget.txt', 'w') as f:
-        export_budget(budget_url, f)
+        budget_edit_url = export_budget(spreadsheet_id, credentials_file, f)
 
     with open(reports_path + 'budget_url.txt', 'w') as f:
-        if budget_edit_url != None:
-            f.write(budget_edit_url)
+        f.write(budget_edit_url)
 
     return 'Fetched data from budget and updated report'
 

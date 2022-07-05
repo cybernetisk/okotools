@@ -20,8 +20,8 @@ def require_env(name: str) -> str:
 context_id = int(require_env("TRIPLETEX_CONTEXT_ID"))
 customer_token = require_env("TRIPLETEX_CUSTOMER_TOKEN")
 employee_token = require_env("TRIPLETEX_EMPLOYEE_TOKEN")
-budget_url = os.environ.get("OKOREPORTS_BUDGET_URL", None)
-budget_edit_url = os.environ.get("OKOREPORTS_BUDGET_EDIT_URL", None)
+budget_credentials_file = os.environ.get("OKOREPORTS_BUDGET_CREDENTIALS_FILE", None)
+budget_spreadsheet_id = os.environ.get("OKOREPORTS_BUDGET_SPREADSHEET_ID", None)
 
 reports_path = os.environ.get("REPORTS_DIR", os.getcwd() + "/reports/")
 
@@ -54,8 +54,8 @@ def get_output(title, data):
 @app.route("/api/fetch-budget")
 def fetch_budget():
     result = fetch_budget_data.run(
-        budget_url=budget_url,
-        budget_edit_url=budget_edit_url,
+        spreadsheet_id=budget_spreadsheet_id,
+        credentials_file=budget_credentials_file,
         reports_path=reports_path,
     )
     return get_output('Oppdatering av budsjettdata', result)

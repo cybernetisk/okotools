@@ -19,13 +19,14 @@ TRIPLETEX_EMPLOYEE_TOKEN=xxx
 # defaults to $PWD/reports/
 REPORTS_DIR=/var/okoreports/reports/
 
-# this is the link to a Google Spreadsheet feed - the document must be published for this to work
-# e.g. https://spreadsheets.google.com/feeds/worksheets/1pAEq8O5NMkmEWvW-c6x_47abg5IO7HqPO5bs5J-iPt4/public/full?alt=json
-# set to None to disable budget
-OKOREPORTS_BUDGET_URL=xxx
+# Path to Google Cloud Service Account credentials file.
+# As of writing, we use credentials for okoreports@cyb-okotools.iam.gserviceaccount.com
+OKOREPORTS_BUDGET_CREDENTIALS_FILE=xxx
 
-# the URL the user can go to and edit the spreadsheet
-OKOREPORTS_BUDGET_EDIT_URL=xxx
+# ID to a Google Spreadsheet
+# e.g. 1pAEq8O5NMkmEWvW-c6x_47abg5IO7HqPO5bs5J-iPt4
+# set to None to disable budget
+OKOREPORTS_BUDGET_SPREADSHEET_ID=xxx
 ```
 
 Make sure you have Python 3.10 or newer.
