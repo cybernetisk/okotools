@@ -72,16 +72,20 @@ def export_budget(spreadsheet_id, credentials_file, output_handle) -> str:
         version = get_name_from_range(value_range['range'])
 
         for row in value_range["values"][1:]:
-            aar = col(row, COL_AAR)
+            # ignore rows without year
+            try:
+                aar = int(col(row, COL_AAR))
+            except ValueError:
+                continue
 
             # ignore rows not including anything useful
-            if aar == '' or (col(row, COL_INNTEKTER) == '' and col(row, COL_KOSTNADER) == ''):
+            if col(row, COL_INNTEKTER) == '' and col(row, COL_KOSTNADER) == '':
                 continue
 
             csv_out.writerow([
                 col(row, COL_TYPE) or 'Budsjett',
                 version,
-                col(row, COL_AAR),
+                aar,
                 6 if col(row, COL_SEMESTER) == 'vår' else (12 if col(row, COL_SEMESTER) == 'høst' else 0),
                 col(row, COL_AVDELING),
                 col(row, COL_PROSJEKT),
