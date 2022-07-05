@@ -28,11 +28,14 @@ def export_budget(spreadsheet_id, credentials_file, output_handle) -> str:
 
     spreadsheet_info = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
 
-    sheet_names = [sheet["properties"]["title"] for sheet in spreadsheet_info["sheets"]]
+    ranges = [
+        "'{}'!A1:I1000".format(sheet["properties"]["title"])
+        for sheet in spreadsheet_info["sheets"]
+    ]
 
     result = service.spreadsheets().values().batchGet(
         spreadsheetId=spreadsheet_id,
-        ranges=sheet_names,
+        ranges=ranges,
         valueRenderOption="UNFORMATTED_VALUE",
     ).execute()
 
