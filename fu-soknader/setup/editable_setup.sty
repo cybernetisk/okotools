@@ -1,0 +1,62 @@
+%%% Here comes setup of colors, etc %%%
+% Defining a new coordinate system for the page:
+%
+% --------------------------
+% |(-1,1)    (0,1)    (1,1)|
+% |                        |
+% |(-1,0)    (0,0)    (1,0)|
+% |                        |
+% |(-1,-1)   (0,-1)  (1,-1)|
+% --------------------------
+\makeatletter
+\def\parsecomma#1,#2\endparsecomma{\def\page@x{#1}\def\page@y{#2}}
+\tikzdeclarecoordinatesystem{page}{
+    \parsecomma#1\endparsecomma
+    \pgfpointanchor{current page}{north east}
+    % Save the upper right corner
+    \pgf@xc=\pgf@x%
+    \pgf@yc=\pgf@y%
+    % save the lower left corner
+    \pgfpointanchor{current page}{south west}
+    \pgf@xb=\pgf@x%
+    \pgf@yb=\pgf@y%
+    % Transform to the correct placement
+    \pgfmathparse{(\pgf@xc-\pgf@xb)/2.*\page@x+(\pgf@xc+\pgf@xb)/2.}
+    \expandafter\pgf@x\expandafter=\pgfmathresult pt
+    \pgfmathparse{(\pgf@yc-\pgf@yb)/2.*\page@y+(\pgf@yc+\pgf@yb)/2.}
+    \expandafter\pgf@y\expandafter=\pgfmathresult pt
+}
+
+\makeatother
+
+%%% COLOR %%%
+\definecolor{cybgul}{RGB}{254,202,43}
+\definecolor{cybgraa}{RGB}{163,159,161}
+\definecolor{cybmorkgraa}{RGB}{32,32,32}
+
+%%% TITLE %%%
+% \title{Søknad Fordelingsutvalget}
+
+% Clear out page before writing
+\pagestyle{empty}
+
+% Adjusts page properties
+\pagecolor{cybgul}
+
+% "Constants (and variables...)"
+\newcommand{\mottakerNavn}{Fordelingsutvalget}
+\newcommand{\typeStotte}{prosjektstøtte}
+
+\newcommand{\avsenderSelskap}{Cybernetisk Selskab}
+\newcommand{\avsenderAdresse}{Gaustadalleen 23B, 0181 Oslo}
+\newcommand{\avsenderEpost}{okonomi@cyb.no}
+\newcommand{\avsenderOrgnr}{990 110 352}
+\newcommand{\avsenderKontonr}{6039 06 57423}
+\newcommand{\avsenderWeb}{https://cyb.no} % Dette bør være en fungerende lenke
+\newcommand{\avsenderKontaktNavn}[1]{#1}
+\renewcommand*\contentsname{Oversikt} % ikke i bruk
+
+% Setter vspace mellom søknadspunkter
+\newcommand{\postSpacing}{
+    1cm
+}

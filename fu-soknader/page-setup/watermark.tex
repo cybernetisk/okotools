@@ -1,0 +1,11 @@
+\newcommand{\watermark}{
+    \AddToShipoutPicture{ %add * before the { to only make watermark at first page
+        \put(0,0){
+            \parbox[b][\paperheight]{\paperwidth}{%
+                \vfill
+                \centering    {\transparent{0.015}\includegraphics[width=0.8\textwidth]{figures/watermark.png}}%
+                \vfill
+            }
+        }
+    }
+}

@@ -1,0 +1,38 @@
+\newcommand{\maketop}[7]{
+    \begin{tikzpicture}[remember picture,overlay,every node/.style={anchor=center}]
+        %%% Inserts address in top right corner %%%
+        \node (argumenter) [align = left] at (page cs:0.65,0.7)
+        {
+            {#1}\\
+            {#2}\\
+            {#3}\\
+            {#4 MVA}\\
+            {#5}\\
+            {\href{#6}{#6}}\\
+            {#7}
+        };
+        \node (avsender)[text = black, align = left, left = of argumenter]
+        {
+            \textbf{Avsender}\\
+            \textbf{Adresse}\\
+            \textbf{E-mail}\\
+            \textbf{Org. nr}\\
+            \textbf{Kontonr}\\
+            \textbf{Web}\\
+            \textbf{Kontakt}
+        };
+        %%% Inserts the logo at top left %%%
+        \node (logo) [left=3cm of avsender]
+        {
+            \includegraphics{figures/logotop.eps}
+        };
+        \node (3) at (page cs:0.0,0.83) {};
+        \node (4) at (page cs:0.0,0.57) {};
+        \draw [color = black, line width = 0.5pt, black](3) -- (4) {};
+    \end{tikzpicture}%
+    \vspace{6cm}
+}
+
+\newcommand{\trymtitle}[1]{
+    \flushleft\Large\textbf{{Søknad til \mottakerNavn{} - \typeStotte{}}}
+}

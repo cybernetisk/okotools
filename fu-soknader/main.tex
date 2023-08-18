@@ -1,0 +1,29 @@
+%%% Packages moved to packages.tex %%%
+\input{setup/packages.tex}
+\input{setup/editable_setup.sty}
+\input{commands/all.tex}
+\input{page-setup/watermark.tex}
+\geometry{
+    a4paper,
+    total={170mm,257mm},
+    left=20mm,
+    top=20mm,
+}
+\begin{document}
+    
+    \watermark{}
+    \maketop
+        {\avsenderSelskap{}}
+        {\avsenderAdresse{}}
+        {\avsenderEpost{}}
+        {\avsenderOrgnr{}}
+        {\avsenderKontonr{}}
+        {\avsenderWeb{}}
+        {\avsenderKontaktNavn{FYLL INN NAVN}}
+    \trymtitle{}
+    \vspace{2cm}
+    \input{fields/soknadspunkter}
+    
+\end{document}
+
+

@@ -1,0 +1,87 @@
+%%% Makes line next to section heading (punkt- heading) See answers in https://tex.stackexchange.com/questions/246501/horizontal-line-next-to-section-heading %%%
+
+%%% Making of lines next to section lines for...%%%
+    \newcommand{\raisedrulefill}[2][0ex]{\leaders\hbox{\rule[#1]{1pt}{#2}}\hfill}
+    %%% ... \section %%%
+    \titleformat{\section}{\Large\bfseries}{\thesection. }{0em}{#1\,\raisedrulefill[0.4ex]{1pt}}
+    %%% ... \subsection %%%
+    \titleformat{\subsection}{\bfseries}{\thesubsection. }{0em}{#1\,\raisedrulefill[0.4ex]{0.5pt}}
+    %%% ... \subsubsection %%%
+    \titleformat{\subsubsection}{\bfseries}{\thesubsubsection. }{0em}{#1\,\raisedrulefill[0.4ex]{0.5pt}}
+
+%%% Adjusting spacing around section titles %%%
+    %\titlespacing*{<command>}{<left>}{<before-sep>}{<after-sep>}
+    \titlespacing*{\section}{0cm}{0.5cm}{0.3cm}
+    \titlespacing*{\subsection}{0cm}{3cm}{0.3cm} %denne funker ikke(!)
+    \titlespacing*{\subsubsection}{0cm}{0.5cm}{0.5cm}
+
+    
+%%% Making of the commands punkt (section), upunkt (subsection), uupunkt (subsubsection) %%%
+\makeatletter
+    %%% Punkt %%%
+        \newcommand*{\punkt}{%
+          \@ifstar{\@punkt@star}{\@punkt}%
+        }
+        \newcommand*{\@punkt}{%
+          \@dblarg\@punkt@nostar%
+        }
+        \newcommand*{\@punkt@star}[2]{%
+          \section*{#1}{#2}\vspace{10pt}%
+        }
+        %%% Needs revision: %%%
+        \def\@punkt@nostar[#1]#2{%
+          \section[{#1}]{#2}%
+        }
+    %%% Under- punkt %%%
+        \newcommand*{\upunkt}{%
+          \@ifstar{\@upunkt@star}{\@upunkt}%
+        }
+        \newcommand*{\@upunkt}{%
+          \@dblarg\@upunkt@nostar%
+        }
+        \newcommand*{\@upunkt@star}[1]{%
+          \subsection*{#1}%
+        }
+        \def\@upunkt@nostar[#1]#2{%
+          \subsection[{#1}]{#2}%
+        }
+    %%% Under- under- punkt %%%
+        \newcommand*{\uupunkt}{%
+          \@ifstar{\@uupunkt@star}{\@uupunkt}%
+        }
+        \newcommand*{\@uupunkt}{%
+          \@dblarg\@uupunkt@nostar%
+        }
+        \newcommand*{\@uupunkt@star}[1]{%
+          \subsubsection*{#1}%
+        }
+        \def\@uupunkt@nostar[#1]#2{%
+          \subsubsection[{#1}]{#2}%
+        }
+\makeatother
+%%% Making of the command \beloplinje, to adjust belop to right end of text line. %%%
+\newcommand{\beloplinje}[3]{%
+    \par{#1}\hfill{#2 kr} %1 = tekst, %2 = beløp
+}
+% \newcommand{\sumlinje}[2]{%
+%     \par\noindent\rule[1cm]{\textwidth}{0.4pt}
+%     %\rule[h]{w}{t}, h = height of box, w = width of box, t = thickness of line
+%     {\textbf{#1}}\hfill{#2 kr}\\ %1 = tekst, %2 = beløp
+% }
+\newcommand{\sumlinje}[2]{%
+    \noindent\rule[0.5cm]{\textwidth}{0.4pt}
+    %\rule[h]{w}{t}, h = height of box, w = width of box, t = thickness of line
+    {#1}\hfill{#2 kr} %1 = tekst, %2 = beløp
+}
+\newcommand{\Sumlinje}[2]{%
+    \noindent\rule[0cm]{\textwidth}{0.4pt}
+    %\rule[h]{w}{t}, h = height of box, w = width of box, t = thickness of line
+    {\textbf{#1}}\hfill{\textbf{#2 kr}} %1 = tekst, %2 = beløp
+    \vspace{2cm}
+}
+\newcommand{\SUMlinje}[2]{%
+    \par\noindent%\rule[1cm]{\textwidth}{0.4pt}
+    {\Large\textbf{#1}}\hfill{\Large\textbf{#2 kr}} %1 = tekst, %2 = beløp
+}
+
+%%% insert more under/ over this line, depending on \makeat environment %%%

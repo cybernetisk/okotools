@@ -1,0 +1,12 @@
+# Fdb version 4
+["pdflatex"] 1691423921 "top.tex" "top.pdf" "top" 1691423922 2
+  "/usr/local/texlive/2022/texmf-dist/web2c/texmf.cnf" 1646502317 40171 cdab547de63d26590bebb3baff566530 ""
+  "/usr/local/texlive/2022/texmf-var/web2c/pdftex/pdflatex.fmt" 1675783307 7878356 329280dee9c87067db8cf453f5aa28d2 ""
+  "/usr/local/texlive/2022/texmf.cnf" 1647878952 577 209b46be99c9075fd74d4c0369380e8c ""
+  "top.aux" 1691423840 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "top.tex" 1691423920 1184 2540d6f773c4a46d18c34ab074599f28 ""
+  (generated)
+  "top.aux"
+  "top.log"
+  "top.pdf"
+  (rewritten before read)
