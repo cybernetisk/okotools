@@ -1,6 +1,0 @@
-PWD /Users/trym/Documents/CYB/FU-søknader/v23_4/fields
-INPUT /usr/local/texlive/2022/texmf.cnf
-INPUT /usr/local/texlive/2022/texmf-dist/web2c/texmf.cnf
-INPUT /usr/local/texlive/2022/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT soknadspunkter.tex
-OUTPUT soknadspunkter.log
