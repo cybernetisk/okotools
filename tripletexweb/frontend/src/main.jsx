@@ -326,7 +326,7 @@ class ReportTableWrapper extends React.Component {
           <p>
             <a href={getApiUrl('api/fetch-accounting')}>Last ny data fra Tripletex</a>
             {' '}
-            (<a href={getApiUrl('api/fetch-accounting?drop_cache')}>oppdater også tall før 2022</a>)
+            (<a href={getApiUrl('api/fetch-accounting?drop_cache')}>oppdater også tall før 2023</a>)
           </p>
           <p>
             <a href={getApiUrl('api/fetch-budget')}>Last ny data fra budsjett</a>
