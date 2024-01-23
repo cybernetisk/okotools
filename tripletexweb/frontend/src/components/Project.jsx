@@ -14,6 +14,9 @@ export default class Project extends React.Component {
     accounts: PropTypes.object.isRequired,
   }
 
+  /** @var any */
+  context = undefined
+
   static propTypes = {
     datasets: PropTypes.array.isRequired,
     department: PropTypes.object,

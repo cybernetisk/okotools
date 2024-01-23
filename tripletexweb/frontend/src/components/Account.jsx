@@ -92,6 +92,9 @@ export default class Account extends React.Component {
     accounts: PropTypes.object.isRequired,
   }
 
+  /** @type any */
+  context = undefined
+
   render() {
     let accountText
     if (this.context.accounts[this.props.kontoSet[0].Kontonummer] === undefined) {
