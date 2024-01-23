@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import { amount as amountFormatter } from '../formatter'
+import { amount as amountFormatter } from '../formatter.js'
 
 const onlyIn = entry => -entry['BeløpInn']
 const onlyOut = entry => entry['BeløpUt']

@@ -1,9 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Account from './Account.jsx'
-import ProjectAmount from './ProjectAmount'
-
-import { amount as amountFormatter } from '../formatter'
+import ProjectAmount from './ProjectAmount.jsx'
 
 const onlyIn = entry => -entry.in
 const onlyOut = entry => entry.out

@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Project from './Project'
+import Project from './Project.jsx'
 
 export default class ReportTable extends React.Component {
   static childContextTypes = {

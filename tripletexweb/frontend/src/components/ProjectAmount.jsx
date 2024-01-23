@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import { amount as amountFormatter } from '../formatter'
+import { amount as amountFormatter } from '../formatter.js'
 
 export default class ProjectAmount extends React.Component {
 

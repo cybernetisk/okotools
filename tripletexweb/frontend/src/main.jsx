@@ -1,11 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-import * as utils from './utils'
+import * as utils from './utils.js'
 
-import AccountList from './components/AccountList'
-import ProjectFilter from './components/ProjectFilter'
-import ReportTable from './components/ReportTable'
+import AccountList from './components/AccountList.jsx'
+import ProjectFilter from './components/ProjectFilter.jsx'
+import ReportTable from './components/ReportTable.jsx'
 
 import './style.scss'
 
