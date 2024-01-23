@@ -1,6 +1,5 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import checker from "vite-plugin-checker";
 
 export default defineConfig({
   plugins: [
@@ -11,4 +10,7 @@ export default defineConfig({
   },
   // To support running under subpath.
   base: '',
+  server: {
+    port: 3000,
+  },
 });

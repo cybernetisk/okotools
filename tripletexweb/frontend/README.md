@@ -7,7 +7,7 @@ This provides the frontend that generates accounting reports.
 You need to run the backend API to be able to load data into the frontend application.
 See the `backend` directory.
 
-Ensure you have NodeJS v16 or newer.
+Ensure you have NodeJS v20 or newer.
 
 Run development server:
 
