@@ -1,12 +1,32 @@
+import os
 import sys
-from datetime import datetime, timedelta, date
-from zoneinfo import ZoneInfo
+from datetime import datetime, timedelta
 from calendar import monthrange
-from tripletex import Tripletex
-from tripletex_config import Tripletex_Config
+from zoneinfo import ZoneInfo
+from dotenv import load_dotenv
 from zettle import Zettle
-from zettle_config import Zettle_Config
+from tripletex import Tripletex
 
+load_dotenv()
+
+def parse_custom_dates(start_date_str, end_date_str):
+    start_date = datetime.strptime(start_date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
+    end_date = datetime.strptime(end_date_str, "%Y-%m-%d").strftime("%Y-%m-%d")
+    return start_date, end_date
+
+def auto_dates():
+    now = datetime.now()
+    start_date = datetime(now.year, now.month, 1).strftime("%Y-%m-%d")
+    last_day_of_month = monthrange(now.year, now.month)[1]
+    end_date = datetime(now.year, now.month, last_day_of_month).strftime("%Y-%m-%d")
+    return start_date, end_date
+
+def manual_dates(manual_date):
+    date = datetime.strptime(manual_date, "%Y-%m-%d")
+    start_date = datetime(date.year, date.month, 1).strftime("%Y-%m-%d")
+    last_day_of_month = monthrange(date.year, date.month)[1]
+    end_date = datetime(date.year, date.month, last_day_of_month).strftime("%Y-%m-%d")
+    return start_date, end_date
 
 def month(date):
     date_format = '%Y-%m-%d'
@@ -17,7 +37,7 @@ def month(date):
         "march": "mars",
         "april": "april",
         "may": "mai",
-        "june": "june",
+        "june": "juni",
         "july": "juli",
         "august": "august",
         "september": "september",
@@ -25,111 +45,83 @@ def month(date):
         "november": "november",
         "december": "desember"
     }
-    if month in translate.keys():
-        return translate[month]
-    return False
+    return translate.get(month, month)
 
-
-def auto_dates():
-    date_now = datetime.now(ZoneInfo("Europe/Oslo")).date()  # for automatic
-    year = date_now.year
-    month = date_now.month
-    days_in_month = monthrange(year, month)[1]
-    this_date = (date_now).strftime('%Y-%m-%d')[0:7]
-    next_date = (date_now + timedelta(days=days_in_month)).strftime('%Y-%m-%d')[0:7]
-    from_date = f'{this_date}-01'
-    to_date = f'{next_date}-01'
-    return from_date, to_date
-
-
-def manual_dates(manual_date):
-    date_format = '%Y-%m-%d'
-    date_now = datetime.strptime(manual_date, date_format).date()
-    year = date_now.year
-    month = date_now.month
-    days_in_month = monthrange(year, month)[1]
-    this_date = (date_now).strftime('%Y-%m-%d')[0:7]
-    next_date = (date_now + timedelta(days=days_in_month)).strftime('%Y-%m-%d')[0:7]
-    from_date = f'{this_date}-01'
-    to_date = f'{next_date}-01'
-    return from_date, to_date
-
-
-def payload(tripletex_client, fee_dict):
-
+def payload(fee_dict):
     postings_list = []
     row_num = 1
 
-    for date in fee_dict:
-        fee_sum = fee_dict[date]
+    for date, fee_sum in fee_dict.items():
         posting = {
             "row": row_num,
             "date": date,
             "description": "Daglig gebyr Zettle",
             "amountGross": -fee_sum,
             "amountGrossCurrency": -fee_sum,
-            "account": {
-                "id": 15311097
-                }
-            }
+            "account": {"id": 15311097}
+        }
         contra_posting = {
             "row": row_num,
             "date": date,
             "description": "Daglig gebyr Zettle",
             "amountGross": fee_sum,
             "amountGrossCurrency": fee_sum,
-            "account": {
-                "id": 57458194
-                }
-            }
+            "account": {"id": 57458194}
+        }
         postings_list.append(posting)
         postings_list.append(contra_posting)
-        desc_date = datetime.now(ZoneInfo("Europe/Oslo")).strftime('%Y-%m-%d')
-        desc_text = "Gebyr Zettle " + month(postings_list[0]["date"])
         row_num += 1
 
-    ret = {
-        "date": desc_date,
-        "description": desc_text,
+    description_date = datetime.now(ZoneInfo("Europe/Oslo")).strftime('%Y-%m-%d')
+    description_text = "Gebyr Zettle " + month(postings_list[0]["date"])
+
+    return {
+        "date": description_date,
+        "description": description_text,
         "postings": postings_list
-        }
-
-    return ret
-
+    }
 
 def main():
-    date1 = 0
-    date2 = 0
-    if len(sys.argv) == 2:
-        arg = sys.argv[1]
-        if arg == "auto":
-            date1, date2 = auto_dates()
-        else:
-            date1, date2 = manual_dates(arg)
+    if len(sys.argv) == 2 and sys.argv[1] == "auto":
+        start_date, end_date = auto_dates()
+    elif len(sys.argv) == 2 and sys.argv[1] != "auto":
+        start_date, end_date = manual_dates(sys.argv[1])
+    elif len(sys.argv) == 3:
+        start_date, end_date = parse_custom_dates(sys.argv[1], sys.argv[2])
     else:
-        print("Usage manual: python main.py 2022-01-01")
-        print("Usage auto  : python main.py auto")
+        print("syntax: <filename.py> auto or <filename.py> yyyy-mm-dd or <filename.py> startdate enddate")
+        exit()
+
+    print("Program running...")
+
+    zettle_client = Zettle(os.getenv("ZETTLE_ID"), os.getenv("ZETTLE_SECRET"))
+    fee_dict = zettle_client.get_fees(start_date, end_date)
+    print(f"Retrieved Zettle fees from {start_date} to {end_date}: {fee_dict}")
+
+    tripletex_base_url = os.getenv("TRIPLETEX_BASE_URL", "https://api.tripletex.io/v2")
+    tripletex_consumer_token = os.getenv("TRIPLETEX_CONSUMER_TOKEN")
+    tripletex_employee_token = os.getenv("TRIPLETEX_EMPLOYEE_TOKEN")
+
+    if not tripletex_consumer_token or not tripletex_employee_token:
+        print("Missing Tripletex tokens. Exiting...")
         return
 
-    zettle_config = Zettle_Config()
-    tripletex_config = Tripletex_Config()
-
-    zettle_client = Zettle(
-        zettle_config.zettle_id,
-        zettle_config.zettle_secret
-        )
-    fee_dict = zettle_client.get_fees(date1, date2)
-
+    expiration_date = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
+    
     tripletex_client = Tripletex(
-        tripletex_config.base_url,
-        tripletex_config.consumer_token,
-        tripletex_config.employee_token,
-        tripletex_config.expiration_date
-        )
-    tripletex_client.create_voucher(payload(tripletex_client, fee_dict))
+        tripletex_base_url,
+        tripletex_consumer_token,
+        tripletex_employee_token,
+        expiration_date  # Future date
+    )
 
-    print('Finished - check tripletex journal')
+    if not tripletex_client.session_token:
+        print("Unable to create Tripletex client. Exiting...")
+        return
 
+    voucher_payload = payload(fee_dict)
+    response = tripletex_client.create_voucher(voucher_payload)
+    print(f"Completed: {response}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
