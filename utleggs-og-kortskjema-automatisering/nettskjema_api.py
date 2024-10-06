@@ -16,12 +16,11 @@ def obtain_token():
     }
 
     response = requests.post(token_url, data=data, auth=HTTPBasicAuth(client_id, client_secret))
-
     response.raise_for_status()
     return response.json()
 
 def save_token(token_data):
-    token_data['expires_at'] = datetime.datetime.now().timestamp() + token_data['expires_in']
+    token_data['expires_at'] = (datetime.datetime.utcnow() + datetime.timedelta(seconds=token_data['expires_in'])).timestamp()
     with open('token.json', 'w') as f:
         json.dump(token_data, f)
 
@@ -38,10 +37,8 @@ def check_and_refresh_token():
     if not token_data:
         return obtain_and_save_new_token()
 
-    now = datetime.datetime.now()
-    expires_at = datetime.datetime.fromtimestamp(token_data['expires_at'])
-
-    if now >= expires_at:
+    now = datetime.datetime.utcnow().timestamp()
+    if now >= token_data['expires_at']:
         print("Token expired. Obtaining a new token...")
         return obtain_and_save_new_token()
     else:
@@ -72,27 +69,15 @@ def api_request(url, method='GET', data=None, params=None, timeout=300):
     token_data = check_and_refresh_token()
     headers = {"Authorization": f"Bearer {token_data['access_token']}"}
 
-    if method == 'GET':
-        response = requests.get(url, headers=headers, params=params, timeout=timeout)
-    elif method == 'POST':
-        response = requests.post(url, headers=headers, json=data, timeout=timeout)
-    elif method == 'PUT':
-        response = requests.put(url, headers=headers, json=data, timeout=timeout)
-    elif method == 'PATCH':
-        response = requests.patch(url, headers=headers, json=data, timeout=timeout)
-    elif method == 'DELETE':
-        response = requests.delete(url, headers=headers, json=data, timeout=timeout)
-    else:
-        raise ValueError("Unsupported HTTP method")
-
+    response = requests.request(method, url, headers=headers, json=data, params=params, timeout=timeout)
     response.raise_for_status()
-    
+
     content_type = response.headers.get('Content-Type', '')
     if 'application/json' in content_type:
         return response.json()
     elif 'application/x-ndjson' in content_type:
         return parse_xndjson(response.text)
-    else:  
+    else:
         # For binary files like PDFs and images, return the raw response
         return response
 
@@ -108,7 +93,7 @@ def get_form_submissions(form_id):
 
 def create_submission(form_id, submission_data):
     url = f"https://api.nettskjema.no/v3/form/{form_id}/submission"
-    return api_request(url, method='POST', data=submission_data).json()
+    return api_request(url, method='POST', data=submission_data)
 
 def delete_submissions(form_id, submission_data):
     url = f"https://api.nettskjema.no/v3/form/{form_id}/submission"
@@ -116,7 +101,7 @@ def delete_submissions(form_id, submission_data):
 
 def update_codebook(form_id, codebook_data):
     url = f"https://api.nettskjema.no/v3/form/{form_id}/codebook"
-    return api_request(url, method='PUT', data=codebook_data).json()
+    return api_request(url, method='PUT', data=codebook_data)
 
 def get_user_info():
     url = "https://api.nettskjema.no/v3/me"
