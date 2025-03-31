@@ -54,6 +54,8 @@ Dette prosjektet automatiserer prosessen med å hente innsendelser fra Nettskjem
 
     KORTSKJEMA_ID og UTLEGGSKJEMA_ID er nå respektive 396301 og 393516
 
+    OBS!!! Det har kommet en endring i hvordan API klienten til nettskjema funker, så det holder ikke lenger å bare lage en client-id. Du må også legge til denne klienten på de spesifikke skjemaene du ønsker at den skal ha tilgang til. For mer info om hvordan les [her](https://www.uio.no/tjenester/it/adm-app/nettskjema/hjelp/api-clients-v3.md) under "Authentication"
+
 ## Bruk
 
 1. Kjør hovedskriptet:
