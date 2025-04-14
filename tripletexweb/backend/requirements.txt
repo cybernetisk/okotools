@@ -1,7 +1,7 @@
 cyb-tripletex==0.0.1
 Flask==3.0.1
 Flask-Cors==4.0.0
-gunicorn==21.2.0
+gunicorn==23.0.0
 requests==2.31.0
 python-dotenv==1.0.1
 pytest>=7.4.4
