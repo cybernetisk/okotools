@@ -93,6 +93,12 @@ def main():
         exit()
 
     print("Program running...")
+    
+    current_time = datetime.now()
+    if datetime.strptime(end_date, "%Y-%m-%d") > current_time:
+        print(f"end_date must be before the {current_time} since it otherwise makes problems in the accounting software")
+        exit()
+
 
     zettle_client = Zettle(os.getenv("ZETTLE_ID"), os.getenv("ZETTLE_SECRET"))
     fee_dict = zettle_client.get_fees(start_date, end_date)
