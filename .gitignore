@@ -2,6 +2,12 @@
 .idea/
 dist/
 /*.whl
-/.venv/
+.venv/
 .env
+token.json
 __pycache__/
+
+kombinerte_skjemaer/
+quickorder-errors/csv/
+quickorder-errors/zettle_csv/
+quickorder-errors/*.csv
