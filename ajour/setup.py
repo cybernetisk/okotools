@@ -11,6 +11,6 @@ setuptools.setup(
         "colorama==0.4.4",
         "numpy==1.19.4",
         "pandas==1.2.0",
-        "reportlab==3.5.57",
+        "reportlab==3.6.13",
     ]
 )
