@@ -10,7 +10,7 @@ Flask = "^1.1.1"
 gunicorn = "^20.0.4"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = "^9.0.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
