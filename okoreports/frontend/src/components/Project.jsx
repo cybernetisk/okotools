@@ -2,17 +2,14 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Account from './Account.jsx'
 import ProjectAmount from './ProjectAmount.jsx'
+import { ReportContext } from './ReportContext.js'
 
 const onlyIn = entry => -entry.in
 const onlyOut = entry => entry.out
 const inAndOut = entry => -entry.in - entry.out
 
 export default class Project extends React.Component {
-  static contextTypes = {
-    projectsWithDatasets: PropTypes.object.isRequired,
-    projectsWithHovedbok: PropTypes.object.isRequired,
-    accounts: PropTypes.object.isRequired,
-  }
+  static contextType = ReportContext
 
   /** @var any */
   context = undefined

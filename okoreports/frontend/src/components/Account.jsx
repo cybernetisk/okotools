@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 import { amount as amountFormatter } from '../formatter.js'
+import { ReportContext } from './ReportContext.js'
 
 const onlyIn = entry => -entry['BeløpInn']
 const onlyOut = entry => entry['BeløpUt']
@@ -88,9 +89,7 @@ export default class Account extends React.Component {
     project: PropTypes.object.isRequired,
   }
 
-  static contextTypes = {
-    accounts: PropTypes.object.isRequired,
-  }
+  static contextType = ReportContext
 
   /** @type any */
   context = undefined
