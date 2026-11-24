@@ -14,7 +14,7 @@ SEMESTERS = (
 # if we delete the aggregated-previous.txt file
 DATE_RANGES = {
     'previous': ['2014-01-01', '2025-01-01'],
-    'current': ['2025-01-01', '2027-01-01'],
+    'current': ['2025-01-01', '2028-01-01'],
 }
 
 
