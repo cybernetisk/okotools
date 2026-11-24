@@ -32,7 +32,7 @@ OKOREPORTS_BUDGET_CREDENTIALS_FILE=xxx
 OKOREPORTS_BUDGET_SPREADSHEET_ID=xxx
 ```
 
-Make sure you have Python 3.10 or newer.
+Make sure you have Python 3.15 or newer.
 
 Set up environment and dependencies:
 
