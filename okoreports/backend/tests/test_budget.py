@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 
-from app import fetch_budget_data
+import fetch_budget_data
 
 load_dotenv()
 

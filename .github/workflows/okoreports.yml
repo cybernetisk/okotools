@@ -1,25 +1,29 @@
-name: tripletexweb
-on: [push]
+name: okoreports
+on:
+  push:
+    paths:
+      - "okoreports/**"
+      - ".github/workflows/okoreports.yml"
+  workflow_dispatch:
 jobs:
   frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: okoreports/frontend
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '20.x'
       - run: npm ci
-        working-directory: tripletexweb/frontend
       - run: npm run typecheck
-        working-directory: tripletexweb/frontend
       - run: npm run build
-        working-directory: tripletexweb/frontend
       - run: docker build -t cybernetisk/okoreports-frontend .
-        working-directory: tripletexweb/frontend
       - name: Push docker image to Docker Hub if master branch
         if: github.ref == 'refs/heads/master'
         run: |
-          docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
           docker push cybernetisk/okoreports-frontend
         env:
           DOCKER_LOGIN: ${{ secrets.DOCKER_LOGIN }}
@@ -27,20 +31,16 @@ jobs:
 
   backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: okoreports/backend
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: pip install -e ".[dev]"
-        working-directory: tripletex
-      - run: python setup.py bdist_wheel -d ..
-        working-directory: tripletex
-      - run: docker build -t cybernetisk/okoreports-backend -f tripletexweb/backend/Dockerfile .
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: docker build -t cybernetisk/okoreports-backend .
       - name: Push docker image to Docker Hub if master branch
         if: github.ref == 'refs/heads/master'
         run: |
-          docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
           docker push cybernetisk/okoreports-backend
         env:
           DOCKER_LOGIN: ${{ secrets.DOCKER_LOGIN }}

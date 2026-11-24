@@ -1,6 +1,5 @@
 [tool.pytest.ini_options]
-testpaths = [
-  "tests",
-]
+pythonpath = ["app"]
+testpaths = ["tests"]
 log_cli = true
 log_cli_level = "debug"

@@ -1,0 +1,6 @@
+*
+!app/
+!container/
+!requirements.txt
+**/__pycache__
+**/.env
