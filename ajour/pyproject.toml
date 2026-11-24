@@ -1,0 +1,17 @@
+[project]
+name = "cyb-ajour"
+version = "0.0.1"
+requires-python = ">=3.12"
+dependencies = [
+  "colorama==0.4.6",
+  "numpy==2.5.5",
+  "pandas==3.1.1",
+  "reportlab==5.1.0",
+]
+
+[project.scripts]
+ajour = "cybajour.cli:main"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

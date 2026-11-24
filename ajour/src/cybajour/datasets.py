@@ -444,7 +444,7 @@ class Zrapport(DataSet):
         result = result[result["dato"].dt.year >= 2018]
 
         # Endre 0 til å bli None.
-        result[BILAG_NR].replace({0: None}, inplace=True)
+        result[BILAG_NR] = result[BILAG_NR].replace({0: None})
 
         return result
 
@@ -482,7 +482,7 @@ class ZrapportLinje(DataSet):
 
         # Blank ut faktura_nr der dette også benyttes som bilag_nr.
         result.loc[result[Faktura.nr] == result[BILAG_NR], Faktura.nr] = -1
-        result[Faktura.nr].replace({-1: None}, inplace=True)
+        result[Faktura.nr] = result[Faktura.nr].replace({-1: None})
 
         return result
 
@@ -519,7 +519,7 @@ class FinansBilagLog(DataSet):
 
         # Blank ut faktura_nr der dette også benyttes som bilag_nr.
         result.loc[result[Faktura.nr] == result[BILAG_NR], Faktura.nr] = -1
-        result[Faktura.nr].replace({-1: None}, inplace=True)
+        result[Faktura.nr] = result[Faktura.nr].replace({-1: None})
 
         return result
 
