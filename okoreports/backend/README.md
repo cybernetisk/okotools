@@ -49,7 +49,7 @@ Run the development server:
 python app/app.py
 ```
 
-Run tests (they call the real Tripletex API and Google Sheets):
+Run tests (they call the real Tripletex API and Google Sheets, and skip without credentials):
 
 ```bash
 pytest
@@ -61,7 +61,7 @@ See https://hub.docker.com/r/cybernetisk/okoreports-backend/
 
 and https://cloud.docker.com/swarm/cybernetisk/repository/docker/cybernetisk/okoreports-backend/general
 
-The image is rebuilt on each push to the Git repository.
+The image is built and pushed on each push to `master` that touches `okoreports/`.
 
 ## Using with reverse proxy
 

@@ -5,6 +5,10 @@ on:
       - "okoreports/**"
       - ".github/workflows/okoreports.yml"
   workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: okoreports-${{ github.ref }}
 jobs:
   frontend:
     runs-on: ubuntu-latest

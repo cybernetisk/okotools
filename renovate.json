@@ -11,7 +11,8 @@
       "matchFileNames": ["okoreports/**", ".github/workflows/okoreports.yml"],
       "dependencyDashboardApproval": false,
       "automerge": true,
-      "minimumReleaseAge": "3 days"
+      "minimumReleaseAge": "3 days",
+      "minimumReleaseAgeBehaviour": "timestamp-optional"
     },
     {
       "matchFileNames": ["okoreports/**", ".github/workflows/okoreports.yml"],
