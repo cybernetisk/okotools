@@ -1,6 +1,7 @@
 import io
 import os
 
+import pytest
 from dotenv import load_dotenv
 
 import fetch_budget_data
@@ -11,6 +12,10 @@ budget_credentials_file = os.environ.get("OKOREPORTS_BUDGET_CREDENTIALS_FILE", N
 budget_spreadsheet_id = os.environ.get("OKOREPORTS_BUDGET_SPREADSHEET_ID", None)
 
 class TestBudget:
+    @pytest.mark.skipif(
+        not (budget_credentials_file and budget_spreadsheet_id),
+        reason="Budget credentials not set in .env",
+    )
     def test_budget(self):
         out = io.StringIO()
 

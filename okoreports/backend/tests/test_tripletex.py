@@ -16,15 +16,14 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-def require_env(name: str) -> str:
-    value = os.environ.get(name, None)
-    if value is None:
-        raise RuntimeError(f"Missing {name} - please set in .env file")
-    return value
+context_id = os.environ.get("TRIPLETEX_CONTEXT_ID")
+customer_token = os.environ.get("TRIPLETEX_CUSTOMER_TOKEN")
+employee_token = os.environ.get("TRIPLETEX_EMPLOYEE_TOKEN")
 
-context_id = int(require_env("TRIPLETEX_CONTEXT_ID"))
-customer_token = require_env("TRIPLETEX_CUSTOMER_TOKEN")
-employee_token = require_env("TRIPLETEX_EMPLOYEE_TOKEN")
+pytestmark = pytest.mark.skipif(
+    not (context_id and customer_token and employee_token),
+    reason="Tripletex credentials not set in .env",
+)
 
 
 @pytest.fixture(scope="class")
@@ -34,7 +33,7 @@ def connector():
 
 @pytest.fixture(scope="class")
 def tripletex(connector):
-    return Tripletex(context_id, connector=connector)
+    return Tripletex(int(context_id), connector=connector)
 
 
 class TestTripletex:

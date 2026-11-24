@@ -15,11 +15,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '20.x'
+          node-version-file: okoreports/frontend/.nvmrc
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
       - run: docker build -t cybernetisk/okoreports-frontend .
+      - name: Smoke test image
+        run: |
+          docker run -d --name frontend -p 8080:80 cybernetisk/okoreports-frontend
+          index=$(curl --retry 10 --retry-all-errors --retry-delay 1 -fsS localhost:8080/)
+          echo "$index" | grep -q '<div id="app">'
+          script=$(echo "$index" | grep -o 'assets/[^"]*\.js')
+          curl -fsS "localhost:8080/$script" > /dev/null
       - name: Push docker image to Docker Hub if master branch
         if: github.ref == 'refs/heads/master'
         run: |
@@ -37,6 +44,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: docker build -t cybernetisk/okoreports-backend .
+      - name: Run tests in image
+        run: docker run --rm -v "$PWD:/src" -w /src cybernetisk/okoreports-backend pytest -p no:cacheprovider
+      - name: Smoke test image
+        run: |
+          docker run -d --name backend -p 8000:8000 \
+            -e TRIPLETEX_CONTEXT_ID=0 \
+            -e TRIPLETEX_CUSTOMER_TOKEN=dummy \
+            -e TRIPLETEX_EMPLOYEE_TOKEN=dummy \
+            -e REPORTS_DIR=/var/okoreports/reports/ \
+            cybernetisk/okoreports-backend
+          docker exec backend sh -c 'echo ok > /var/okoreports/reports/smoke.txt' \
+            && curl --retry 10 --retry-all-errors --retry-delay 1 -fsS localhost:8000/reports/smoke.txt | grep -qx ok \
+            || { docker logs backend; exit 1; }
       - name: Push docker image to Docker Hub if master branch
         if: github.ref == 'refs/heads/master'
         run: |
