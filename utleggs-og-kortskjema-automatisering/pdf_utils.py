@@ -1,6 +1,6 @@
 import io
 from PIL import Image
-import PyPDF2
+from pypdf import PdfWriter
 from docx import Document
 
 A4_WIDTH_PX = int(8.27 * 300)
@@ -59,9 +59,9 @@ def convert_images_to_pdfs(images):
     return pdf_streams
 
 def combine_pdfs(pdf_streams, output_path):
-    merger = PyPDF2.PdfMerger()
+    writer = PdfWriter()
     for pdf in pdf_streams:
-        merger.append(pdf)
+        writer.append(pdf)
 
     with open(output_path, 'wb') as f:
-        merger.write(f)
+        writer.write(f)
