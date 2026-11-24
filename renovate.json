@@ -7,18 +7,23 @@
   "dependencyDashboardApproval": true,
   "packageRules": [
     {
-      "description": "okoreports: no approval needed, CI gates automerge",
+      "description": "okoreports: no approval needed, CI gates automerge. Own branch prefix keeps its lockfile maintenance apart from approval-gated lockfiles.",
       "matchFileNames": ["okoreports/**", ".github/workflows/okoreports.yml"],
       "dependencyDashboardApproval": false,
       "automerge": true,
       "minimumReleaseAge": "3 days",
-      "minimumReleaseAgeBehaviour": "timestamp-optional"
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "additionalBranchPrefix": "okoreports-"
     },
     {
       "matchFileNames": ["okoreports/**", ".github/workflows/okoreports.yml"],
       "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
-      "groupName": "okoreports non-major",
       "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "@vitejs/plugin-react majors require the matching vite major",
+      "matchPackageNames": ["vite", "@vitejs/plugin-react"],
+      "groupName": "vite"
     }
   ]
 }
