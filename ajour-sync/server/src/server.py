@@ -7,7 +7,7 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from flask import Flask, Response, escape, request
+from flask import Flask, Response, request
 
 storage_dir = Path(os.getenv("STORAGE_DIR"))
 
