@@ -1,11 +1,23 @@
 {
-  "extends": ["config:base"],
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
   "lockFileMaintenance": {
     "enabled": true
   },
-  "major": {
-    "automerge": false
-  },
-  "masterIssue": true,
-  "masterIssueApproval": true
+  "dependencyDashboardApproval": true,
+  "packageRules": [
+    {
+      "description": "okoreports: no approval needed, CI gates automerge",
+      "matchFileNames": ["okoreports/**", ".github/workflows/okoreports.yml"],
+      "dependencyDashboardApproval": false,
+      "automerge": true,
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "matchFileNames": ["okoreports/**", ".github/workflows/okoreports.yml"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "groupName": "okoreports non-major",
+      "schedule": ["before 6am on monday"]
+    }
+  ]
 }
