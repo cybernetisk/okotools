@@ -1,0 +1,4 @@
+Type;Versjon;År;Måned;Avdelingsnummer;ProsjektId;Kontonummer;BeløpInn;BeløpUt
+Regnskap;20261124;2026;3;1;101;3000;-1500.0;0
+Regnskap;20261124;2026;3;1;101;4000;0;400.0
+Regnskap;20261124;2026;9;1;102;3000;-700.0;0

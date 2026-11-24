@@ -8,7 +8,7 @@
   "packageRules": [
     {
       "description": "okoreports: no approval needed, CI gates automerge. Own branch prefix keeps its lockfile maintenance apart from approval-gated lockfiles.",
-      "matchFileNames": ["okoreports/**", ".github/workflows/okoreports.yml"],
+      "matchFileNames": ["okoreports/**", ".github/workflows/okoreports-*.yml"],
       "dependencyDashboardApproval": false,
       "automerge": true,
       "minimumReleaseAge": "3 days",
@@ -16,7 +16,7 @@
       "additionalBranchPrefix": "okoreports-"
     },
     {
-      "matchFileNames": ["okoreports/**", ".github/workflows/okoreports.yml"],
+      "matchFileNames": ["okoreports/**", ".github/workflows/okoreports-*.yml"],
       "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
       "schedule": ["before 6am on monday"]
     },

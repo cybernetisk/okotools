@@ -61,7 +61,7 @@ See https://hub.docker.com/r/cybernetisk/okoreports-backend/
 
 and https://cloud.docker.com/swarm/cybernetisk/repository/docker/cybernetisk/okoreports-backend/general
 
-The image is built and pushed on each push to `master` that touches `okoreports/`.
+The image is built and pushed on each push to `master` that touches `okoreports/backend/`.
 
 ## Using with reverse proxy
 

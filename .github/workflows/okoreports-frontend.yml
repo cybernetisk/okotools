@@ -1,0 +1,42 @@
+name: okoreports-frontend
+on:
+  push:
+    paths:
+      - "okoreports/frontend/**"
+      - ".github/workflows/okoreports-frontend.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: okoreports/frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: okoreports/frontend/.nvmrc
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: docker build -t cybernetisk/okoreports-frontend .
+      - name: Start image with sample reports
+        run: |
+          docker run -d --name frontend -p 8080:80 \
+            -v "$PWD/e2e/reports:/usr/share/nginx/html/reports:ro" \
+            cybernetisk/okoreports-frontend
+          curl --retry 10 --retry-all-errors --retry-delay 1 -fsS localhost:8080/ > /dev/null
+      - run: npm exec -- playwright install --with-deps chromium
+      - run: npm run e2e
+      - name: Push docker image to Docker Hub if master branch
+        if: github.ref == 'refs/heads/master'
+        run: |
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
+          docker push cybernetisk/okoreports-frontend
+        env:
+          DOCKER_LOGIN: ${{ secrets.DOCKER_LOGIN }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
