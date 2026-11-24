@@ -1,13 +1,6 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 
 export default class ProjectFilter extends React.Component {
-  static propTypes = {
-    currentFilter: PropTypes.any,
-    onChange: PropTypes.func.isRequired,
-    projects: PropTypes.object.isRequired,
-  }
-
   constructor(props) {
     super(props)
     this.handleSelection = this.handleSelection.bind(this)

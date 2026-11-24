@@ -1,19 +1,8 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 
 import { amount as amountFormatter } from '../formatter.js'
 
 export default class ProjectAmount extends React.Component {
-
-  static propTypes = {
-    dataset: PropTypes.object.isRequired,
-    department: PropTypes.object,
-    fnSum: PropTypes.func.isRequired,
-    forceText: PropTypes.bool,
-    onlyThis: PropTypes.bool,
-    project: PropTypes.object.isRequired,
-    projectsWithDatasets: PropTypes.object.isRequired,
-  }
 
   getDepartmentSum(departmentNumber) {
     let summer = this.props.projectsWithDatasets[departmentNumber][this.props.project.id][this.props.dataset.key]

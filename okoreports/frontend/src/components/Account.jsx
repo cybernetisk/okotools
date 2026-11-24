@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 
 import { amount as amountFormatter } from '../formatter.js'
 import { ReportContext } from './ReportContext.js'
@@ -81,14 +80,6 @@ class AccountResult extends React.Component {
 }
 
 export default class Account extends React.Component {
-  static propTypes = {
-    datasets: PropTypes.array.isRequired,
-    department: PropTypes.object.isRequired,
-    kontoSet: PropTypes.array.isRequired,
-    level: PropTypes.number.isRequired,
-    project: PropTypes.object.isRequired,
-  }
-
   static contextType = ReportContext
 
   /** @type any */

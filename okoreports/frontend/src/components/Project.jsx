@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import Account from './Account.jsx'
 import ProjectAmount from './ProjectAmount.jsx'
 import { ReportContext } from './ReportContext.js'
@@ -13,18 +12,6 @@ export default class Project extends React.Component {
 
   /** @var any */
   context = undefined
-
-  static propTypes = {
-    datasets: PropTypes.array.isRequired,
-    department: PropTypes.object,
-    hasChildProjects: PropTypes.bool,
-    isExpanded: PropTypes.bool,
-    isTotalSum: PropTypes.bool,
-    level: PropTypes.number.isRequired,
-    onlyThis: PropTypes.bool,
-    project: PropTypes.object,
-    setExpanded: PropTypes.func,
-  }
 
   constructor(props) {
     super(props)
