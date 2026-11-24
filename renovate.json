@@ -5,14 +5,14 @@
     "enabled": true
   },
   "dependencyDashboardApproval": true,
+  "minimumReleaseAge": "3 days",
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
   "packageRules": [
     {
       "description": "okoreports: no approval needed, CI gates automerge. Own branch prefix keeps its lockfile maintenance apart from approval-gated lockfiles.",
       "matchFileNames": ["okoreports/**", ".github/workflows/okoreports-*.yml"],
       "dependencyDashboardApproval": false,
       "automerge": true,
-      "minimumReleaseAge": "3 days",
-      "minimumReleaseAgeBehaviour": "timestamp-optional",
       "additionalBranchPrefix": "okoreports-"
     },
     {

@@ -32,27 +32,17 @@ OKOREPORTS_BUDGET_CREDENTIALS_FILE=xxx
 OKOREPORTS_BUDGET_SPREADSHEET_ID=xxx
 ```
 
-Make sure you have Python 3.15 or newer.
-
-Set up environment and dependencies:
+Install [uv](https://docs.astral.sh/uv/). Run the development server:
 
 ```bash
 cd okoreports/backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Run the development server:
-
-```bash
-python app/app.py
+uv run app/app.py
 ```
 
 Run tests (they call the real Tripletex API and Google Sheets, and skip without credentials):
 
 ```bash
-pytest
+uv run pytest
 ```
 
 ## Docker image

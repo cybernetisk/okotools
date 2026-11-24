@@ -26,18 +26,8 @@ You need keys to the server. See script.
 
 ## Running
 
-Setting up:
+Install [uv](https://docs.astral.sh/uv/). It installs the patched pandas_access from the submodule.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
-# Install our patched version of pandas_access.
-(cd ../pandas_access && pip install -e .)
-```
-
-Running:
-
-```bash
-ajour
+uv run ajour
 ```

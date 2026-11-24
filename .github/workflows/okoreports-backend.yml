@@ -17,9 +17,9 @@ jobs:
         working-directory: okoreports/backend
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+      - run: uv run --locked pytest
       - run: docker build -t cybernetisk/okoreports-backend .
-      - name: Run tests in image
-        run: docker run --rm -v "$PWD:/src" -w /src cybernetisk/okoreports-backend pytest -p no:cacheprovider
       - name: Smoke test image
         run: |
           docker run -d --name backend -p 8000:8000 \

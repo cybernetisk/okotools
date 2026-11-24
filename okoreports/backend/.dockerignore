@@ -1,6 +1,7 @@
 *
 !app/
 !container/
-!requirements.txt
+!pyproject.toml
+!uv.lock
 **/__pycache__
 **/.env

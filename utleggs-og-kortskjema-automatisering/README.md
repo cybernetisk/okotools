@@ -8,8 +8,7 @@ Dette prosjektet automatiserer prosessen med å hente innsendelser fra Nettskjem
 
 ### Forutsetninger
 
-- Python 3.7 eller høyere
-- `pip` for å installere Python-pakker
+- [uv](https://docs.astral.sh/uv/), som installerer Python og avhengigheter ved `uv run`
 - Nettskjema API-legitimasjon (Klient-ID og hemmelighet)
   - Fås fra [https://authorization.nettskjema.no/client](https://authorization.nettskjema.no/client)
 - Tripletex API-legitimasjon (consumerstoken og employeetoken)
@@ -23,22 +22,7 @@ Dette prosjektet automatiserer prosessen med å hente innsendelser fra Nettskjem
     cd utleggs-og-kortskjema-automatisering
     ```
 
-2. Opprett et virtuelt miljø:
-
-    ```sh
-    python -m venv .venv
-    source venv/bin/activate  # På Windows bruk `venv\Scripts\activate`
-    ```
-
-3. Installer avhengigheter:
-
-    ```sh
-    pip install -r requirements.txt
-    ```
-
-    Det er mulig at det er noen mangler i requirements.txt filen. i så fall gjerne legg til de requirementsene som mangler :)
-
-4. Opprett en `.env`-fil i mappen `utleggs-og-kortskjema-automatisering` og fyll den med nødvendige miljøvariabler:
+2. Opprett en `.env`-fil i mappen `utleggs-og-kortskjema-automatisering` og fyll den med nødvendige miljøvariabler:
 
     ```ini
     # Hentet fra https://authorization.nettskjema.no/client - Gir
@@ -61,7 +45,7 @@ Dette prosjektet automatiserer prosessen med å hente innsendelser fra Nettskjem
 1. Kjør hovedskriptet:
 
     ```sh
-    python main.py
+    uv run main.py
     ```
 
 2. Skriptet vil:

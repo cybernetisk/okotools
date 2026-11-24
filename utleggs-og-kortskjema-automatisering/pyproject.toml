@@ -1,0 +1,14 @@
+[project]
+name = "utleggs-og-kortskjema-automatisering"
+version = "0"
+requires-python = ">=3.11"
+dependencies = [
+  "pillow==13.0.0",
+  "pypdf==7.1.1",
+  "python-docx==1.2.0",
+  "python-dotenv==1.2.4",
+  "requests==2.34.2",
+]
+
+[tool.uv]
+exclude-newer = "3 days"
