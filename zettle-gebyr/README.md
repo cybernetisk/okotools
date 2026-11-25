@@ -25,10 +25,8 @@ ZETTLE_SECRET=<zettle-secret>
 
 ## Kjøring
 
-Krever [uv](https://docs.astral.sh/uv/).
+Krever [uv](https://docs.astral.sh/uv/). Hver kjøring fører bilag i Tripletex, så velg én av:
 
-``` bash
-uv run main.py 2026-10-15                 # hele måneden datoen ligger i
-uv run main.py 2026-10-01 2026-10-15      # egendefinert periode
-uv run main.py auto                       # inneværende måned, kun siste dag i måneden
-```
+- Måneden en dato ligger i: `uv run main.py 2026-10-15`
+- Egendefinert periode: `uv run main.py 2026-10-01 2026-10-15`
+- Inneværende måned, kun på siste dag i måneden: `uv run main.py auto`
