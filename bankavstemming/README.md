@@ -28,8 +28,5 @@ For CSV filen som lastes opp til Tripletex (med DNB formatet):
 Kjøring av tester:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install pytest
-pytest test.py
+uv run --with pytest pytest tests/test.py
 ```

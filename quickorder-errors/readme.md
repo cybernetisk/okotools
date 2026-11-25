@@ -6,15 +6,15 @@ This repository contains scripts for processing CSV exports from QuickOrder and 
 
 1. **QuickOrder CSV Export Script**
    - **Purpose:** To download CSV exports from the QuickOrder API for each day within specified date ranges. This script uses multithreading to accelerate the downloading process.
-   - **File:** `quickorder_script.py`
+   - **File:** `fetch_quickorder_purchases.py`
 
 2. **Zettle CSV Export Script**
    - **Purpose:** To fetch purchase data from the Zettle API for each month within specified year ranges, and save it as CSV files. The script only creates CSV files when there is data available.
-   - **File:** `zettle_script.py`
+   - **File:** `fetch_zettle_purchases.py`
 
 3. **CSV Concatenation and Filtering Script**
    - **Purpose:** To concatenate CSV files, filter them by matching certain data points, and produce a refined CSV output.
-   - **File:** `concatenate_and_filter.py`
+   - **File:** `get_quickorder_errors.py`
 
 ## Setup
 
@@ -31,11 +31,7 @@ ZETTLE_SECRET=<YourZettleSecret>
 
 ### Dependencies
 
-Install required Python packages using pip:
-
-```bash
-pip install requests pandas python-dotenv
-```
+Requires [uv](https://docs.astral.sh/uv/), which installs Python and the dependencies on `uv run`.
 
 ## Usage Instructions
 
@@ -44,7 +40,7 @@ pip install requests pandas python-dotenv
 1. Run the script to fetch and save CSV files for each day:
 
 ```bash
-python quickorder_script.py
+uv run fetch_quickorder_purchases.py
 ```
 
 2. The script will store CSV files in the `csv` folder. It automatically skips days for which files already exist.
@@ -54,7 +50,7 @@ python quickorder_script.py
 1. Run the script to fetch and save purchase data for each month:
 
 ```bash
-python zettle_script.py
+uv run fetch_zettle_purchases.py
 ```
 
 2. The script will store CSV files in the `zettle_csv` folder. It skips months with existing files.
@@ -66,7 +62,7 @@ python zettle_script.py
 2. Run the script to concatenate and filter data:
 
 ```bash
-python concatenate_and_filter.py
+uv run get_quickorder_errors.py
 ```
 
 3. The script identifies records in Zettle data not present in QuickOrder based on specified columns, and saves the filtered data to `filtered_data.csv`.

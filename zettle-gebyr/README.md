@@ -28,7 +28,7 @@ ZETTLE_SECRET=<zettle-secret>
 Krever [uv](https://docs.astral.sh/uv/).
 
 ``` bash
-uv run main.py auto
-uv run main.py yyyy-mm-dd
-uv run main.py <startdato> <sluttdato>
+uv run main.py 2026-10-15                 # hele måneden datoen ligger i
+uv run main.py 2026-10-01 2026-10-15      # egendefinert periode
+uv run main.py auto                       # inneværende måned, kun siste dag i måneden
 ```
