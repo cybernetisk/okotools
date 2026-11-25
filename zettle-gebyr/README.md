@@ -22,3 +22,13 @@ TRIPLETEX_BASE_URL=https://tripletex.no/v2
 ZETTLE_ID=<zettle-id>
 ZETTLE_SECRET=<zettle-secret>
 ```
+
+## Kjøring
+
+Krever [uv](https://docs.astral.sh/uv/).
+
+``` bash
+uv run main.py auto
+uv run main.py yyyy-mm-dd
+uv run main.py <startdato> <sluttdato>
+```

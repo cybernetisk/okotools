@@ -231,7 +231,7 @@ class Rapport:
         data += "Kontrollsum:                   {:15} (skal være lik summen over)\n".format(beloep_inkl_mva)
         data += "Fakturert kontosalg inkl mva:  {:15}\n".format(kontosalg_totalt)
         data += "Kontant/kort:                  {:15}\n".format(estimert_kontant_og_kort)
-        data += "Antall kvitteringer:           {:15}\n".format(kvittering_df.count()[0])
+        data += "Antall kvitteringer:           {:15}\n".format(kvittering_df.count().iloc[0])
         data += "Antall produkter solgt:        {:15}\n".format(antall_produkter)
 
         data += "\n"
@@ -362,7 +362,7 @@ class MyPrompt(Cmd):
         sum_omsetning = data["beloep_inkl_mva"].sum()
 
         print("Sum omsetning inkl mva: {}".format(sum_omsetning))
-        print("Antall kvitteringer: {}".format(kvittering_df.count()[0]))
+        print("Antall kvitteringer: {}".format(kvittering_df.count().iloc[0]))
         print("Antall produkter solgt: {}".format(salgslinje_df[salgslinje_df["beloep_inkl_mva"] != 0]["antall"].sum()))
 
         print("Journaler:")
